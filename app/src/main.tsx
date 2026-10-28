@@ -5,6 +5,7 @@ import { Binder } from "./pages/binder";
 import { Coffre } from "./pages/coffre";
 import { Jeux } from "./pages/jeux";
 import { Parents } from "./pages/parents";
+import { Reglages } from "./pages/reglages";
 import { demarrerHorsLigne } from "./maj/hors-ligne";
 import { demarrerMajApk } from "./maj/maj-apk";
 import { demarrerTempsEcran } from "./maj/temps-ecran";
@@ -50,6 +51,7 @@ function Page({ route, album }: { route: Route; album: Album }) {
     case "coffre": return <Coffre />;
     case "jeux": return <Jeux />;
     case "parents": return <Parents />;
+    case "reglages": return <Reglages />;
     case "plus": return <Plus album={album} />;
   }
 }
@@ -57,7 +59,7 @@ function Page({ route, album }: { route: Route; album: Album }) {
 const TITLES: Record<string, string> = {
   accueil: "Footdex", joueurs: "Joueurs", paquets: "Paquets", classeur: "Classeur", matchs: "Matchs", scores: "Scores", coupes: "Coupes",
   clubs: "Clubs", saison: "Saison 2026-2027", lexique: "Lexique", defi: "Défi du jour", "grand-defi": "Grand défi", histoires: "Histoires",
-  videos: "Vidéos", sources: "Sources", carte: "La carte", coffre: "Le coffre", jeux: "Les jeux", parents: "Coin des parents", plus: "Plus",
+  videos: "Vidéos", sources: "Sources", carte: "La carte", coffre: "Le coffre", jeux: "Les jeux", parents: "Coin des parents", reglages: "Paramètres", plus: "Plus",
 };
 
 function App() {

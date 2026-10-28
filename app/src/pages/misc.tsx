@@ -499,6 +499,7 @@ export function Plus({ album }: { album: Album }) {
       <PageTitle kicker="Le reste de l'album" title="Encore des rayons" />
       <div className="doors doors--list">
         <Door to={{ page: "jeux" }} kicker="On joue ensemble" title="Les jeux" figure="10 jeux avec le personnage" tone="gold" icon={LuPlay} />
+        <Door to={{ page: "reglages" }} kicker="L'appli" title="Paramètres" figure="Personnage, voix, sons, mises à jour" tone="gold" icon={LuShieldCheck} />
         <Door to={{ page: "parents" }} kicker="Pour les grands" title="Coin des parents" figure="Nouveautés, sauvegarde, temps d'écran" icon={LuShieldCheck} />
         <Door to={{ page: "coffre" }} kicker="Le trésor" title="Le coffre" figure="Personnages secrets et cartes spéciales" tone="gold" icon={LuGem} />
         <Door to={{ page: "carte" }} kicker="Tour du monde" title="La carte des stades" figure="Voyages et découvertes" tone="pitch" icon={LuGlobe} />

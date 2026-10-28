@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { LuHouse, LuLibrary, LuMenu, LuPackageOpen, LuSearch, LuStar, LuUsers, LuVolume2, LuVolumeX } from "react-icons/lu";
+import { LuHouse, LuLibrary, LuMenu, LuPackageOpen, LuSearch, LuStar, LuUsers, LuVolume2, LuVolumeX, LuSettings } from "react-icons/lu";
 import { openBinderTab } from "../pages/binder";
 import { go, type Route } from "../router";
 import { click, onSoundChange, setSound, soundOn, unlockAudio } from "../sound";
@@ -21,7 +21,7 @@ const TABS: { to: Route; label: string; icon: typeof LuHouse; match: string[] }[
     to: { page: "plus" },
     label: "Plus",
     icon: LuMenu,
-    match: ["plus", "matchs", "match", "scores", "coupes", "coupe", "clubs", "club", "saison", "lexique", "defi", "grand-defi", "histoires", "videos", "sources", "carte", "coffre", "jeux", "parents"],
+    match: ["plus", "matchs", "match", "scores", "coupes", "coupe", "clubs", "club", "saison", "lexique", "defi", "grand-defi", "histoires", "videos", "sources", "carte", "coffre", "jeux", "parents", "reglages"],
   },
 ];
 
@@ -100,6 +100,7 @@ export function Shell({ page, pageKey, album, children }: { page: string; pageKe
             >
               {sound ? <LuVolume2 aria-hidden="true" /> : <LuVolumeX aria-hidden="true" />}
             </button>
+            <button type="button" className="iconbtn topbar__gear" onClick={() => go({ page: "reglages" })} aria-label="Paramètres de l'appli"><LuSettings aria-hidden="true" /></button>
             <button type="button" className="iconbtn topbar__search" onClick={() => go({ page: "joueurs" })} aria-label="Chercher un joueur">
               <LuSearch aria-hidden="true" />
             </button>

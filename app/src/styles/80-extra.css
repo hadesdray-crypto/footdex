@@ -182,3 +182,6 @@
 .installer { gap: 8px; }
 .installer__row { display: flex; gap: 8px; align-items: center; }
 .installer__row .btn { flex: 1; }
+
+/* narrow phones: the ⚙️ button takes the place of the search (the Joueurs tab already searches) */
+@media (max-width: 430px) { .topbar__search { display: none; } }

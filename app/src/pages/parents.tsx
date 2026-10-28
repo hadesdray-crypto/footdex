@@ -43,7 +43,7 @@ function Journal() {
   );
 }
 
-function Version() {
+export function Version() {
   const web = useHorsLigne();
   const apk = useMajApk();
   const v = EST_APK ? apk.verification : web.verification;

@@ -4,7 +4,7 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-10-28",
-    titre: "Version 22 : une plus jolie voix, et le jongleur qui vole",
+    titre: "Version 23 : Paramètres, jolie voix, et le jongleur qui vole",
     type: "appli",
     points: [
       "La voix n'est plus déformée : chaque personnage garde une voix naturelle.",
@@ -12,6 +12,8 @@ export const NOUVEAUTES: Nouveaute[] = [
       "Bouton « Installer de plus belles voix » (voix Google haute qualité).",
       "Lance le jongleur d'un coup de doigt : il vole, tombe, se relève et retourne à son ballon.",
       "Déplace-le : il va chercher son ballon et le ramène à sa nouvelle place.",
+      "Nouvelle page Paramètres (bouton ⚙️ en haut) : personnage, voix, sons, mises à jour.",
+      "Deux touchers sur le personnage : il joue (le Jongleur sort avec son ballon).",
     ],
   },
   {

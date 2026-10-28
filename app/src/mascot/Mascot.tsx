@@ -9,7 +9,7 @@ import { PERSOS } from "./lines";
 import { CaracList } from "./Carac";
 import { ballOpen } from "../sound";
 import { piperDownload, piperRemove } from "../piper";
-import { SPEEDS, choosePerso, wornLook, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, androidVoices, installAndroidVoices, isApp, type Engine } from "./state";
+import { SPEEDS, choosePerso, wornLook, hasMore, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, androidVoices, installAndroidVoices, isApp, type Engine } from "./state";
 import { Wardrobe, type Tab } from "./Wardrobe";
 import { go, type Route } from "../router";
 import { createActor } from "./actor";
@@ -335,7 +335,13 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       if (now - s.lastTap < 340) {
         s.lastTap = 0;
         setMenu(null);
-        continueSpeech();
+        // double tap: goes on with what he was telling; with nothing to tell, he plays
+        if (hasMore()) continueSpeech();
+        else if (perso.mode === "joueur") wander();
+        else {
+          play(perso.mode === "statue" ? "tip" : "cheer", 1800);
+          sample();
+        }
       } else {
         s.lastTap = now;
         s.tapTimer = window.setTimeout(() => {
@@ -580,7 +586,7 @@ function pickTarget(): HTMLElement | null {
 }
 
 /** The voice menu: choose how he speaks, test each way, and let him find the one you really hear. */
-function VoicePanel() {
+export function VoicePanel() {
   const m = useMascot();
   const [asked, setAsked] = useState<Engine | null>(null);
   const [wizard, setWizard] = useState<Engine[] | null>(null);
