@@ -27,12 +27,12 @@ export const ENGINES_ALL: { id: Engine; name: string; text: string }[] = [
 ];
 /** The ways that exist here: the Android voice only in the app; in the app, the browser voice is the same engine, so it is not shown twice. */
 export const ENGINES = ENGINES_ALL.filter((e) => (isApp() ? e.id !== "phone" : e.id !== "native"));
-export type Settings = { look: Look; perso: number; speed: number; auto: boolean; engine: "auto" | Engine; heard: Partial<Record<Engine, boolean>>; piper: boolean; looks: Record<string, Look>; rest: boolean; narrate: boolean; fx: number; fy: number; day: string };
+export type Settings = { look: Look; perso: number; speed: number; auto: boolean; engine: "auto" | Engine; heard: Partial<Record<Engine, boolean>>; piper: boolean; nativeVoice: number; looks: Record<string, Look>; rest: boolean; narrate: boolean; fx: number; fy: number; day: string };
 export type Bubble = { id: number; text: string; top: boolean } | null;
 type Snap = { reading: boolean; s: Settings; eng: Partial<Record<Engine, "ok" | "ko">>; using: Engine | null; bubble: Bubble; talking: boolean; busy: boolean; anim: string | null; animId: number; vx: number; vy: number; hurt: number };
 
 function loadSettings(): Settings {
-  const d: Settings = { look: DEFAULT_LOOK, perso: 0, speed: 1, auto: true, engine: "auto", heard: {}, piper: false, looks: {}, rest: false, narrate: false, fx: 1, fy: 1, day: "" };
+  const d: Settings = { look: DEFAULT_LOOK, perso: 0, speed: 1, auto: true, engine: "auto", heard: {}, piper: false, nativeVoice: -1, looks: {}, rest: false, narrate: false, fx: 1, fy: 1, day: "" };
   try {
     const raw = JSON.parse(storageGet(KEY) ?? "null") as Partial<Settings> | null;
     if (!raw) return d;
@@ -53,6 +53,7 @@ function loadSettings(): Settings {
       engine: raw.engine === "native" || raw.engine === "phone" || raw.engine === "piper" || raw.engine === "robot" || raw.engine === "babble" ? raw.engine : "auto",
       heard: raw.heard && typeof raw.heard === "object" ? raw.heard : {},
       piper: raw.piper === true,
+      nativeVoice: typeof raw.nativeVoice === "number" && raw.nativeVoice >= 0 ? Math.floor(raw.nativeVoice) : -1,
       narrate: raw.narrate === true,
       fx: num(raw.fx, 0, 1, 1),
       fy: num(raw.fy, 0, 1, 1),
@@ -229,6 +230,9 @@ function mark(e: Engine, v: "ok" | "ko") {
 function runEngine(e: Engine, text: string, my: number, done: () => void, fail: () => void) {
   const p = PERSOS[snap.s.perso];
   const rate = Math.max(0.5, Math.min(2, p.rate * SPEEDS[snap.s.speed].factor));
+  // A real voice (Android's, the phone's) gets ugly when pushed too high or too fast: only a gentle nudge per character.
+  const softPitch = 1 + (p.pitch - 1) * 0.3;
+  const softRate = Math.max(0.6, Math.min(1.5, 1 + (p.rate - 1) * 0.45)) * SPEEDS[snap.s.speed].factor;
   const alive = () => my === wake;
   if (e === "robot" || e === "babble") {
     const r = (e === "robot" ? robotSound : babbleSound)(text, p.pitch, rate, p.voice.formant, p.voice.vib);
@@ -318,7 +322,9 @@ function runEngine(e: Engine, text: string, my: number, done: () => void, fail: 
       .catch(() => undefined)
       .then(() => {
         if (!alive()) return;
-        return appeler("TextToSpeech", "speak", { text, lang: "fr-FR", rate, pitch: p.pitch, volume: 1, category: "playback" });
+        const opts: Record<string, unknown> = { text, lang: "fr-FR", rate: softRate, pitch: softPitch, volume: 1, category: "playback" };
+        if (snap.s.nativeVoice >= 0) opts.voice = snap.s.nativeVoice;
+        return appeler("TextToSpeech", "speak", opts);
       })
       .then(
         () => {
@@ -367,8 +373,8 @@ function runEngine(e: Engine, text: string, my: number, done: () => void, fail: 
           u.lang = "fr-FR";
           const v = pickVoice ? frenchVoice() : undefined;
           if (v) u.voice = v;
-          u.pitch = p.pitch;
-          u.rate = rate;
+          u.pitch = softPitch;
+          u.rate = softRate;
           u.volume = 1;
           u.onstart = () => {
             started = true;
@@ -640,4 +646,22 @@ export function setBusy(busy: boolean) {
   if (snap.busy === busy) return;
   set({ busy });
   if (busy) hideBubble();
+}
+
+/** The French voices installed on the phone (Android app only): to choose the nicest one. */
+export async function androidVoices(): Promise<{ index: number; name: string; local: boolean }[]> {
+  if (!isApp()) return [];
+  try {
+    const r = await appeler<{ voices: { name?: string; lang?: string; voiceURI?: string; localService?: boolean }[] }>("TextToSpeech", "getSupportedVoices");
+    return (r?.voices ?? [])
+      .map((v, index) => ({ index, name: v.name || v.voiceURI || `Voix ${index + 1}`, lang: v.lang || "", local: v.localService !== false }))
+      .filter((v) => /^fr/i.test(v.lang) || /fr[-_]/i.test(v.name))
+      .map(({ index, name, local }) => ({ index, name, local }));
+  } catch {
+    return [];
+  }
+}
+/** Opens Android's screen to install better voices (Google's French voice, for example). */
+export function installAndroidVoices() {
+  appeler("TextToSpeech", "openInstall").catch(() => undefined);
 }

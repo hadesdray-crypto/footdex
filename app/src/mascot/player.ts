@@ -23,7 +23,8 @@ type Act =
   | { k: "juggle"; left: number; t: number; age: number; leg: 0 | 1; swinging: boolean; done: () => void }
   | { k: "tired"; t: number; until: number; done: () => void }
   | { k: "push"; t: number; until: number; done: () => void }
-  | { k: "cheer"; t: number; until: number; done: () => void };
+  | { k: "cheer"; t: number; until: number; done: () => void }
+  | { k: "fly"; z: number; vz: number; vx: number; vy: number; spin: number; ang: number; ground: number; t: number; done: () => void };
 
 type Pl = {
   look: Look;
@@ -341,6 +342,9 @@ function place(p: Pose) {
   const rot = p.rot ? ` rotate(${p.rot * pl.dir}deg)` : "";
   pl.el.style.transform = `translate(${pl.x - FIG_W / 2}px,${pl.y - FIG_H - p.lift}px) scale(${s})${rot}`;
   pl.el.style.zIndex = String(15 + Math.round(pl.y / 40));
+  // in the air he tumbles around his middle; on the ground he turns around his feet
+  const flying = pl.act.k === "fly" && pl.act.ground === 0;
+  pl.el.style.transformOrigin = flying ? "33px 48px" : "33px 86px";
   pl.el.firstElementChild?.setAttribute("style", `transform:scaleX(${pl.dir})`);
 }
 
@@ -446,6 +450,43 @@ function stepPlayer(dt: number) {
     if (a.t > a.until) {
       p0.act = { k: "idle" };
       a.done();
+    }
+  } else if (a.k === "fly") {
+    // Thrown! He flies, tumbles, falls on the ground line, lies there a moment, then gets up.
+    a.t += dt;
+    const s = scaleAt(p0.y);
+    if (a.ground === 0) {
+      a.vz -= G * 0.9 * dt;
+      a.z += a.vz * dt;
+      p0.x = clamp(p0.x + a.vx * dt, 20, window.innerWidth - 20);
+      p0.y = clamp(p0.y + a.vy * dt, top(), bottom());
+      if (p0.x <= 20 || p0.x >= window.innerWidth - 20) a.vx = -a.vx * 0.5;
+      a.ang += a.spin * dt;
+      if (a.z <= 0) {
+        a.z = 0;
+        ballBounce(0.9);
+        if (a.vz < -420) {
+          a.vz = -a.vz * 0.28;
+          a.vx *= 0.5;
+          a.vy *= 0.5;
+          a.spin *= 0.4;
+        } else {
+          a.ground = a.t;
+          a.ang = 90 * Math.sign(a.vx || 1);
+        }
+      }
+      const flail = Math.sin(a.t * 22);
+      pose = { ...STAND, rot: a.ang, lift: a.z, hA: -30 + 25 * flail, kA: 40, hB: 20 - 25 * flail, kB: 30, sA: -150 + 30 * flail, eA: -20, sB: -120 - 30 * flail, eB: -30 };
+    } else {
+      const lie = a.t - a.ground;
+      const lying: Pose = { ...STAND, rot: a.ang, lift: -2 * s, hA: -10, kA: 20, hB: 10, kB: 10, sA: -170, eA: 0, sB: -10, eB: -20 };
+      if (lie < 1.3) pose = { ...lying, sA: -170 + 10 * Math.sin(lie * 9) };
+      else if (lie < 2.1) pose = mix(lying, { ...STAND, lean: 22, hA: -40, kA: 70, sA: -40, eA: -60 }, ease((lie - 1.3) / 0.8));
+      else if (lie < 2.6) pose = mix({ ...STAND, lean: 22, hA: -40, kA: 70, sA: -40, eA: -60 }, STAND, ease((lie - 2.1) / 0.5));
+      else {
+        p0.act = { k: "idle" };
+        a.done();
+      }
     }
   } else if (a.k === "cheer") {
     a.t += dt;
@@ -554,6 +595,8 @@ export type Footballer = {
   tired: (ms: number) => Promise<void>;
   pushups: (ms: number) => Promise<void>;
   cheer: (ms: number) => Promise<void>;
+  /** Thrown by a finger: he flies (vx, vz in px/s), lands, lies down a moment, gets up. */
+  fling: (vx: number, vz: number, vy?: number) => Promise<void>;
   wait: (ms: number) => Promise<void>;
   destroy: () => void;
 };
@@ -633,6 +676,13 @@ export function spawnFootballer(look: Look, x: number, y: number, hooks: { onTap
         }
         pl.act = { k: "push", t: 0, until: ms / 1000, done };
       }),
+    fling: (vx, vz, vy = 0) =>
+      new Promise<void>((done) => {
+        if (!pl) return done();
+        cancelAct();
+        if (Math.abs(vx) > 20) pl.dir = vx > 0 ? 1 : -1;
+        pl.act = { k: "fly", z: 0, vz: Math.max(250, vz), vx, vy, spin: (vx >= 0 ? 1 : -1) * (300 + Math.abs(vx) * 0.5), ang: 0, ground: 0, t: 0, done };
+      }),
     cheer: (ms) => new Promise<void>((done) => (pl ? (cancelAct(), (pl.act = { k: "cheer", t: 0, until: ms / 1000, done })) : done())),
     wait: (ms) => new Promise<void>((r) => window.setTimeout(r, ms)),
     destroy: () => {
@@ -661,3 +711,4 @@ export function trapBall() {
   ballTrap(0.5);
   return true;
 }
+

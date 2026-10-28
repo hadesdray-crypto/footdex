@@ -71,9 +71,22 @@ async function juggling(f: Footballer) {
 }
 
 /** One outing: dribbles, shots, juggling, a sprint, push-ups… then home, with the ball at his feet. */
-export async function footballOuting(f: Footballer, home: Pt, stolen = false): Promise<void> {
+export type Outing = "play" | "stolen" | "thrown" | "moved";
+
+export async function footballOuting(f: Footballer, home: Pt, why: Outing = "play", fling?: { vx: number; vz: number; vy: number }): Promise<void> {
   try {
-    if (stolen) {
+    if (why === "thrown" && fling) {
+      // Thrown away from his ball: he flies, falls, gets up, and goes back for his ball.
+      say(pick(["Aaaaaah !", "Wouaaah ! Pose-moi !", "Au secouuuurs !"]));
+      await f.fling(fling.vx, fling.vz, fling.vy);
+      if (f.dead) return;
+      say(pick(["Aïe… Bon. Mon ballon !", "Ouille. Où est mon ballon ?", "Pas drôle ! Je retourne à mon ballon."]));
+      await getBall(f);
+    } else if (why === "moved") {
+      // Moved to another place: his ball stayed behind. He goes for it and brings it to his new spot.
+      say(pick(["Attends, je vais chercher mon ballon !", "Mon ballon est resté là-bas !", "Je reviens avec mon ballon !"]));
+      await getBall(f);
+    } else if (why === "stolen") {
       say(pick(["Hé ! Mon ballon !", "Rends-moi mon ballon !", "Ah non, pas mon ballon !"]));
       await getBall(f);
     } else {

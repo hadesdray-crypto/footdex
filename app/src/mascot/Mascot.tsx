@@ -9,12 +9,12 @@ import { PERSOS } from "./lines";
 import { CaracList } from "./Carac";
 import { ballOpen } from "../sound";
 import { piperDownload, piperRemove } from "../piper";
-import { SPEEDS, choosePerso, wornLook, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, type Engine } from "./state";
+import { SPEEDS, choosePerso, wornLook, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, androidVoices, installAndroidVoices, isApp, type Engine } from "./state";
 import { Wardrobe, type Tab } from "./Wardrobe";
 import { go, type Route } from "../router";
 import { createActor } from "./actor";
 import { ensureBall, parkBall, removeBall, spawnFootballer, whenStolen } from "./player";
-import { footballOuting } from "./footScenes";
+import { footballOuting, type Outing } from "./footScenes";
 import { runScript } from "./scripts";
 
 const W = 74;
@@ -113,10 +113,11 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [perso.mode, m.s.rest]);
   useEffect(() => {
-    if (perso.mode !== "joueur" || roam) return;
+    // while you drag him, his ball stays where it was: he will go and get it when you let go
+    if (perso.mode !== "joueur" || roam || drag) return;
     const f = feet(pos);
     parkBall(f.x + 20, f.y);
-  }, [perso.mode, pos.x, pos.y, roam]);
+  }, [perso.mode, pos.x, pos.y, roam, drag]);
 
   // Each character has his own habits.
   useEffect(() => {
@@ -151,7 +152,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     const st = getMascot();
     const a = act.current;
     const fab = fabRef.current;
-    if (stolen && fab && !a.busy && PERSOS[st.s.perso].mode === "joueur") return footballer(true);
+    if (stolen && fab && !a.busy && PERSOS[st.s.perso].mode === "joueur") return footballer("stolen");
     if (a.busy || !fab || st.busy || st.talking || st.anim || menuRef.current || wardrobeRef.current || document.querySelector(".mm, .wd, .reveal")) return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     const here = posRef.current;
@@ -164,7 +165,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       setRoam(null);
     };
     // The juggler always goes out with his ball (player.ts): never without it.
-    if (mode === "joueur") return footballer(false);
+    if (mode === "joueur") return footballer("play");
     // Everything else: he really walks on the screen.
     a.busy = true;
     const actor = createActor(getMascot().s.look, here.x + W / 2, here.y + H - 4, {
@@ -194,12 +195,12 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
   }
 
   /** The juggler goes out with his ball, plays, and comes back to his corner. */
-  function footballer(stolen: boolean) {
+  function footballer(why: Outing, at?: { x: number; y: number }, fling?: { vx: number; vz: number; vy: number }) {
     const a = act.current;
     const fab = fabRef.current;
     if (!fab) return;
     a.busy = true;
-    const here = posRef.current;
+    const here = at ?? posRef.current;
     const home = feet(here);
     fab.style.visibility = "hidden";
     const player = spawnFootballer(getMascot().s.look, home.x, home.y, {
@@ -219,7 +220,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       player.destroy();
       finish();
     };
-    footballOuting(player, home, stolen)
+    footballOuting(player, home, why, fling)
       .catch(() => undefined)
       .finally(() => {
         if (player.dead) return;
@@ -307,12 +308,20 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     if (s.mode === "drag") {
       const x = drag?.x ?? pos.x;
       const y = drag?.y ?? pos.y;
+      // the juggler was moved without his ball: he goes back for it (spawned first, so the ball does not jump to him)
+      if (perso.mode === "joueur" && Math.hypot(x - s.ox, y - s.oy) > 30) footballer("moved", { x, y });
       update({ fx: (x - area.l) / Math.max(1, area.r - area.l), fy: (y - area.t) / Math.max(1, area.b - area.t) });
       setDrag(null);
       setDragging(false);
     } else if (s.mode === "swipe") {
       const len = Math.hypot(dx, dy);
-      if (len > 45 && len / dt > 0.5) {
+      if (len > 45 && len / dt > 0.5 && perso.mode === "joueur") {
+        // the juggler is thrown for real: he flies with gravity, falls, gets up and goes back for his ball
+        setMenu(null);
+        hideBubble();
+        const k = 1000 / dt;
+        footballer("thrown", undefined, { vx: Math.max(-1500, Math.min(1500, dx * k * 0.9)), vz: Math.max(300, Math.min(1300, -dy * k * 0.9)), vy: dy > 0 ? Math.min(500, dy * k * 0.25) : 0 });
+      } else if (len > 45 && len / dt > 0.5) {
         setMenu(null);
         hideBubble();
         play("thrown", 2700, dx / len, dy / len);
@@ -676,6 +685,7 @@ function VoicePanel() {
           </button>
         </div>
       </div>
+      {isApp() ? <AndroidVoices /> : null}
       {dl !== null ? (
         <div className="voicepanel__bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(dl * 100)}>
           <span style={{ width: `${Math.round(dl * 100)}%` }} />
@@ -687,3 +697,33 @@ function VoicePanel() {
   );
 }
 
+
+/** In the Android app: the French voices of the phone, to pick the nicest. */
+function AndroidVoices() {
+  const m = useMascot();
+  const [list, setList] = useState<{ index: number; name: string; local: boolean }[] | null>(null);
+  useEffect(() => {
+    void androidVoices().then(setList);
+  }, []);
+  const pickV = (i: number) => {
+    update({ nativeVoice: i, engine: "native", auto: true });
+    window.setTimeout(sample, 60);
+  };
+  return (
+    <div className="voicepanel__android">
+      <p className="mm__label">Les voix françaises du téléphone</p>
+      <p className="mm__note">Touche une voix pour l'écouter : il gardera celle que tu choisis.</p>
+      <div className="chips">
+        <button type="button" className={cx("chip", m.s.nativeVoice < 0 && "chip--on")} onClick={() => pickV(-1)}>Celle du téléphone</button>
+        {(list ?? []).map((v, k) => (
+          <button key={v.index} type="button" className={cx("chip", m.s.nativeVoice === v.index && "chip--on")} onClick={() => pickV(v.index)}>
+            Voix {k + 1}{v.local ? "" : " (Internet)"}
+          </button>
+        ))}
+      </div>
+      {list && !list.length ? <p className="mm__note">Une seule voix française sur ce téléphone.</p> : null}
+      <button type="button" className="btn btn--soft" onClick={installAndroidVoices}>Installer de plus belles voix</button>
+      <p className="mm__note">Conseil : dans les réglages d'Android, « Synthèse vocale », choisis le moteur Google et télécharge la voix française haute qualité.</p>
+    </div>
+  );
+}
