@@ -1,0 +1,1134 @@
+{
+ "description": "Corrections de l'étape 2 (27 octobre 2026), appliquées à ts-current.json par build-data.py et verify-data.py (tools/corrections_lib.py).",
+ "operations": [
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "ribery"
+    },
+    "story"
+   ],
+   "ancien": "Il ne participe pas au Mondial 2010, après une grosse crise dans l'équipe de France.",
+   "nouveau": "Il joue le Mondial 2010, où la France est éliminée dès le premier tour après une grosse crise dans l'équipe. Il manque celui de 2014, blessé.",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "ribery"
+    },
+    "clubs",
+    0,
+    "name"
+   ],
+   "ancien": "Brest (Ligue 2)",
+   "nouveau": "Brest",
+   "source": "Division non vérifiée"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "ribery"
+    },
+    "pitch"
+   ],
+   "ancien": "À Brest, en Ligue 2, c'était déjà son style.",
+   "nouveau": "À Brest, c'était déjà son style.",
+   "source": "Division non vérifiée"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "ribery"
+    },
+    "stats",
+    1,
+    "value"
+   ],
+   "ancien": "Brest, Ligue 2",
+   "nouveau": "Brest",
+   "source": "Division non vérifiée"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "fenomeno"
+    },
+    "story"
+   ],
+   "ancien": "Ballons d'Or 1996, 1997 et 2002.",
+   "nouveau": "Ballons d'Or 1997 et 2002 (et FIFA World Player 1996, 1997 et 2002).",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "fenomeno"
+    },
+    "stats",
+    0,
+    "value"
+   ],
+   "ancien": "1996, 1997, 2002",
+   "nouveau": "1997, 2002",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "fenomeno"
+    },
+    "honours",
+    1
+   ],
+   "ancien": "Trois Ballons d'Or",
+   "nouveau": "Deux Ballons d'Or (1997, 2002)",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "fenomeno"
+    },
+    "clubs"
+   ],
+   "index": 5,
+   "ancien": null,
+   "valeur": {
+    "name": "AC Milan",
+    "years": "2007–2008"
+   },
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "fenomeno"
+    },
+    "clubs"
+   ],
+   "index": 6,
+   "ancien": null,
+   "valeur": {
+    "name": "Corinthians",
+    "years": "2009–2011"
+   },
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "hakimi"
+    },
+    "clubs",
+    1,
+    "years"
+   ],
+   "ancien": "prêt puis transfert",
+   "nouveau": "prêt 2018–2020",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "drogba"
+    },
+    "story"
+   ],
+   "ancien": "appeler à la paix après une élection très violente.",
+   "nouveau": "appeler à la paix en 2005, pendant la guerre civile.",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "drogba"
+    },
+    "clubs",
+    3,
+    "years"
+   ],
+   "ancien": "2004–2012, puis retour",
+   "nouveau": "2004–2012",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "drogba"
+    },
+    "clubs"
+   ],
+   "index": 4,
+   "ancien": null,
+   "valeur": {
+    "name": "Shanghai Shenhua",
+    "years": "2012–2013"
+   },
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "drogba"
+    },
+    "clubs"
+   ],
+   "index": 5,
+   "ancien": null,
+   "valeur": {
+    "name": "Galatasaray",
+    "years": "2013–2014"
+   },
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "drogba"
+    },
+    "clubs"
+   ],
+   "index": 6,
+   "ancien": null,
+   "valeur": {
+    "name": "Chelsea",
+    "years": "retour 2014–2015"
+   },
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "drogba"
+    },
+    "clubs"
+   ],
+   "index": 7,
+   "ancien": null,
+   "valeur": {
+    "name": "Montréal",
+    "years": "2015–2016"
+   },
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "drogba"
+    },
+    "clubs"
+   ],
+   "index": 8,
+   "ancien": null,
+   "valeur": {
+    "name": "Phoenix Rising",
+    "years": "2017–2018"
+   },
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "trezeguet"
+    },
+    "anecdotes",
+    0,
+    "text"
+   ],
+   "ancien": "d'un coup de l'intérieur du pied",
+   "nouveau": "d'une volée du pied gauche",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "trezeguet"
+    },
+    "clubs"
+   ],
+   "index": 3,
+   "ancien": null,
+   "valeur": {
+    "name": "Hércules",
+    "years": "2010–2011"
+   },
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "papin"
+    },
+    "clubs",
+    0,
+    "years"
+   ],
+   "ancien": "jeunesse",
+   "nouveau": "débuts pro",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "papin"
+    },
+    "clubs"
+   ],
+   "index": 5,
+   "ancien": null,
+   "valeur": {
+    "name": "Bordeaux",
+    "years": "après le Bayern"
+   },
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "papin"
+    },
+    "clubs"
+   ],
+   "index": 6,
+   "ancien": null,
+   "valeur": {
+    "name": "Guingamp",
+    "years": "fin de carrière"
+   },
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "giroud"
+    },
+    "clubs"
+   ],
+   "index": 6,
+   "ancien": {
+    "name": "Lille OSC",
+    "years": "en octobre 2026"
+   },
+   "valeur": {
+    "name": "Los Angeles FC",
+    "years": "2024–2025"
+   },
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "giroud"
+    },
+    "pitch"
+   ],
+   "ancien": "il marque encore en Ligue 1",
+   "nouveau": "il joue encore en Ligue 1",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "buffon"
+    },
+    "clubs",
+    3,
+    "years"
+   ],
+   "ancien": "retour",
+   "nouveau": "2019–2021",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "buffon"
+    },
+    "clubs"
+   ],
+   "index": 4,
+   "ancien": null,
+   "valeur": {
+    "name": "Parme",
+    "years": "2021–2023"
+   },
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "bellingham"
+    },
+    "clubs",
+    0,
+    "years"
+   ],
+   "ancien": "avant le Real",
+   "nouveau": "2020–2023",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "bellingham"
+    },
+    "clubs"
+   ],
+   "index": 0,
+   "ancien": {
+    "name": "Borussia Dortmund",
+    "years": "2020–2023"
+   },
+   "valeur": {
+    "name": "Birmingham City",
+    "years": "2019–2020"
+   },
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "de-bruyne"
+    },
+    "clubs"
+   ],
+   "index": 0,
+   "ancien": {
+    "name": "Wolfsburg",
+    "years": "avant Manchester"
+   },
+   "valeur": {
+    "name": "KRC Genk",
+    "years": "2008–2012"
+   },
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "de-bruyne"
+    },
+    "clubs"
+   ],
+   "index": 1,
+   "ancien": {
+    "name": "Wolfsburg",
+    "years": "avant Manchester"
+   },
+   "valeur": {
+    "name": "Chelsea",
+    "years": "2012–2014"
+   },
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "de-bruyne"
+    },
+    "now"
+   ],
+   "ancien": " Il a joué contre Venise.",
+   "nouveau": "",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "kante"
+    },
+    "clubs",
+    4,
+    "years"
+   ],
+   "ancien": "2023–2025",
+   "nouveau": "2023–2026",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "kante"
+    },
+    "clubs",
+    5,
+    "years"
+   ],
+   "ancien": "depuis 2025",
+   "nouveau": "depuis février 2026",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "kante"
+    },
+    "story"
+   ],
+   "ancien": "Il a ensuite joué à Al-Ittihad, en Arabie saoudite.",
+   "nouveau": "Il a ensuite joué à Al-Ittihad, en Arabie saoudite. Depuis février 2026, il joue à Fenerbahçe (contrat jusqu'en 2028).",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "benzema"
+    },
+    "now"
+   ],
+   "ancien": "Un contrat en Arabie saoudite bloque encore un départ, y compris le retour à Lyon dont on a parlé.",
+   "nouveau": "Son contrat avec Al-Hilal a pris fin fin août 2026.",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "mbappe"
+    },
+    "now"
+   ],
+   "ancien": "Doublé contre Séville (37e et penalty 63e), Real Madrid 4-1. ",
+   "nouveau": "",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "mbappe"
+    },
+    "story"
+   ],
+   "ancien": "Au 19 octobre 2026, il compte 67 buts en 107 sélections, et 447 buts en carrière senior.",
+   "nouveau": "Au 25 septembre 2026, il compte 67 buts en 107 sélections. Au 19 octobre 2026, on lui attribue 447 buts en carrière senior.",
+   "source": "Dernier décompte vérifié : 25 septembre 2026"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "mbappe"
+    },
+    "story"
+   ],
+   "ancien": "Le Ballon d'Or 2026 n'était pas encore décerné : la cérémonie est fixée au 26 octobre.",
+   "nouveau": "Au Ballon d'Or 2026 (26 octobre, Londres), c'est Harry Kane qui l'emporte.",
+   "source": "footmercato, franceinfo (26 octobre 2026)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "dembele"
+    },
+    "now"
+   ],
+   "ancien": "A joué contre Strasbourg (1-3). ",
+   "nouveau": "",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "dembele"
+    },
+    "story"
+   ],
+   "ancien": "les décomptes retiennent 37 buts et 14 passes décisives en 60 matchs.",
+   "nouveau": "il marque plus de 30 buts.",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "dembele"
+    },
+    "stats",
+    1,
+    "value"
+   ],
+   "ancien": "37 buts, 14 passes",
+   "nouveau": "plus de 30 buts",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "lloris"
+    },
+    "now"
+   ],
+   "ancien": "Trois arrêts dans une victoire 3-1 contre Austin. ",
+   "nouveau": "",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "haaland"
+    },
+    "story"
+   ],
+   "ancien": " Le 17 octobre 2026, il marque deux buts pour City contre Ipswich.",
+   "nouveau": "",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "haaland"
+    },
+    "sources",
+    0
+   ],
+   "ancien": "Delo, deux buts contre Ipswich le 17 octobre 2026, toujours à Manchester City",
+   "nouveau": "Delo : toujours à Manchester City",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "oblak"
+    },
+    "pitch"
+   ],
+   "ancien": " Le 18 octobre 2026, il garde sa cage inviolée contre l'Espanyol.",
+   "nouveau": "",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "oblak"
+    },
+    "story"
+   ],
+   "ancien": "il joue toujours à l'Atlético et arrête deux tirs contre l'Espanyol (1-0).",
+   "nouveau": "il est toujours à l'Atlético.",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "oblak"
+    },
+    "sources",
+    0
+   ],
+   "ancien": "match du 18 octobre 2026",
+   "nouveau": "au 18 octobre 2026",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "barella"
+    },
+    "story"
+   ],
+   "ancien": "il joue à l'Inter et donne une passe décisive contre Bologne (3-1).",
+   "nouveau": "il est à l'Inter.",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "neymar"
+    },
+    "story"
+   ],
+   "ancien": " Le 8 octobre 2026, il entre en jeu et marque deux penaltys contre Flamengo (2-2).",
+   "nouveau": "",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "neymar"
+    },
+    "now"
+   ],
+   "ancien": " Le 8 octobre, deux penaltys contre Flamengo, 2-2.",
+   "nouveau": "",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "retirer_element",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "neymar"
+    },
+    "sources"
+   ],
+   "ancien": "Flashscore, deux penaltys contre Flamengo le 8 octobre 2026",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "gignac"
+    },
+    "story"
+   ],
+   "ancien": "le 30 mai 2026, en finale de la Coupe des champions de la CONCACAF,",
+   "nouveau": "à la fin de la saison 2025-2026, lors d'une finale perdue,",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "yamal"
+    },
+    "story"
+   ],
+   "ancien": "penalty de Mikel Oyarzabal après une faute de Lucas Digne sur Yamal, puis",
+   "nouveau": "penalty de Mikel Oyarzabal à la 22e minute, puis",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "matches",
+    "matches",
+    14,
+    "story"
+   ],
+   "ancien": "Mikel Oyarzabal ouvre le score sur penalty, après une faute de Lucas Digne sur Yamal.",
+   "nouveau": "Mikel Oyarzabal ouvre le score sur penalty à la 22e minute.",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "matches",
+    "matches",
+    14,
+    "story"
+   ],
+   "ancien": "Pedro Porro marque le deuxième but juste après l'heure de jeu.",
+   "nouveau": "Pedro Porro marque le deuxième but vers la 58e minute.",
+   "source": "Cohérence avec la 58e minute confirmée"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "matches",
+    "matches",
+    15,
+    "story"
+   ],
+   "ancien": "devant 80 663 spectateurs au MetLife Stadium",
+   "nouveau": "au MetLife Stadium",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "retirer_element",
+   "chemin": [
+    "matches",
+    "matches",
+    15,
+    "facts"
+   ],
+   "ancien": "Affluence annoncée : 80 663.",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "matches",
+    "matches",
+    3,
+    "story"
+   ],
+   "ancien": "une échange",
+   "nouveau": "un échange",
+   "source": "Faute de français"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "matches",
+    "matches",
+    7,
+    "story"
+   ],
+   "ancien": "un passe",
+   "nouveau": "une passe",
+   "source": "Faute de français"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "coupes",
+    "coupes",
+    {
+     "id": "france"
+    },
+    "finals",
+    0,
+    "text"
+   ],
+   "ancien": " Florian Thauvin et Odsonne Édouard marquent.",
+   "nouveau": "",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "coupes",
+    "coupes",
+    {
+     "id": "europa"
+    },
+    "finals",
+    0,
+    "text"
+   ],
+   "ancien": " Buts de Tielemans, Buendía et Rogers.",
+   "nouveau": "",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "coupes",
+    "coupes",
+    {
+     "id": "can"
+    },
+    "finals",
+    0,
+    "text"
+   ],
+   "ancien": "Le Sénégal a dit qu'il irait au tribunal du sport.",
+   "nouveau": "Le Sénégal a saisi le tribunal du sport (TAS) : audience le 8 octobre, verdict attendu fin novembre 2026.",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "coupes",
+    "coupes",
+    {
+     "id": "ballon"
+    },
+    "finals",
+    0,
+    "score"
+   ],
+   "ancien": "Pas encore remis",
+   "nouveau": "Harry Kane",
+   "source": "footmercato, franceinfo (26 octobre 2026)"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "coupes",
+    "coupes",
+    {
+     "id": "ballon"
+    },
+    "finals",
+    0,
+    "text"
+   ],
+   "ancien": "La cérémonie est prévue le 26 octobre 2026, à Londres. Le tenant est Ousmane Dembélé.",
+   "nouveau": "Ballon d'Or masculin, remis à Londres le 26 octobre 2026. Premier Anglais récompensé depuis 25 ans. Le tenant était Ousmane Dembélé.",
+   "source": "footmercato, franceinfo (26 octobre 2026)"
+  },
+  {
+   "op": "definir",
+   "chemin": [
+    "coupes",
+    "coupes",
+    {
+     "id": "ballon"
+    },
+    "finals",
+    0,
+    "source"
+   ],
+   "ancien": "Wikipédia, Ballon d'Or 2026",
+   "nouveau": "footmercato et franceinfo, 26 octobre 2026",
+   "source": "footmercato, franceinfo"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "clubs",
+    "clubs",
+    {
+     "id": "psg"
+    },
+    "honours"
+   ],
+   "index": 1,
+   "ancien": "Nombreux titres de Ligue 1 depuis 2013",
+   "valeur": "Ligue des champions 2026 (tirs au but contre Arsenal, 30 mai)",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "clubs",
+    "clubs",
+    {
+     "id": "psg"
+    },
+    "pitch"
+   ],
+   "ancien": "Il gagne sa première Ligue des champions le 31 mai 2025.",
+   "nouveau": "Il gagne sa première Ligue des champions le 31 mai 2025, puis une deuxième le 30 mai 2026.",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "clubs",
+    "clubs",
+    {
+     "id": "psg"
+    },
+    "story"
+   ],
+   "ancien": "sont les visages de cette équipe-là.",
+   "nouveau": "sont les visages de cette équipe-là. Le 30 mai 2026, le PSG gagne encore la Ligue des champions : victoire aux tirs au but contre Arsenal.",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "clubs",
+    "clubs",
+    {
+     "id": "lens"
+    },
+    "honours"
+   ],
+   "index": 1,
+   "ancien": null,
+   "valeur": "Coupe de France 2026",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "clubs",
+    "clubs",
+    {
+     "id": "lens"
+    },
+    "story"
+   ],
+   "ancien": "La fiche ne promet pas d'autres titres : un championnat, bien raconté, suffit à entrer dans l'almanach.",
+   "nouveau": "Le 22 mai 2026, Lens gagne sa première Coupe de France : 3-1 contre Nice.",
+   "source": "Vérification web du 27 octobre 2026 (dossier de reprise, étape 2)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "clubs",
+    "clubs",
+    {
+     "id": "lille"
+    },
+    "pitch"
+   ],
+   "ancien": "y marque encore",
+   "nouveau": "y joue encore",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "updates",
+    "updates",
+    3,
+    "change"
+   ],
+   "ancien": " Précision : doublé contre Séville le 18 octobre (37e et penalty 63e), Real Madrid 4-1.",
+   "nouveau": "",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "updates",
+    "updates",
+    10,
+    "change"
+   ],
+   "ancien": " A joué le 15 octobre contre Austin.",
+   "nouveau": "",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "updates",
+    "updates",
+    12,
+    "change"
+   ],
+   "ancien": " Deux penaltys contre Flamengo le 8 octobre, 2-2.",
+   "nouveau": "",
+   "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  }
+ ]
+}

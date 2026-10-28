@@ -1,0 +1,59 @@
+FOOTDEX — contrôle de la nouvelle version, 22/10/2026 08:30
+
+1. Données : chaque source d'origine relue et comparée au nouvel export
+
+OK  fiches de l'album — 1050 fiches
+OK  champs des fiches — 27130 champs
+OK  gameCards — 731 éléments
+OK  playerFacts — 498 éléments
+OK  changements — 12 éléments
+OK  portraits2026 — 0 éléments
+OK  effectifs — 3 éléments
+OK  manifest — 22 éléments
+OK  portraits — 44 éléments
+OK  matches — 16 éléments
+OK  clubs — 8 éléments
+OK  coupes — 5 éléments
+OK  lexique — 14 éléments
+OK  quiz — 10 éléments
+OK  mises à jour
+OK  saison (stades, matchs à venir)
+OK  édition et libellés
+OK  page Certitude
+OK  Excel, onglet Joueurs — 804 lignes
+OK  Excel, onglet Clubs et stades — 36 clubs
+OK  Excel, onglet À lire
+OK  CSV des joueurs 2026-2027 — 804 lignes
+OK  scores ajoutés du 16 au 18 octobre — 17 scores
+OK  fiches EA FC 24 (toutes les colonnes) — 18311 lignes, 0 écarts
+OK  photos du jeu, octet par octet — 15954 photos, 0 écarts
+OK  fiches du fichier 2025 — 18405 lignes
+OK  chaque joueur 2025 retrouve son fichier
+OK  index des joueurs du jeu — 25229 joueurs
+OK  liens fiche album ↔ fiche du jeu
+OK  liens fiche ↔ jeu mis de côté (gardés dans les données) — 5 fiches : Lamine Sy ≠ Lamine Fomba, Aboubacar Lô ≠ Aboubacar Toungara, Alassane Sy ≠ Alassane Plea, Ousmane Ba ≠ Ousmane Dembélé, Pape Sy ≠ Pape Matar Sarr
+OK  photos du jeu reliées aux fiches de l'album — 439 fiches
+OK  scores de Ligue 1 et de Ligue 2 — 22842 matchs
+OK  matchs entre pays — 49945 matchs
+OK  matchs de Coupe du monde — 1068
+OK  effectifs Wikipédia (base) — 988 joueurs
+OK  effectifs Wikipédia par club — 36 clubs
+OK  clubs vérifiés à part — 1038 joueurs
+OK  liens de club mis de côté (gardés dans les données) — 5 liens : Lamine Yamal Nasraoui  ≠ Lamine Sy, Alassane Plea ≠ Alassane Sy, Ousmane Diomande ≠ Ousmane Ba, Pape Matar Sarr ≠ Pape Sy, Jota Silva ≠ João Ferreira
+OK  historique FIFA collé — 10 joueurs
+OK  portraits grands — 44 images
+OK  portraits petits — 35 images
+OK  chaque portrait cité existe — 48 références
+
+Tout est là : 42 contrôles passés.
+
+2. Dans un vrai navigateur (Chromium) :
+
+Photos du jeu décodées : 15954 (échecs : 0) en 6 s
+Portraits, couverture, affiches : 85 chargés, échecs []
+Fiches de l'album ouvertes : 1050 / 1050 en 13 s []
+Fiches du jeu ouvertes : 25229 / 25229 (dont cas particuliers) en 309 s []
+Matchs, coupes, clubs : 29 / 29 []
+Erreurs JavaScript : aucune
+
+3. Parcours testés : premier paquet, paquet bonus après le défi, 10e paquet qui ouvre la Ligue 2, zone du monde avec photos, zone Légendes, classeur, recherche, classement, matchs entre pays, effectifs Wikipédia : tous passés, sans erreur.

@@ -1,0 +1,105 @@
+/* ------------------------------------------------------------------ progress along a path */
+.pathbar { padding: 6px 0 4px; }
+.pathbar__track { position: relative; height: 12px; margin: 16px 16px 20px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6); }
+.pathbar__fill {
+  position: absolute; inset: 0 auto 0 0; border-radius: inherit; overflow: hidden;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--p1, var(--pitch)) 85%, white), var(--gold));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--gold) 65%, transparent);
+  transition: width 1.4s var(--ease);
+}
+.pathbar__fill::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent) -100% 0 / 50% 100% no-repeat;
+  animation: barshine 2.6s ease-in-out infinite;
+}
+@keyframes barshine { to { background-position: 250% 0; } }
+.pathbar__tick {
+  position: absolute; top: 50%; width: 32px; height: 32px; margin: -16px 0 0 -16px; border-radius: 50%;
+  display: grid; place-items: center; z-index: 1;
+  background: var(--night-3); border: 1px solid var(--line-2); color: var(--fg-2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  transition: background 0.4s, color 0.4s, box-shadow 0.4s;
+}
+.pathbar__tick svg { width: 15px; height: 15px; }
+.pathbar__tick .ricon--stars { fill: var(--gold); stroke: var(--gold); }
+.pathbar__tick--done { background: radial-gradient(circle at 35% 30%, #fff3c4, var(--gold) 55%, var(--gold-deep)); color: var(--gold-ink); border-color: transparent; box-shadow: 0 0 14px rgba(246, 196, 83, 0.7); }
+.ricon--stars { color: var(--gold); }
+.ricon--gift { color: var(--pitch-hi); }
+.ricon--back { color: var(--sky); }
+
+/* ------------------------------------------------------------------ the winding path */
+.pathmap { position: relative; width: 100%; max-width: 430px; aspect-ratio: 340 / 470; margin-inline: auto; }
+.pathmap__svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.pathmap__road { fill: none; stroke: rgba(255, 255, 255, 0.08); stroke-width: 16; stroke-linecap: round; }
+.pathmap__done { fill: none; stroke: var(--gold); stroke-width: 6; stroke-linecap: round; filter: drop-shadow(0 0 5px rgba(246, 196, 83, 0.85)); }
+.pathmap__start circle { fill: var(--pitch); filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.9)); }
+.pathmap__node { fill: var(--night-3); stroke: rgba(255, 255, 255, 0.28); stroke-width: 2; }
+.pathmap__node--done { fill: var(--gold); stroke: #fff3c4; filter: drop-shadow(0 0 4px rgba(246, 196, 83, 0.8)); }
+.pathmap__mile { color: var(--fg-2); }
+.pathmap__disc { fill: var(--night-2); stroke: var(--line-2); stroke-width: 2; }
+.pathmap__halo { fill: none; stroke: none; }
+.pathmap__mile .ricon--stars { fill: var(--gold); }
+.pathmap__mile--done { color: var(--gold-ink); }
+.pathmap__mile--done .pathmap__disc { fill: var(--gold); stroke: #fff3c4; filter: drop-shadow(0 0 8px rgba(246, 196, 83, 0.9)); }
+.pathmap__mile--next .pathmap__halo { stroke: var(--gold); stroke-width: 2.5; transform-box: fill-box; transform-origin: center; animation: halo 1.8s ease-out infinite; }
+@keyframes halo { from { transform: scale(0.8); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
+.pathmap__label { fill: var(--muted); font: 800 13px var(--f-label); letter-spacing: 0.08em; text-anchor: middle; }
+.pathmap__mile--done .pathmap__label { fill: var(--gold-hi); }
+.pathmap__ball {
+  position: absolute; width: 9.5%; aspect-ratio: 1; transform: translate(-50%, -50%); pointer-events: none;
+  filter: drop-shadow(0 5px 6px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 12px rgba(255, 255, 255, 0.55));
+}
+.pathmap__ball .ball { width: 100%; height: 100%; animation: ballbob 1.3s ease-in-out infinite; }
+@keyframes ballbob { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-22%) rotate(20deg); } }
+
+.rewards { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; align-content: start; }
+.rewards__row {
+  display: grid; grid-template-columns: 52px 1fr auto; gap: 12px; align-items: center;
+  padding: 12px 14px; border-radius: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line);
+}
+.rewards__at { font: 900 28px/1 var(--f-display); color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+.rewards__what { display: grid; gap: 4px; font-weight: 700; font-size: 14.5px; min-width: 0; }
+.rewards__item { display: flex; align-items: center; gap: 8px; }
+.rewards__item .ricon { width: 18px; height: 18px; flex: none; }
+.rewards__state { font: 700 12.5px/1.2 var(--f-label); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.rewards__state svg { width: 20px; height: 20px; color: var(--good); }
+.rewards__row--won { background: linear-gradient(90deg, rgba(246, 196, 83, 0.14), rgba(246, 196, 83, 0.03)); border-color: rgba(246, 196, 83, 0.4); }
+.rewards__row--won .rewards__at { color: var(--gold); }
+
+.chapters {
+  list-style: none; margin: 0 -10px; padding: 10px 10px 16px; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 74%);
+  gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: thin;
+}
+.chapter {
+  position: relative; scroll-snap-align: start; display: grid; gap: 6px; align-content: start; padding: 18px 16px 16px; border-radius: var(--r-md); overflow: hidden;
+  background: radial-gradient(90% 70% at 100% 0%, color-mix(in srgb, var(--p1) 42%, transparent), transparent 70%), linear-gradient(165deg, color-mix(in srgb, var(--p2) 85%, #070b16), #070b16 90%);
+  border: 1px solid color-mix(in srgb, var(--p1) 38%, transparent);
+}
+.chapter__num { font: 900 54px/0.85 var(--f-display); color: var(--p1); text-shadow: 0 0 22px color-mix(in srgb, var(--p1) 60%, transparent); }
+.chapter__name { font: 800 23px/1 var(--f-display); text-transform: uppercase; letter-spacing: 0.02em; }
+.chapter__text { font-size: 13.5px; color: var(--fg-2); }
+.chapter__state { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font: 800 12px/1 var(--f-label); letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-2); }
+.chapter__state svg { width: 14px; height: 14px; }
+.chapter--now { box-shadow: 0 0 0 2px var(--gold), 0 0 34px -8px var(--p1); }
+.chapter--now .chapter__state { color: var(--gold-hi); }
+.chapter--done .chapter__state { color: var(--good); }
+.chapter--locked { filter: saturate(0.35) brightness(0.75); }
+@media (min-width: 900px) {
+  .chapters { grid-auto-flow: row; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); overflow: visible; margin: 0; padding: 0; }
+}
+
+/* the path, on the home page */
+.chemincard {
+  display: grid; gap: 6px; padding: 20px; border-radius: var(--r-lg); overflow: hidden;
+  background: radial-gradient(90% 120% at 100% 0%, color-mix(in srgb, var(--p1) 26%, transparent), transparent 65%), linear-gradient(180deg, rgba(150, 175, 255, 0.07), rgba(150, 175, 255, 0.02));
+  border: 1px solid color-mix(in srgb, var(--p1) 30%, var(--line));
+  box-shadow: var(--hairline), var(--shadow);
+}
+.chemincard__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.chemincard__name { font: 900 clamp(30px, 7vw, 42px)/0.95 var(--f-display); text-transform: uppercase; }
+.chemincard__more { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-weight: 800; font-size: 14px; color: var(--gold-hi); text-decoration: none; padding-top: 4px; }
+.chemincard__more svg { width: 16px; height: 16px; }
+.chemincard__meta { color: var(--fg-2); font-size: 14.5px; }
+.chemincard__meta strong { color: var(--fg); font: 800 18px/1 var(--f-display); }
+.chemincard__actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.chemincard__done { color: var(--muted); font-weight: 700; }

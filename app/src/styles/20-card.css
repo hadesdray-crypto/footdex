@@ -1,0 +1,410 @@
+/* ------------------------------------------------------------------ the collectible card
+   Sizes are in cqi (percent of the card's width), so one card works from 90 px to 340 px. */
+.carte {
+  --px: 50%;
+  --py: 50%;
+  --rx: 0deg;
+  --ry: 0deg;
+  --glare: 0;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 5 / 7;
+  container-type: inline-size;
+  perspective: 1100px;
+  text-align: left;
+}
+.carte--tap { cursor: pointer; }
+.carte--tap:focus-visible { outline-offset: 5px; border-radius: 6cqi; }
+.carte__tilt {
+  position: absolute; inset: 0; transform-style: preserve-3d;
+  transform: rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform 0.6s var(--ease);
+}
+.carte.is-tilting .carte__tilt { transition: transform 0.08s linear; }
+.carte--tap:not(.carte--back):hover .carte__tilt { transform: rotateX(var(--rx)) rotateY(var(--ry)) translateZ(0) scale(1.02); }
+.carte__flip { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform 0.9s cubic-bezier(0.25, 0.8, 0.25, 1); }
+.carte--back .carte__flip { transform: rotateY(180deg); }
+.carte__face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 6cqi; }
+.carte__face--back { transform: rotateY(180deg); }
+
+.carte__frame {
+  position: absolute; inset: 0; border-radius: 6cqi; padding: 2.2cqi;
+  background: var(--frame);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 3cqi 7cqi -2cqi rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(0, 0, 0, 0.45), var(--halo, 0 0 0 transparent);
+}
+.carte__inner {
+  position: relative; height: 100%; border-radius: 4.3cqi; overflow: hidden; isolation: isolate;
+  background: var(--body);
+  box-shadow: inset 0 0 0 0.5cqi rgba(0, 0, 0, 0.5);
+}
+.carte__art { position: absolute; inset: 0; z-index: 0; }
+.carte__art::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(70% 55% at 50% 36%, var(--spot), transparent 72%);
+}
+.carte__shade {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(180deg, rgba(4, 6, 12, 0.55) 0%, transparent 18%, transparent 44%, rgba(4, 6, 12, 0.82) 70%, rgba(4, 6, 12, 0.96) 100%);
+}
+
+/* top: rating and post, rarity badge */
+.carte__top {
+  position: absolute; z-index: 2; top: 4.4cqi; left: 5.4cqi; right: 4.4cqi;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 2cqi;
+}
+.carte__rating { display: grid; justify-items: center; line-height: 1; color: #fff; text-shadow: 0 0.6cqi 2cqi rgba(0, 0, 0, 0.7); }
+.carte__rating strong { font: 900 15.5cqi/0.86 var(--f-display); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.carte__rating span { font: 800 4.6cqi/1 var(--f-label); letter-spacing: 0.16em; margin-top: 1.2cqi; color: var(--accent, #fff); }
+.carte__rating--year strong { font-size: 9.5cqi; padding-top: 1cqi; }
+.carte__source { margin-top: 1cqi; font: 700 2.7cqi/1 var(--f-label); letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255, 255, 255, 0.62); white-space: nowrap; }
+.carte--sm .carte__source { display: none; }
+.carte__badge {
+  padding: 1.5cqi 3cqi 1.3cqi; border-radius: 999px;
+  font: 800 3.9cqi/1 var(--f-label); letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--badge-ink, #10131c); background: var(--badge, #e8eef8);
+  box-shadow: 0 0.6cqi 2cqi rgba(0, 0, 0, 0.45), inset 0 0.3cqi 0 rgba(255, 255, 255, 0.6);
+}
+
+/* bottom: nation, name, club, serial */
+.carte__info {
+  position: absolute; z-index: 2; left: 5.4cqi; right: 5.4cqi; bottom: 4.2cqi;
+  display: grid; gap: 0.8cqi; color: #fff; text-shadow: 0 0.4cqi 1.6cqi rgba(0, 0, 0, 0.7);
+}
+.carte__meta {
+  display: flex; gap: 2.4cqi; align-items: center;
+  font: 800 4.1cqi/1 var(--f-label); letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent, #c9d4ea);
+}
+.carte__meta span + span::before { content: ""; display: inline-block; width: 1cqi; height: 1cqi; border-radius: 50%; background: currentColor; margin-right: 2.4cqi; vertical-align: middle; opacity: 0.7; }
+.carte__name {
+  font: 900 12.4cqi/0.92 var(--f-display); letter-spacing: 0.01em; text-transform: uppercase;
+  overflow-wrap: anywhere; hyphens: auto;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.carte__club { font: 700 4.5cqi/1.2 var(--f-body); color: rgba(255, 255, 255, 0.86); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.carte__serial {
+  margin-top: 1.2cqi; padding-top: 1.6cqi; border-top: 0.3cqi solid rgba(255, 255, 255, 0.16);
+  font: 700 3.4cqi/1 var(--f-label); letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255, 255, 255, 0.55);
+  font-variant-numeric: tabular-nums;
+}
+.carte--scene .carte__name { font-size: 10cqi; }
+
+/* light: holographic foil and glare that follow the finger */
+.carte__holo, .carte__glare { position: absolute; inset: 0; z-index: 3; pointer-events: none; border-radius: inherit; }
+.carte__holo {
+  opacity: 0; mix-blend-mode: color-dodge;
+  background-size: 300% 300%; background-position: var(--px) var(--py);
+  transition: opacity 0.4s;
+  /* The foil stays light on the face, strong on the edges. */
+  -webkit-mask-image: radial-gradient(58% 44% at 50% 40%, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.25) 55%, #000 100%);
+  mask-image: radial-gradient(58% 44% at 50% 40%, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.25) 55%, #000 100%);
+}
+.carte__glare {
+  z-index: 4; mix-blend-mode: overlay; opacity: calc(var(--glare) * 0.9);
+  background: radial-gradient(circle at var(--px) var(--py), rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0) 48%);
+  transition: opacity 0.35s;
+}
+.carte.is-tilting .carte__holo { animation: none !important; }
+/* In long grids the foil stays still: only the big cards shimmer on their own (saves the phone's battery). */
+.carte--sm .carte__holo { animation: none !important; }
+.carte--sm.carte--shiny .carte__frame { animation: none; }
+.backitem .back::after { animation: none; }
+
+/* ------------------------------------------------------------------ art */
+.art__img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; position: relative; }
+.art__img--scene { object-position: 50% 50%; }
+.carte__art--face { background: radial-gradient(60% 46% at 50% 36%, #1a2824 0%, #141f1c 46%, color-mix(in srgb, var(--rc, #7aa2ff) 16%, #070b12) 100%); }
+.carte__art--face::before { display: none; }
+.carte .art__img--face {
+  position: absolute; left: 50%; top: 13cqi; width: 76cqi; height: 76cqi; transform: translateX(-50%);
+  object-fit: cover;
+  -webkit-mask-image: radial-gradient(56% 58% at 50% 46%, #000 62%, transparent 100%);
+  mask-image: radial-gradient(56% 58% at 50% 46%, #000 62%, transparent 100%);
+}
+.tile__art .art__img--face, .viewer .art__img--face { image-rendering: auto; }
+
+/* No picture: the club shirt with the player's number. */
+.art__number, .art__initials {
+  position: relative; width: 100%; height: 100%; display: grid; place-items: start center;
+  color: var(--kit-ink, #fff);
+  background:
+    radial-gradient(70% 50% at 50% 30%, color-mix(in srgb, var(--kit, #2a3b52) 55%, transparent), transparent 75%),
+    linear-gradient(180deg, color-mix(in srgb, var(--kit, #2a3b52) 30%, #070b14), #070b14 80%);
+}
+.art__number::before, .art__initials::before {
+  content: ""; position: absolute; left: 50%; top: 9cqi; width: 78cqi; height: 78cqi; transform: translateX(-50%);
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 4cqi, transparent 4cqi 8cqi),
+    linear-gradient(180deg, color-mix(in srgb, var(--kit, #2a3b52) 80%, white), var(--kit, #2a3b52) 45%, color-mix(in srgb, var(--kit, #2a3b52) 75%, black));
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M31 7L42 3Q50 9 58 3L69 7L93 21L84 41L74 36L74 93Q50 97 26 93L26 36L16 41L7 21Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M31 7L42 3Q50 9 58 3L69 7L93 21L84 41L74 36L74 93Q50 97 26 93L26 36L16 41L7 21Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 0 0.35cqi rgba(255, 255, 255, 0.45)) drop-shadow(0 2cqi 4cqi rgba(0, 0, 0, 0.5));
+}
+.art__number {
+  padding-top: 31cqi;
+  font: 900 30cqi/1 var(--f-display); font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+}
+.art__initials { padding-top: 34cqi; font: 900 20cqi/1 var(--f-display); letter-spacing: 0.04em; }
+.art__number, .art__initials { text-shadow: 0 0.6cqi 0 rgba(0, 0, 0, 0.25); isolation: isolate; }
+.art__number::before, .art__initials::before { z-index: -1; }
+
+/* Matches without a picture: a pitch at night and the scoreboard. */
+.art__scene {
+  width: 100%; height: 100%; display: block; position: relative;
+  background:
+    radial-gradient(80% 50% at 50% 0%, rgba(220, 235, 255, 0.25), transparent 70%),
+    repeating-linear-gradient(90deg, #1d6b41 0 12%, #1a613b 12% 24%);
+}
+.art__scene-pitch { position: absolute; inset: 12% 9% 34%; border: 0.7cqi solid rgba(255, 255, 255, 0.6); border-radius: 1cqi; }
+.art__scene-pitch::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; border-left: 0.7cqi solid rgba(255, 255, 255, 0.6); }
+.art__scene-pitch::after { content: ""; position: absolute; left: 50%; top: 50%; width: 20cqi; height: 20cqi; transform: translate(-50%, -50%); border: 0.7cqi solid rgba(255, 255, 255, 0.6); border-radius: 50%; }
+.art__board {
+  position: absolute; left: 50%; top: 36%; transform: translate(-50%, -50%);
+  display: grid; grid-template-columns: auto auto; gap: 1.4cqi 4cqi; align-items: center;
+  padding: 3cqi 5cqi; border-radius: 2cqi; color: #f4e7c4; white-space: nowrap;
+  background: linear-gradient(180deg, #11151f, #05070c); border: 0.8cqi solid rgba(246, 196, 83, 0.55);
+  box-shadow: 0 2cqi 6cqi rgba(0, 0, 0, 0.6), 0 0 6cqi rgba(246, 196, 83, 0.25);
+  font: 800 5.2cqi/1.1 var(--f-label); letter-spacing: 0.08em; text-transform: uppercase;
+}
+.art__board strong { font: 900 9cqi/1 var(--f-display); color: var(--gold-hi); text-align: right; text-shadow: 0 0 3cqi rgba(246, 196, 83, 0.6); }
+
+/* ------------------------------------------------------------------ rarity materials */
+.carte--base {
+  --frame: linear-gradient(150deg, #f4f7fc 0%, #9aa6ba 22%, #eef2f8 40%, #6b778b 62%, #cdd5e2 80%, #858fa3 100%);
+  --body: #0f1726; --spot: rgba(160, 185, 230, 0.35); --accent: #c9d4ea; --badge: #e3e9f4; --rc: #c9d4ea;
+}
+.carte--rare {
+  --frame: linear-gradient(150deg, #ffc8d2 0%, #e0284f 24%, #ffa3b5 44%, #8e0f2c 66%, #ff5a76 86%, #6b0a20 100%);
+  --body: #1c0710; --spot: rgba(255, 90, 118, 0.5); --accent: #ff9aae;
+  --badge: linear-gradient(180deg, #ff9aae, #e0284f); --badge-ink: #fff;
+  --halo: 0 0 7cqi -1cqi rgba(255, 90, 118, 0.45);
+}
+.carte--rare .carte__holo {
+  opacity: 0.32;
+  background-image: repeating-linear-gradient(115deg, transparent 0%, rgba(255, 150, 175, 0.6) 2.5%, transparent 5%, transparent 8%);
+}
+.carte--eclat {
+  --frame: linear-gradient(150deg, #fff7d0 0%, #e8b13a 20%, #fff2ae 38%, #b07a12 58%, #ffd86a 78%, #8a5a0a 100%);
+  --body: #151003; --spot: rgba(255, 207, 79, 0.55); --accent: #ffd76a;
+  --badge: linear-gradient(180deg, #fff2ae, #f2b632); --badge-ink: #241703;
+  --halo: 0 0 9cqi 0 rgba(255, 207, 79, 0.5);
+}
+.carte--eclat .carte__holo {
+  opacity: 0.48;
+  background-image: linear-gradient(115deg, transparent 25%, rgba(255, 226, 140, 0.85) 42%, rgba(255, 255, 255, 0.95) 50%, rgba(255, 200, 90, 0.8) 58%, transparent 75%);
+  animation: glint 5s ease-in-out infinite;
+}
+.carte--legende {
+  --frame: linear-gradient(150deg, #fffdf6 0%, #d9c29a 24%, #fff6de 44%, #9c8458 66%, #f1e3c2 86%, #7d6a45 100%);
+  --body: #18130b; --spot: rgba(243, 226, 184, 0.45); --accent: #f3e2b8;
+  --badge: linear-gradient(180deg, #fffaf0, #d9c29a); --badge-ink: #2a2010;
+  --halo: 0 0 9cqi 0 rgba(243, 226, 184, 0.45);
+}
+.carte--legende .art__img:not(.art__img--face) { filter: sepia(0.28) saturate(0.85) contrast(1.06); }
+.carte--legende .carte__holo {
+  opacity: 0.45;
+  background-image: linear-gradient(125deg, transparent 22%, rgba(255, 240, 210, 0.75) 44%, rgba(190, 215, 255, 0.55) 54%, transparent 78%);
+  animation: glint 7s ease-in-out infinite;
+}
+.carte--moment {
+  --frame: linear-gradient(150deg, #8af3ff 0%, #6b7bff 25%, #ff7ae0 50%, #ffe27a 75%, #8af3ff 100%);
+  --body: #090e28; --spot: rgba(138, 243, 255, 0.4); --accent: #8af3ff;
+  --badge: linear-gradient(90deg, #8af3ff, #ff9ce8); --badge-ink: #10102a;
+  --halo: 0 0 9cqi 0 rgba(138, 243, 255, 0.4);
+}
+.carte--moment .carte__holo {
+  opacity: 0.4;
+  background-image: linear-gradient(115deg, rgba(138, 243, 255, 0.35) 10%, rgba(255, 122, 224, 0.45) 30%, rgba(255, 226, 122, 0.4) 50%, rgba(156, 255, 138, 0.3) 70%, rgba(156, 139, 255, 0.45) 90%);
+  animation: glint 6s ease-in-out infinite;
+}
+/* Brillante: any card can come out in rainbow foil. */
+.carte--shiny .carte__frame {
+  background: conic-gradient(from var(--spin), #ff7ae0, #ffe27a, #8af3ff, #9cff8a, #9c8bff, #ff7ae0);
+  animation: spin 5s linear infinite;
+  --halo: 0 0 10cqi 1cqi rgba(255, 122, 224, 0.45);
+}
+.carte--shiny .carte__holo {
+  opacity: 0.5;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.9) 0 0.5cqi, transparent 0.8cqi),
+    radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.8) 0 0.4cqi, transparent 0.7cqi),
+    repeating-linear-gradient(110deg, #ff7ae0 0%, #ffe27a 5%, #8af3ff 10%, #9cff8a 15%, #9c8bff 20%, #ff7ae0 25%);
+  background-size: 18cqi 18cqi, 13cqi 13cqi, 300% 300%;
+  animation: holo 7s linear infinite;
+}
+.carte--shiny .carte__badge { background: conic-gradient(from 90deg, #ff9ce8, #ffe27a, #8af3ff, #9cff8a, #ff9ce8); color: #1a1030; }
+@keyframes glint { 0%, 100% { background-position: 100% 30%; } 50% { background-position: 0% 70%; } }
+@keyframes holo { to { background-position: 0 0, 0 0, 300% 0; } }
+@keyframes spin { to { --spin: 360deg; } }
+
+/* ------------------------------------------------------------------ flags on a card */
+.carte__flag {
+  position: absolute; z-index: 5; left: 50%; top: -2.6cqi; transform: translateX(-50%);
+  padding: 1.8cqi 4cqi 1.6cqi; border-radius: 999px; white-space: nowrap;
+  font: 800 4.4cqi/1 var(--f-label); letter-spacing: 0.14em; text-transform: uppercase;
+  color: #fff; background: rgba(9, 14, 28, 0.92); border: 0.4cqi solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 1cqi 4cqi rgba(0, 0, 0, 0.6);
+}
+.carte__flag--new { background: linear-gradient(180deg, #ff7d93, #e3214a); border-color: rgba(255, 200, 210, 0.7); box-shadow: 0 0 6cqi rgba(255, 70, 110, 0.6); animation: stamp 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+.carte__flag--stars { background: linear-gradient(180deg, #fff0b8, var(--gold)); color: var(--gold-ink); border-color: rgba(255, 245, 210, 0.8); }
+.carte__flag--count { left: auto; right: 3cqi; top: auto; bottom: 3cqi; transform: none; padding: 1.8cqi 3cqi; background: rgba(9, 14, 28, 0.9); border-color: rgba(246, 196, 83, 0.6); color: var(--gold-hi); }
+@keyframes stamp { from { transform: translateX(-50%) scale(2.2) rotate(-8deg); opacity: 0; } to { transform: translateX(-50%) scale(1) rotate(0); opacity: 1; } }
+
+/* ------------------------------------------------------------------ card backs */
+.back {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4.5cqi;
+  overflow: hidden; border-radius: 6cqi; color: var(--gold-hi);
+  background:
+    radial-gradient(circle at 50% 45%, rgba(246, 196, 83, 0.28), transparent 52%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.035) 0 2cqi, transparent 2cqi 4cqi),
+    linear-gradient(160deg, #15224a, #070b16 75%);
+  box-shadow: inset 0 0 0 2cqi #b98a2e, inset 0 0 0 2.6cqi rgba(0, 0, 0, 0.5), inset 0 0 0 3.6cqi rgba(246, 196, 83, 0.35), 0 3cqi 7cqi -2cqi rgba(0, 0, 0, 0.75);
+}
+.carte__face--back { display: flex; }
+.carte__monogram {
+  width: 34cqi; height: 34cqi; border-radius: 50%; display: grid; place-items: center;
+  font: 900 22cqi/1 var(--f-display); color: var(--gold-ink);
+  background: radial-gradient(circle at 35% 28%, #fff4c8, var(--gold) 50%, var(--gold-deep));
+  box-shadow: 0 0 0 1.6cqi rgba(255, 255, 255, 0.1), 0 0 10cqi rgba(246, 196, 83, 0.5);
+}
+.carte__backword { font: 900 7.4cqi/1 var(--f-display); letter-spacing: 0.32em; padding-left: 0.32em; }
+.back::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.18) 48%, transparent 60%) 0 0 / 300% 100%;
+  animation: glint 6s ease-in-out infinite;
+}
+.back--dos-1 {
+  color: #fff;
+  background:
+    linear-gradient(0deg, transparent calc(50% - 0.35cqi), rgba(255, 255, 255, 0.75) calc(50% - 0.35cqi) calc(50% + 0.35cqi), transparent calc(50% + 0.35cqi)),
+    radial-gradient(circle at 50% 50%, transparent 24cqi, rgba(255, 255, 255, 0.75) 24cqi 24.8cqi, transparent 25.2cqi),
+    repeating-linear-gradient(0deg, #1f8452 0 11cqi, #1a7447 11cqi 22cqi);
+  box-shadow: inset 0 0 0 2cqi #f4f7fc, inset 0 0 0 2.6cqi rgba(0, 0, 0, 0.3), inset 0 0 0 5.5cqi rgba(255, 255, 255, 0.55), 0 3cqi 7cqi -2cqi rgba(0, 0, 0, 0.75);
+}
+.back--dos-1 .carte__monogram { background: radial-gradient(circle at 35% 28%, #fff, #e6ecf6 55%, #9aa6ba); color: #0e3d26; }
+.back--dos-2 {
+  color: #c8f6ff;
+  background:
+    radial-gradient(circle, rgba(56, 200, 224, 0.4) 0 1.4cqi, transparent 1.7cqi) 0 0 / 9cqi 9cqi,
+    radial-gradient(circle at 50% 45%, rgba(56, 200, 224, 0.35), transparent 55%),
+    linear-gradient(160deg, #0b4a58, #04161c 80%);
+  box-shadow: inset 0 0 0 2cqi #38c8e0, inset 0 0 0 2.6cqi rgba(0, 0, 0, 0.45), 0 3cqi 7cqi -2cqi rgba(0, 0, 0, 0.75);
+}
+.back--dos-2 .carte__monogram { background: radial-gradient(circle at 35% 28%, #e8fcff, #38c8e0 55%, #0b6474); color: #032128; box-shadow: 0 0 10cqi rgba(56, 200, 224, 0.6); }
+.back--dos-3 {
+  color: #f5f8ff;
+  background:
+    conic-gradient(from 150deg at 0% 0%, transparent 0deg, rgba(255, 255, 235, 0.3) 12deg, transparent 26deg),
+    conic-gradient(from 184deg at 100% 0%, transparent 0deg, rgba(255, 255, 235, 0.3) 12deg, transparent 26deg),
+    radial-gradient(circle at 50% 110%, rgba(52, 211, 153, 0.35), transparent 55%),
+    linear-gradient(180deg, #050814, #0d1a3a);
+  box-shadow: inset 0 0 0 2cqi #dfe7ff, inset 0 0 0 2.6cqi rgba(0, 0, 0, 0.45), 0 3cqi 7cqi -2cqi rgba(0, 0, 0, 0.75);
+}
+.back--dos-3 .carte__monogram { background: radial-gradient(circle at 35% 28%, #fff, #dfe7ff 55%, #7a8db8); color: #08112a; box-shadow: 0 0 12cqi rgba(220, 230, 255, 0.6); }
+.back--dos-4 {
+  color: #dbe6ff;
+  background:
+    repeating-radial-gradient(circle at 50% 45%, transparent 0 7cqi, rgba(255, 255, 255, 0.12) 7cqi 7.4cqi),
+    repeating-linear-gradient(90deg, transparent 0 9cqi, rgba(255, 255, 255, 0.07) 9cqi 9.4cqi),
+    radial-gradient(circle at 50% 45%, #3a63e0, #0d1a4d 70%);
+  box-shadow: inset 0 0 0 2cqi #6f8bff, inset 0 0 0 2.6cqi rgba(0, 0, 0, 0.45), 0 3cqi 7cqi -2cqi rgba(0, 0, 0, 0.75);
+}
+.back--dos-4 .carte__monogram { background: radial-gradient(circle at 35% 28%, #fff, #9fb4ff 55%, #2c48b8); color: #07123a; }
+.back--dos-5 {
+  background:
+    radial-gradient(circle at 20% 30%, #f6c453 0 0.8cqi, transparent 1.1cqi) 0 0 / 14cqi 14cqi,
+    radial-gradient(circle at 70% 60%, #fff3c4 0 0.6cqi, transparent 0.9cqi) 0 0 / 11cqi 11cqi,
+    radial-gradient(circle at 40% 80%, #ff9a4a 0 0.6cqi, transparent 0.9cqi) 0 0 / 17cqi 17cqi,
+    radial-gradient(circle at 50% 45%, rgba(246, 196, 83, 0.35), transparent 55%),
+    linear-gradient(160deg, #1d1606, #050403);
+}
+.back--dos-6 {
+  color: #3a2c12;
+  background:
+    repeating-linear-gradient(90deg, rgba(150, 120, 60, 0.13) 0 3cqi, transparent 3cqi 10cqi),
+    linear-gradient(115deg, #ece7db, #cfc6b4 30%, #f5f1e8 45%, #bfb5a0 70%, #efe9dd);
+  box-shadow: inset 0 0 0 2cqi #b98a2e, inset 0 0 0 2.6cqi rgba(0, 0, 0, 0.2), inset 0 0 0 3.6cqi rgba(255, 255, 255, 0.6), 0 3cqi 7cqi -2cqi rgba(0, 0, 0, 0.75);
+}
+.back--dos-7 {
+  color: #fff;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.35), transparent 50%),
+    conic-gradient(from var(--spin), #ff7ae0, #ffe27a, #8af3ff, #9cff8a, #9c8bff, #ff7ae0);
+  animation: spin 9s linear infinite;
+  box-shadow: inset 0 0 0 2cqi rgba(255, 255, 255, 0.85), inset 0 0 0 2.6cqi rgba(0, 0, 0, 0.3), 0 3cqi 7cqi -2cqi rgba(0, 0, 0, 0.75);
+}
+.back--dos-7 .carte__monogram { background: radial-gradient(circle at 35% 28%, #fff, #fff3c4 50%, #f6c453); }
+
+/* ------------------------------------------------------------------ tiles (long lists) */
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(46%, 172px), 1fr)); gap: 12px; }
+.tile {
+  --edge: var(--r-base);
+  position: relative; display: grid; grid-template-rows: auto 1fr; overflow: hidden; min-width: 0;
+  border-radius: 16px; text-decoration: none; color: var(--fg);
+  background: linear-gradient(180deg, rgba(150, 175, 255, 0.08), rgba(150, 175, 255, 0.02));
+  border: 1px solid var(--line);
+  box-shadow: var(--hairline);
+  transition: transform 0.25s var(--ease), border-color 0.25s, box-shadow 0.25s;
+}
+.tile::before { content: ""; position: absolute; inset: 0 0 auto; height: 3px; z-index: 2; background: var(--edge); box-shadow: 0 0 14px var(--edge); }
+.tile:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--edge) 55%, transparent); box-shadow: var(--hairline), 0 16px 34px -22px color-mix(in srgb, var(--edge) 70%, black); }
+.tile--rare { --edge: var(--r-rare); }
+.tile--eclat { --edge: var(--r-eclat); }
+.tile--legende { --edge: var(--r-legende); }
+.tile--moment { --edge: var(--r-moment); }
+.tile__art { position: relative; aspect-ratio: 1; background: #141f1c; container-type: inline-size; overflow: hidden; }
+.tile__art .art__img--face { object-fit: cover; }
+.tile__art .art__number { padding-top: 34cqi; font-size: 34cqi; }
+.tile__art .art__number::before, .tile__art .art__initials::before { top: 8cqi; width: 84cqi; height: 84cqi; }
+.tile__art .art__initials { padding-top: 38cqi; font-size: 22cqi; }
+.tile__art .art__board { font-size: 7cqi; }
+.tile__art .art__board strong { font-size: 11cqi; }
+.tile__art .art__scene-pitch { inset: 14% 10% 14%; }
+.tile__art .art__board { top: 50%; }
+.tile__rating {
+  position: absolute; top: 7px; left: 7px; z-index: 1; display: grid; justify-items: center; min-width: 36px; padding: 4px 6px 3px; border-radius: 9px;
+  background: rgba(7, 11, 22, 0.82); color: #fff; font: 900 19px/1 var(--f-display); text-align: center;
+  border: 1px solid color-mix(in srgb, var(--edge) 60%, transparent);
+}
+.tile__rating small { font: 800 9px/1 var(--f-label); letter-spacing: 0.14em; color: var(--edge); margin-top: 2px; }
+.tile__rarity {
+  position: absolute; top: 8px; right: 8px; z-index: 1; padding: 4px 8px 3px; border-radius: 999px;
+  font: 800 10px/1 var(--f-label); letter-spacing: 0.14em; text-transform: uppercase; color: #0b0f1a; background: var(--edge);
+}
+.tile__body { display: grid; gap: 3px; padding: 10px 11px 12px; min-width: 0; align-content: start; }
+.tile__name { font: 800 19px/1 var(--f-display); letter-spacing: 0.01em; text-transform: uppercase; overflow-wrap: anywhere; }
+.tile__sub { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile__meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; font: 700 11.5px/1.2 var(--f-label); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.tile__owned { color: var(--good); }
+.tile__fav { margin-left: auto; color: #ff7d93; display: inline-flex; }
+.tile__fav svg { width: 15px; height: 15px; fill: currentColor; }
+
+/* ------------------------------------------------------------------ a card held up to the light */
+.viewer {
+  position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; overflow-y: auto;
+  padding-top: max(16px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  padding-left: var(--gutter-l); padding-right: var(--gutter-r);
+  animation: fadein 0.25s ease both;
+}
+.viewer__backdrop {
+  position: fixed; inset: 0; border: 0; padding: 0; cursor: default;
+  background: radial-gradient(60% 50% at 50% 40%, color-mix(in srgb, var(--rc) 22%, rgba(5, 8, 16, 0.92)), rgba(3, 5, 10, 0.96));
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.viewer__inner { position: relative; display: grid; gap: 18px; justify-items: center; width: min(100%, 860px); padding-block: 40px 10px; }
+.viewer__close { position: absolute; top: 0; right: 0; }
+.viewer__card { width: min(72vw, 330px, calc((100vh - 330px) * 5 / 7)); min-width: 200px; animation: viewin 0.6s var(--ease) both; }
+.viewer__text { display: grid; gap: 6px; text-align: center; justify-items: center; max-width: 46ch; }
+.viewer__rarity { font: 700 12.5px/1.3 var(--f-label); letter-spacing: 0.2em; text-transform: uppercase; color: var(--rc); }
+.viewer__name { font: 900 clamp(34px, 8vw, 54px)/0.95 var(--f-display); text-transform: uppercase; }
+.viewer__sub { color: var(--fg-2); }
+.viewer__own { font-size: 14px; color: var(--muted); }
+.viewer__actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 8px; }
+@media (min-width: 760px) {
+  .viewer__inner { grid-template-columns: auto 1fr; align-items: center; justify-items: start; gap: 40px; }
+  .viewer__text { text-align: left; justify-items: start; }
+  .viewer__actions { justify-content: flex-start; }
+}
+@keyframes viewin { from { opacity: 0; transform: translateY(40px) rotateX(18deg) scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }

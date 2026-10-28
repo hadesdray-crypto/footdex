@@ -1,0 +1,16 @@
+{
+  "name": "footdex",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Footdex, l'almanach du football de Raphaël",
+  "scripts": {
+    "build": "node tools/build-app.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-icons": "5.7.0"
+  }
+}

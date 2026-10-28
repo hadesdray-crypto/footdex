@@ -1,0 +1,107 @@
+{
+ "certitude": [
+  {
+   "title": "Les 14 matchs racontés",
+   "rate": "95 %",
+   "sure": "Les scores et les dates tiennent. Relus le 19 octobre 2026 : finale 2018 France 4-2 Croatie, finale 2022 Argentine 3-3 France puis 4-2 aux tirs au but, finale 2026 Espagne 1-0 Argentine (Ferran Torres, 106e), petite finale 2026 France 4-6 Angleterre.",
+   "sources": "FIFA pour les vieilles finales. The Guardian et Sky Sports pour la finale 2026. Sofascore, Eurosport et Équipe de France pour le 4-6. UEFA pour l'Euro 2000 et l'Euro 1984. BBC et UEFA pour le Ballon d'Or 2025 de Dembélé et le 5-0 du PSG.",
+   "doubt": "Les minutes exactes des vieux matchs viennent des mêmes comptes rendus, pas d'une vidéo revue image par image aujourd'hui. Rien n'a été enlevé."
+  },
+  {
+   "title": "Les fiches de l'album",
+   "rate": "80 %",
+   "sure": "Les naissances, les Ballons d'Or et les grandes carrières sont les faits connus. Giroud est encore à Lille (L'Équipe, juin 2026, et StatMuse le 17 octobre 2026).",
+   "sources": "AP et AS USA, 9 octobre 2026, pour Ronaldo à Al-Nassr. AS et ESPN, 15 octobre 2026, pour Messi à l'Inter Miami. Maxifoot et WorldFootball, 19 octobre 2026, pour Kanté à Fenerbahçe. beIN Sports, 16 octobre 2026, pour Benzema sans club confirmé après Al-Hilal.",
+   "doubt": "Le maillot dessiné sur la fiche est souvent le club de l'histoire, pas celui d'octobre 2026. Ronaldo est dessiné au Real, il joue à Al-Nassr. Messi est dessiné à Barcelone et au PSG, il joue à l'Inter Miami. Kanté est noté Chelsea, il joue à Fenerbahçe. Ces lignes n'ont pas été effacées : ce sont des clubs de carrière. Certitude sur le club d'aujourd'hui, pour ces trois-là : le maillot de la fiche n'est pas le club actuel."
+  },
+  {
+   "title": "Ligue 1 et Ligue 2, 22 842 scores",
+   "rate": "85 %",
+   "sure": "Le fichier est entier : aucun score vide, aucun score impossible, aucun match en double. Les scores du 16 au 18 octobre 2026 ont déjà été recoupés sur trois sites français.",
+   "sources": "football-data.co.uk jusqu'au 12 octobre 2026. football.fr, footballdatabase et mon-match pour le week-end du 16 au 18 octobre.",
+   "doubt": "Je n'ai pas rouvert les 22 842 pages une par une aujourd'hui. Un vieux fichier peut garder une erreur isolée. C'est pour ça que ce n'est pas 100 %."
+  },
+  {
+   "title": "49 945 matchs des pays",
+   "rate": "80 %",
+   "sure": "Le premier match, Écosse 0-0 Angleterre le 30 novembre 1872, est le bon. Les finales 2018, 2022 et 2026 citées plus haut correspondent au fichier et aux articles.",
+   "sources": "Base publique de Mart Jürisoo, la même que le fichier des résultats internationaux, à jour au 6 octobre 2026.",
+   "doubt": "49 945 matchs ne peuvent pas être relus un par un dans une journée. Les matchs amicaux obscurs sont les moins sûrs. Rien n'a été retiré."
+  },
+  {
+   "title": "1 068 matchs de Coupe du monde",
+   "rate": "90 %",
+   "sure": "C'est le filtre « Coupe du monde » du même fichier. Les finales célèbres ont été revues. Chaque match a un score.",
+   "sources": "Même base, plus les articles de la finale et de la petite finale 2026.",
+   "doubt": "Les matchs de groupes anciens n'ont pas été revus un par un aujourd'hui."
+  },
+  {
+   "title": "988 joueurs de Ligue 1 et de Ligue 2",
+   "rate": "75 %",
+   "sure": "Les noms, postes et numéros viennent des effectifs Wikipédia, avec la date écrite sur la fiche.",
+   "sources": "Wikipédia pour l'effectif. Wikidata pour 153 dates de naissance, seulement quand le club correspondait. EA Sports FC 24, septembre 2023, pour 345 autres dates, tailles et pieds.",
+   "doubt": "Un effectif bouge. Une date prise dans le jeu de 2023 n'est pas un acte de naissance. Si la fiche n'a pas de date, c'est qu'aucune source sûre n'a été trouvée."
+  },
+  {
+   "title": "18 311 fiches du jeu",
+   "rate": "100 % sur le fichier, pas sur le football réel",
+   "sure": "Chaque ligne recopie le fichier de septembre 2023 : note, poste, salaire du jeu, taille, pied. 15 954 visuels sont dans le téléphone. Les 2 357 autres disent « Pas de visuel ».",
+   "sources": "Export public EA Sports FC 24, septembre 2023. Visuels du jeu, liés au numéro du joueur.",
+   "doubt": "Le club et la note ne sont pas ceux d'octobre 2026. Mbappé y est encore au Paris Saint-Germain. Ce n'est pas une erreur de copie : c'est l'âge du fichier. Certitude que ces notes sont de vraies statistiques de match : 0 %. Elles ne le prétendent pas."
+  },
+  {
+   "title": "1 038 clubs recollés le 19 octobre 2026",
+   "rate": "80 % sur ces fiches-là, 0 % sur les autres",
+   "sure": "621 joueurs de Ligue 1 et de Ligue 2 ont leur club et leur poste d'effectif Wikipédia recollés sur la fiche du jeu, quand le nom correspondait exactement. 417 joueurs de Premier League ont le club et le numéro de la liste officielle du 22 septembre 2026. Haaland y est numéro 9 à Manchester City. Saka y est numéro 7 à Arsenal.",
+   "sources": "Premier League, « All 20 clubs' squad numbers for 2026/27 », publié le 22 septembre 2026, 566 joueurs lus. Wikipédia, effectifs de Ligue 1 et de Ligue 2 déjà dans l'application.",
+   "doubt": "Il reste environ 17 000 fiches du jeu sans club réel plus récent. Aucun fichier public gratuit du 19 octobre 2026 ne couvre les 18 000 joueurs du monde avec leur poste. Je n'ai pas inventé ces postes. Les forums ne sont pas une source assez sûre pour les écrire."
+  }
+ ],
+ "plus": [
+  {
+   "to": "/coupes",
+   "title": "Coupes",
+   "text": "Coupe de France, Ligue Europa, CAN, Copa América, Ballon d'Or."
+  },
+  {
+   "to": "/clubs",
+   "title": "Clubs",
+   "text": "Huit maisons pour se repérer."
+  },
+  {
+   "to": "/saison",
+   "title": "Saison 2026-2027",
+   "text": "804 joueurs, 36 stades, et les prochains matchs de Ligue 1."
+  },
+  {
+   "to": "/lexique",
+   "title": "Lexique",
+   "text": "But en or, VAR, hors-jeu, en clair."
+  },
+  {
+   "to": "/defi",
+   "title": "Défi",
+   "text": "Dix questions. Les réponses sont dans l'album."
+  },
+  {
+   "to": "/archives",
+   "title": "Archives",
+   "text": "Les scores de Ligue 1 et de Ligue 2, les matchs des pays depuis 1872, et la Coupe du monde."
+  },
+  {
+   "to": "/jeu",
+   "title": "Fiches du jeu",
+   "text": "18 311 joueurs, avec toutes les colonnes du fichier de septembre 2023."
+  },
+  {
+   "to": "/certitude",
+   "title": "Certitude",
+   "text": "Les sources, et le taux pour chaque rayon. Rien n'a été effacé."
+  },
+  {
+   "to": "/maj",
+   "title": "Mise à jour",
+   "text": "L'édition du 19 octobre 2026, et le téléphone."
+  }
+ ]
+}

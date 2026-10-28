@@ -1,0 +1,52 @@
+/* La carte du monde */
+.carte { display: grid; gap: 14px; }
+.carte__bar { display: grid; gap: 8px; }
+.carte__count { margin: 0; font-size: 13px; color: var(--muted); }
+.carte__count strong { color: var(--gold-hi); font: 800 18px/1 var(--f-display); }
+.carte__map {
+  position: relative; height: min(46vh, 460px); min-height: 280px; overflow: hidden; border-radius: 20px; border: 1px solid var(--line-2);
+  touch-action: none; cursor: grab; -webkit-user-select: none; user-select: none; box-shadow: 0 20px 50px -26px #000;
+}
+.carte__map:active { cursor: grabbing; }
+.carte__svg { display: block; }
+.carte__grid { fill: none; stroke: #9db6ff; stroke-opacity: 0.13; stroke-width: 1; }
+.carte__land { stroke: #0b2f25; stroke-width: 1.2; stroke-linejoin: round; }
+.carte__lake { fill: #0f2a5b; stroke: #0b2f25; stroke-width: 1; }
+.carte__route { fill: none; stroke: var(--gold); stroke-width: 3; stroke-dasharray: 2 9; stroke-linecap: round; filter: drop-shadow(0 0 4px #f6c453); }
+.pin { cursor: pointer; outline: none; }
+.pin__hit { fill: transparent; }
+.pin__dot { transition: r 0.2s; filter: drop-shadow(0 2px 3px #000a); }
+.pin.is-on .pin__dot { filter: drop-shadow(0 0 8px #fff6); }
+.pin:focus-visible .pin__dot { stroke: #fff; }
+.pin__pulse { opacity: 0.5; animation: pin-pulse 1.4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes pin-pulse { 0% { transform: scale(0.8); opacity: 0.7; } 100% { transform: scale(2.6); opacity: 0; } }
+.pin__label { font: 800 11px/1 var(--f-body); fill: #fff; paint-order: stroke; stroke: #050914; stroke-width: 3.4px; stroke-linejoin: round; pointer-events: none; }
+.carte__zoom { position: absolute; right: 10px; top: 10px; display: grid; gap: 6px; }
+.carte__zoom button { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line-2); background: #0c1324d9; color: var(--fg); display: grid; place-items: center; backdrop-filter: blur(6px); }
+.carte__zoom svg { width: 20px; height: 20px; }
+.carte__legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+.carte__legend i, .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.carte__legend i.hollow { background: transparent; border: 2px solid var(--muted); width: 10px; height: 10px; box-sizing: border-box; }
+.carte__sheet { display: grid; gap: 8px; padding: 16px; border-radius: 20px; border: 1px solid rgba(246, 196, 83, 0.32); background: linear-gradient(160deg, #96afff17, #96afff05); }
+.carte__sheet h2 { margin: 0; font: 900 28px/1 var(--f-display); letter-spacing: 0.03em; text-transform: uppercase; }
+.carte__sheet p { margin: 0; line-height: 1.5; }
+.carte__sheet .eyebrow { display: flex; align-items: center; gap: 6px; }
+.carte__sheet .eyebrow svg { width: 16px; height: 16px; }
+.carte__note { color: var(--gold-hi); font-weight: 700; }
+.carte__sheet--tour { border-color: var(--gold); box-shadow: 0 0 30px -14px var(--gold); }
+.carte__links, .carte__nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.carte__nav .btn { flex: 1; justify-content: center; }
+.carte__tours { display: grid; gap: 8px; }
+.carte__tour {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 10px 14px; border-radius: 18px; text-align: left; color: var(--fg);
+  border: 1px solid var(--line); background: linear-gradient(160deg, #96afff17, #96afff05);
+}
+.carte__tour > svg:first-child { width: 26px; height: 26px; color: var(--gold); flex: none; }
+.carte__tour > svg:last-child { width: 20px; height: 20px; margin-left: auto; color: var(--muted); }
+.carte__tour span { display: grid; gap: 2px; }
+.carte__tour em { font-style: normal; font-size: 13px; color: var(--muted); }
+.carte__list ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.carte__list li button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); background: #00000030; color: var(--fg); text-align: left; }
+.carte__list li i { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+.carte__list li span { display: grid; gap: 1px; }
+.carte__list li em { font-style: normal; font-size: 12.5px; color: var(--muted); }

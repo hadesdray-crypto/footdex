@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="FOOTDEX">
+  <rect width="32" height="32" rx="7" fill="#0b1222"/>
+  <circle cx="16" cy="16.2" r="10.4" fill="none" stroke="#f6c453" stroke-width="1.6"/>
+  <circle cx="16" cy="16.2" r="8.6" fill="#f4f6fb"/>
+  <path fill="#141b2c" d="M16 10 19.3 12.4 18 16.2 14 16.2 12.7 12.4Z"/>
+  <path fill="#141b2c" d="M12.5 12.9 9.9 14.5 10.7 17.4 13.6 16.6Z"/>
+  <path fill="#141b2c" d="M19.5 12.9 22.1 14.5 21.3 17.4 18.4 16.6Z"/>
+  <path fill="#141b2c" d="M13.7 17 11.7 19.2 13.8 21.9 16 19.9Z"/>
+  <path fill="#141b2c" d="M18.3 17 20.3 19.2 18.2 21.9 16 19.9Z"/>
+</svg>

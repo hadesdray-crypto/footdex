@@ -1,0 +1,524 @@
+{
+ "summary": {
+  "album": 1050,
+  "gameCards": 731,
+  "fc24": 18311,
+  "fc26": 18405,
+  "people": 25229,
+  "faces": 15954,
+  "fc24Chunks": 8,
+  "ligues": 22842,
+  "pays": 49945,
+  "wikiPlayers": 988,
+  "reel": 1038,
+  "fifaHistory": 10,
+  "portraits": 44,
+  "portraitsSmall": 35
+ },
+ "files": {
+  "img/une-800.webp": {
+   "bytes": 29068,
+   "sha256": "f406eef3462eca3df06b781b9398f3fd0d87fe501576077468df82f3466e0092"
+  },
+  "img/une.webp": {
+   "bytes": 166814,
+   "sha256": "7c2020342dc670b5402c3251a1a3aaf27e8fe288e4cb60b88b5313bc8aad748f"
+  },
+  "img/players/papin.webp": {
+   "bytes": 20610,
+   "sha256": "eedb44519d1695cb73055783d28fa891813d73a3c2848ab64d15eb2f3dc1ab9a"
+  },
+  "img/players/kopa.webp": {
+   "bytes": 20250,
+   "sha256": "711cd183a1bbf181de7ea0dfb63f1a8d4a84fa3b789595cc75505ecaff78a43e"
+  },
+  "img/players/zidane.webp": {
+   "bytes": 10552,
+   "sha256": "3908ead263865da8fd2828a1575befd14c91fce50741972158ec870d1cd84694"
+  },
+  "img/players/dembele.webp": {
+   "bytes": 36814,
+   "sha256": "4a6419534cd1885b15704a8f136bf430277ff7531b6e6f001e60fb5c3b3695cf"
+  },
+  "img/players/savidan.webp": {
+   "bytes": 13798,
+   "sha256": "8fd98419dda2f7709073cc3f744d7ef09441c6dec226907be01374e5f9834d6d"
+  },
+  "img/players/fontaine.webp": {
+   "bytes": 45532,
+   "sha256": "1e0891eec16489193de947eeb550b5ba0b808c1d369d1f944958d6516a2636ab"
+  },
+  "img/players/oblak.webp": {
+   "bytes": 27924,
+   "sha256": "7cd17b207eacd4c20f71b24c25736f2ae42b087dd6bf65fb272db4f1f6c78eb8"
+  },
+  "img/players/thuram.webp": {
+   "bytes": 10548,
+   "sha256": "b72791affabc402cded1e047762550fde8b6d8c51b3ad2fb9a6e7d28f07c7483"
+  },
+  "img/players/vieira.webp": {
+   "bytes": 20106,
+   "sha256": "02bfc80526d6c68d05edb77da49dc958d4de3759dcfadff4a50c817bcdf1977e"
+  },
+  "img/players/cristiano.webp": {
+   "bytes": 32648,
+   "sha256": "c3e704f3f4e1d2a5373f9cf2e6417307a01aec661dc2290bcb37898c93c8c775"
+  },
+  "img/players/bonmati.webp": {
+   "bytes": 17946,
+   "sha256": "dc5e37c24dbb41f5d0ad131aaeb3e18dffaee2cfddafe79e9d5378b1bbc82e76"
+  },
+  "img/players/lloris.webp": {
+   "bytes": 14340,
+   "sha256": "25f6164c76344551d8889bf68d3ccbdbe006a14592c7f7e8840b1a17277369a3"
+  },
+  "img/players/giroud.webp": {
+   "bytes": 3464,
+   "sha256": "27e5f7a4661ac5f9e332a4374db4c155635abf7c347bdde41c2033a103989b10"
+  },
+  "img/players/weah.webp": {
+   "bytes": 7764,
+   "sha256": "d602fa1c341ea482e045546dc0ecae20cdfe179d622d89ec45de7b2a1340b2cc"
+  },
+  "img/players/bellingham.webp": {
+   "bytes": 18608,
+   "sha256": "17794ec6bd521134cf6b6650584967ee58c22c2824cacbc65d9cfe7b0a3abaaa"
+  },
+  "img/players/pele.webp": {
+   "bytes": 13876,
+   "sha256": "5365a268a643403c5f4390385247b4c915e462a1f6ec8a1b579e04a107bd86f2"
+  },
+  "img/players/hakimi.webp": {
+   "bytes": 22780,
+   "sha256": "b0bc69b9d2695942f98f088e3a84f057538cb32bede62f88b1ab7dd0535d48c8"
+  },
+  "img/players/fenomeno.webp": {
+   "bytes": 16024,
+   "sha256": "51fa165282624ad202716c272094856af6e6b028f04b9dc1744952691f0b108c"
+  },
+  "img/players/ben-yedder.webp": {
+   "bytes": 17486,
+   "sha256": "38c17ef8874d2e5f415f3875cea5708919db7d9abb284a0f214647d669c5defd"
+  },
+  "img/players/vinicius.webp": {
+   "bytes": 12222,
+   "sha256": "07d8486b81a15f17a6c9772ac477bf305e8aaba97abd3ce555f5e1cf90ff1ccf"
+  },
+  "img/players/maradona.webp": {
+   "bytes": 25220,
+   "sha256": "5204d9589e3c8ba79b21d4f67fd23499987bc4999ac70cc897c22007c3c955d1"
+  },
+  "img/players/mbappe.webp": {
+   "bytes": 42362,
+   "sha256": "2bf425442ad93a1206359d2c4f949ac0d2526080dd0987fe8a5758a41b95f24e"
+  },
+  "img/players/renard.webp": {
+   "bytes": 5606,
+   "sha256": "31e82dc2da2b62cdb205b370897770718c536ad7472964a393e5f784d8483b88"
+  },
+  "img/players/ribery.webp": {
+   "bytes": 26050,
+   "sha256": "02f72adf45deac4c1cf700b37f3d904a3ff5667363384215405fb154584bb301"
+  },
+  "img/players/messi.webp": {
+   "bytes": 24418,
+   "sha256": "c7eb5824eec1acd1aed6c2b1e7a9018f7d302ad6bc37c223b2e217e9dd417840"
+  },
+  "img/players/haaland.webp": {
+   "bytes": 15748,
+   "sha256": "34673b9c38f70c03e5bf6c0d989f5222ccc9d96b098d32974174219fe6229036"
+  },
+  "img/players/griezmann.webp": {
+   "bytes": 13392,
+   "sha256": "ffaa0a5c04d0978e6bb5cead645c5955656bb8359279d6c167c7cd1473aecdfe"
+  },
+  "img/players/henry.webp": {
+   "bytes": 18692,
+   "sha256": "2ec7f26b5cc298518281bfcd0016f126708738ecb4bab78830f0c22deb68ae93"
+  },
+  "img/players/buffon.webp": {
+   "bytes": 30530,
+   "sha256": "0db9b1d3e1c879152c4f4bec0f8964fe8ad57927c71d60f7243f5075f1d5ea99"
+  },
+  "img/players/yamal.webp": {
+   "bytes": 28464,
+   "sha256": "e783dcb826e24ef7030a08ad3677c3c7d16442acea2820a40258a70f32115ee9"
+  },
+  "img/players/barella.webp": {
+   "bytes": 11512,
+   "sha256": "a0cd5e70f05afe62d7e934df158e6f62db2d524939d52d4b5507ff934930101b"
+  },
+  "img/players/trezeguet.webp": {
+   "bytes": 16012,
+   "sha256": "a5b8f9a4ff72bc2fb2f77e8b20153425937dcf0887050c930e811250068bf580"
+  },
+  "img/players/ronaldinho.webp": {
+   "bytes": 24466,
+   "sha256": "0264c5a51675b1e41f389768dd5aa774937f1614fdc15e22e51d74f891bb11f0"
+  },
+  "img/players/platini.webp": {
+   "bytes": 15832,
+   "sha256": "7ec33ae88404c1cb1651bd9c104ef4480fd4f44d782ca962482c22efe18c91b5"
+  },
+  "img/players/payet.webp": {
+   "bytes": 22386,
+   "sha256": "31817299fa112aecf225410cbb8f1d2ef060899e37b2f92d015ae22442d8d470"
+  },
+  "img/players/benzema.webp": {
+   "bytes": 9384,
+   "sha256": "05f54488d6ba1329a22ef7aa52476ca30f01e1e4ba3bca96e8570e55fc4e1bea"
+  },
+  "img/players/drogba.webp": {
+   "bytes": 15524,
+   "sha256": "b3d58d8bec07a8f77659a9394f4128b7becd2570352bf42e4635f1201716f912"
+  },
+  "img/players/khalil-fayad.webp": {
+   "bytes": 1672,
+   "sha256": "f034ac623971ea0131ce387cde6e672bf83deebd4a4013c9fcc97c5fb81cd977"
+  },
+  "img/players/doue.webp": {
+   "bytes": 27088,
+   "sha256": "e5ad420d6f5c2d8481382f874c3f929701b2323b7427847924079d3b092be0a3"
+  },
+  "img/players/gignac.webp": {
+   "bytes": 16058,
+   "sha256": "6762d88deb4ad4378bfc7456989838099ffe8fdc842ee9a788de25b00685e25e"
+  },
+  "img/players/neymar.webp": {
+   "bytes": 28746,
+   "sha256": "f9483ebe1f7a3cb1ed98e3818c1a67fb803ee40aea939233e43a66535cee9694"
+  },
+  "img/players/kante.webp": {
+   "bytes": 35640,
+   "sha256": "9819c085a442dc7de9a0cc3f61d2ba13abef68adf1a9c79610f19a62e236e019"
+  },
+  "img/players/mohamed-bayo.webp": {
+   "bytes": 2822,
+   "sha256": "50f5949c4ac27b4724d7d7b05636b7e515039d1d7948f7978252008e52a7ace9"
+  },
+  "img/players/de-bruyne.webp": {
+   "bytes": 17646,
+   "sha256": "909cac689afaf202a2c2a357387c9550d8f7dd8197bb962f0449df254eac5403"
+  },
+  "img/players/sm/papin.webp": {
+   "bytes": 1942,
+   "sha256": "17fe30e16d42db2f9eef32b6e5ea9e704a791bf21adef02eadb8a492489a6cf9"
+  },
+  "img/players/sm/kopa.webp": {
+   "bytes": 1658,
+   "sha256": "0ba7b56e74626d3e07e9c66d6ae19bece3c5478897eb3d8e27aa65c0e630e305"
+  },
+  "img/players/sm/zidane.webp": {
+   "bytes": 1276,
+   "sha256": "5110f42e20cb2dadd8c6b349ce746e108c279c8f79097b6c8e81eff5ef1788bc"
+  },
+  "img/players/sm/dembele.webp": {
+   "bytes": 2282,
+   "sha256": "4e7a9b1e72b504db55d254f6529852e9bd96863a075c09a4ded51a936deff158"
+  },
+  "img/players/sm/savidan.webp": {
+   "bytes": 1178,
+   "sha256": "d46dd8df4b26525b5a0666e720b545d39c3154de094193d8f3780e9b4bc1b6e1"
+  },
+  "img/players/sm/fontaine.webp": {
+   "bytes": 2406,
+   "sha256": "7d8e765d4f9acfd79c19481590223f8e1ff942cd43c9b503c18e8b6c1025e1cc"
+  },
+  "img/players/sm/thuram.webp": {
+   "bytes": 1210,
+   "sha256": "6544b9fdbaf10d1b48316b4bc2c59b519398a3925fe030dbdf469657b781bca8"
+  },
+  "img/players/sm/vieira.webp": {
+   "bytes": 1946,
+   "sha256": "58517deb49a299e308b3429a2ce9e6b8c28fa6f4e212218de9c32925fbd3b68b"
+  },
+  "img/players/sm/cristiano.webp": {
+   "bytes": 2200,
+   "sha256": "5cdcf3c6a5871d8a58a018486ad0a8cd2f9cb99f3c6c364c4caf4d269be13f14"
+  },
+  "img/players/sm/bonmati.webp": {
+   "bytes": 1670,
+   "sha256": "95d67d157ae762c4a583c82a30de7004bfefcd7ed9fabf4713eed7f72928da08"
+  },
+  "img/players/sm/lloris.webp": {
+   "bytes": 1256,
+   "sha256": "20d36d0c53172d008e2fc4fd9ddd0f1efd6fba077a3b37d12c7eff75f309aeb8"
+  },
+  "img/players/sm/giroud.webp": {
+   "bytes": 1234,
+   "sha256": "937612e21c448369a08c21f3027fd87876a8fd3bd26b700d7b022be8dc42903a"
+  },
+  "img/players/sm/weah.webp": {
+   "bytes": 1552,
+   "sha256": "645fc129d3995bf2b2df4577c616d988278b0d31bf59be45e0c80b5a517e40c0"
+  },
+  "img/players/sm/pele.webp": {
+   "bytes": 1812,
+   "sha256": "27cfc95378c361d5aadeb14ea4fbacebea723174fa0585d9f61e7b5035e7d589"
+  },
+  "img/players/sm/hakimi.webp": {
+   "bytes": 2268,
+   "sha256": "11ba2d6ea7aeadc31645b89c6d92df5ee108dfb770a3fc34817fe5b9fe1249e9"
+  },
+  "img/players/sm/fenomeno.webp": {
+   "bytes": 1722,
+   "sha256": "41d68d946d5edd57ccd3e5d2b7bc48caf8c2f1291c13696347cc28912c48c6b8"
+  },
+  "img/players/sm/ben-yedder.webp": {
+   "bytes": 2524,
+   "sha256": "a295834399df9705429c18cb4ace56c129b98d30fa95044481ca25aad5d23b35"
+  },
+  "img/players/sm/maradona.webp": {
+   "bytes": 2928,
+   "sha256": "04472adf9c5f70e56f3e50fb90edcf56cb12c5a1ed7540bbc297a5ab5196e3a6"
+  },
+  "img/players/sm/mbappe.webp": {
+   "bytes": 2690,
+   "sha256": "c63f4ba7e607031ce00b891bba2195b777e012e543da7e3574eafab7861f9f19"
+  },
+  "img/players/sm/renard.webp": {
+   "bytes": 1044,
+   "sha256": "a796b1a7f6e331708290354d7a35409f3eb1fa04d06a0ca38196e4377ee5f1dc"
+  },
+  "img/players/sm/ribery.webp": {
+   "bytes": 2484,
+   "sha256": "14d4af2c830d5a4269aed22c4b7f0e08b1c96fc5a66834b33fe0f3159b2ddd90"
+  },
+  "img/players/sm/messi.webp": {
+   "bytes": 2070,
+   "sha256": "5c0e4e78abd834f5e7abb1a9eff3dc4279a66dc7881a93721d8c41666ab4ac17"
+  },
+  "img/players/sm/griezmann.webp": {
+   "bytes": 1272,
+   "sha256": "98bef6c6a405d4cdba2902117b9b86fefb432a154494358bf8ab50649a528b13"
+  },
+  "img/players/sm/henry.webp": {
+   "bytes": 1960,
+   "sha256": "73990851d19000c12af1d0075b1b623fc3b2fc4249094e389f296f46222f8d8c"
+  },
+  "img/players/sm/buffon.webp": {
+   "bytes": 2102,
+   "sha256": "673cc31d33ec19cc630957da6042dc001ff9887455e3f42bc0b698df8e98c687"
+  },
+  "img/players/sm/yamal.webp": {
+   "bytes": 2260,
+   "sha256": "75199c4fc0473a0a14e7c80acc25b8db6f36713cd015636cb1e39a45f3d34785"
+  },
+  "img/players/sm/trezeguet.webp": {
+   "bytes": 1458,
+   "sha256": "1f0914f68f97b81927ff98685cb1264c9c1edb1c97cbad6990bc8d233422831d"
+  },
+  "img/players/sm/ronaldinho.webp": {
+   "bytes": 2008,
+   "sha256": "8aca3eef14e80c8d641804f6acd623a7096cda5a21f4901bbabafebfa2c4675c"
+  },
+  "img/players/sm/platini.webp": {
+   "bytes": 1878,
+   "sha256": "0c800badbb854fd2a4128d1c34b4757f2f1f0d7b1f5c9cf72735259e9894b635"
+  },
+  "img/players/sm/payet.webp": {
+   "bytes": 1692,
+   "sha256": "64ff6d07687de4310494372b39792950db15df7067909c7182119acf904d6e5f"
+  },
+  "img/players/sm/benzema.webp": {
+   "bytes": 1576,
+   "sha256": "ba63620ce299a7c7876217fb677862095999f436d37f7e5a3bf70bdc4594926c"
+  },
+  "img/players/sm/drogba.webp": {
+   "bytes": 1090,
+   "sha256": "216958785cbaabd7a47aa41ad1be7037d37c6a37e7594844bdd398aed86a4b8b"
+  },
+  "img/players/sm/doue.webp": {
+   "bytes": 2084,
+   "sha256": "2d4e1d80e73ab53e09ff0aa3ab44f4a0e3c4fdf2301eb7c1c5911bab95364ddf"
+  },
+  "img/players/sm/gignac.webp": {
+   "bytes": 1830,
+   "sha256": "438ddf8ab14b68963bdfca3e281573db01eec6061ababf1e0f1291a416098faa"
+  },
+  "img/players/sm/kante.webp": {
+   "bytes": 1468,
+   "sha256": "66eaa51f43cccc1295c819b91787001f2291ad1df331b6aa971be331fa995eb2"
+  },
+  "media/finale-1998.mp4": {
+   "bytes": 1297918,
+   "sha256": "2a89da05a3f7349fdddabcf9789b4ec08fe53720c438284138111bbd830db6f1"
+  },
+  "media/psg-2025.mp4": {
+   "bytes": 1410646,
+   "sha256": "23ea4d8b9275d59e7c32dbcd9a7b01ca6a0fa2558f021043a92dab0902613933"
+  },
+  "media/euro-2000.mp4": {
+   "bytes": 939197,
+   "sha256": "cee0fb4f81f5a21d3a76a74511ca0546943ecbdb905ce319c4d74ce508ff611f"
+  },
+  "media/euro-2000.webp": {
+   "bytes": 100054,
+   "sha256": "7c789ee41e67d1de9bdce77e74683feef5a45b8afed79558ba4225ba868c7585"
+  },
+  "media/main-de-dieu.mp4": {
+   "bytes": 1865668,
+   "sha256": "5e0dd1672bfffca96fc0272e8186856f62725fda615621890f72beb8c1d17241"
+  },
+  "media/psg-2025.webp": {
+   "bytes": 99648,
+   "sha256": "b6311c4642dc080af3b87d5ec1aa68c7a316d8ce27f8db694fcf456843e4975b"
+  },
+  "media/finale-1998.webp": {
+   "bytes": 118692,
+   "sha256": "76d48c0eb02cfbc6df3b58ffcf97e3c95dc446281cebad77bde104d11c1339c8"
+  },
+  "media/main-de-dieu.webp": {
+   "bytes": 113020,
+   "sha256": "b37dbd9444fe292720762945ad050fef652ef601cc797e110b5a5c629f1d2282"
+  },
+  "data/portraits-small.json": {
+   "bytes": 330,
+   "sha256": "1df2ca1e1bcd404ab11aa0d483aa87c7e215c82cb88971c462e3198b1fcdba25"
+  },
+  "data/fc24-5.json": {
+   "bytes": 745801,
+   "sha256": "961a658034aa1fd27795e7fd391ea708aef03553af8de7c08824e8bbd30621c0"
+  },
+  "data/fc24-4.json": {
+   "bytes": 752160,
+   "sha256": "51133b224cd1bd476a21b0561bc1d7f7a56541778dbebf60f2a5d47a0a9f0310"
+  },
+  "data/fc24-1.json": {
+   "bytes": 770024,
+   "sha256": "314a61c2849f47a442584782d5253dd4547353f37fb4e5718802019e80e6af03"
+  },
+  "data/fc26-3.json": {
+   "bytes": 292880,
+   "sha256": "b363ca15e96cc18e018d53efaf361db288bdd2f82c8a4d8ab56f024dff7f250b"
+  },
+  "data/fc26-5.json": {
+   "bytes": 292971,
+   "sha256": "8626b1d78e8a790b24658e9400ca96c99eac7e6ead00160b0e0e50102ca94ddd"
+  },
+  "data/ligues.json": {
+   "bytes": 1727203,
+   "sha256": "e9e35a972834c39f1c74c9ce5d6dde68699551c628cf7ef132ed654b28dffa23"
+  },
+  "data/faces-4.json": {
+   "bytes": 1943164,
+   "sha256": "55cf3238313834c9d0e87acab44f7301f350f1e96ef568680cdd3fc4d7aa75d9"
+  },
+  "data/album-faces.json": {
+   "bytes": 11930,
+   "sha256": "9099c57c3f9ce79948cf15ab554206156aebe7dd53632818cfa74ad43906f373"
+  },
+  "data/core.json": {
+   "bytes": 1538132,
+   "sha256": "96f46ad22aba0e5adff1f2ee58b11ee8f10532570453eff977c05fc977d31892"
+  },
+  "data/pays-0.json": {
+   "bytes": 313909,
+   "sha256": "3fe043721f9b01234a236332ab6a60193efa9f117108df5acd18799fbb28fbc5"
+  },
+  "data/fc26-7.json": {
+   "bytes": 193065,
+   "sha256": "71d5e0e789dd1eef086ade4dec29f6fade09da2233a7a9e0143b1bdbc647227b"
+  },
+  "data/wiki.json": {
+   "bytes": 483172,
+   "sha256": "1ec8deb121795b44a51d9a86c838fe922d3965512eeb73b32dca63c09e42435a"
+  },
+  "data/fc24-2.json": {
+   "bytes": 762931,
+   "sha256": "350299703aa052395d9966e16a21d78b2b80d94b896eb996b229deaef8855afb"
+  },
+  "data/fc24-0.json": {
+   "bytes": 783109,
+   "sha256": "cea069b47a24e8626cd8164f8a9b9140d024413cb3fdc50b363c180420e8aa39"
+  },
+  "data/faces-0.json": {
+   "bytes": 1978944,
+   "sha256": "5c32587be1e04c8f280ce93b7253279acf5f08ee6f173315eab7833962032679"
+  },
+  "data/fc26-6.json": {
+   "bytes": 290582,
+   "sha256": "8f09566b0e290a816c2912f6f9f4c40a2ec3b69312cd9bd4be7aec289e43d1e4"
+  },
+  "data/fc26-2.json": {
+   "bytes": 291241,
+   "sha256": "f59a1c630b29d743ecf0ea6841e5f44ce7c65e0a6ff4ef478e7fee399cf4bad3"
+  },
+  "data/faces-7.json": {
+   "bytes": 1296373,
+   "sha256": "c5802bf6f3fd882789acc9cd0944bc3e44c102aba70799eecb035289ec9da586"
+  },
+  "data/fc24-3.json": {
+   "bytes": 757060,
+   "sha256": "827faa3b858fdc2d32435c19875ecf3a0b6f405ffa7f90534d5f4895a2504700"
+  },
+  "data/reel-doubts.json": {
+   "bytes": 637,
+   "sha256": "806bfa60a063c1b75250291a1db12cc2db345d822483c55ec7f98706129c0af8"
+  },
+  "data/faces-5.json": {
+   "bytes": 1885320,
+   "sha256": "7c6942962365136541f899161906569a821290a48ab17c57f39c33e94e838def"
+  },
+  "data/pays-2.json": {
+   "bytes": 1216779,
+   "sha256": "dcc5c9f6fa1cf27f7bc48f93a24e76eddab79fa5699b1790b82fff739475e063"
+  },
+  "data/faces-1.json": {
+   "bytes": 1931648,
+   "sha256": "a692c48d622601acf7d476933bce1ee66096e14fa1170b497f78fdb4591e4490"
+  },
+  "data/pays-3.json": {
+   "bytes": 1233037,
+   "sha256": "696c116ed590599f31f95610bc869ef02e882081a42fec9d87eeacff4d247153"
+  },
+  "data/pays-1.json": {
+   "bytes": 813196,
+   "sha256": "b7d73e122caf2cc4b27241a9d69255b59e3e802b760a5cc0f2d661bc0a241bd2"
+  },
+  "data/faces-3.json": {
+   "bytes": 1939589,
+   "sha256": "5b4e014b643e9bd18e7c336d708d790311424c26f2049b6d0c6346b07772a9c6"
+  },
+  "data/fc26-4.json": {
+   "bytes": 292529,
+   "sha256": "0ab4fbe25adc38c474836c72c6786ae4eb1996bd9b2791607317dbe13d4da822"
+  },
+  "data/people.json": {
+   "bytes": 2838506,
+   "sha256": "034116dc06b86ec60c875486b5d8a13439aacff84cec633310d798af9ecbdfb4"
+  },
+  "data/card-doubts.json": {
+   "bytes": 354,
+   "sha256": "7a24399ed3c63106947f1d27c6cad2c63cae7e9f1d68b69136af2f818dd8a1b1"
+  },
+  "data/faces-6.json": {
+   "bytes": 1593339,
+   "sha256": "3325183615bc99d03ca48e20a9751a11b91c743f6a66be6f51ea421c35d45275"
+  },
+  "data/faces-2.json": {
+   "bytes": 1946678,
+   "sha256": "41569a58a146db52912c8ff90b5b3a0aaddeeeadfd7955c3d221bd2485f114b7"
+  },
+  "data/fc24-7.json": {
+   "bytes": 708936,
+   "sha256": "58b438f5c7aec800c5096177602ca4d178b770853502f12313877ee662c0767f"
+  },
+  "data/fc26-1.json": {
+   "bytes": 279010,
+   "sha256": "6b5537302e61756afd13011d4930a96ba7dbcbc1cdcfa93013a6b4ce82803dc8"
+  },
+  "data/pays-meta.json": {
+   "bytes": 51388,
+   "sha256": "0a8d7d47a365124aeba4dc375c35ac921d639e84cc7e625ab3a53bae83b5abd3"
+  },
+  "data/fc24-6.json": {
+   "bytes": 740968,
+   "sha256": "7b47b23362508030ec19ee7e4677ecbb26141b146105f450325d5c61e53d66aa"
+  },
+  "data/fc26-0.json": {
+   "bytes": 284820,
+   "sha256": "9c719dc776c85698d14abe500d9002aa2a82c4b3416ef70b8888104708b9b15a"
+  }
+ }
+}
