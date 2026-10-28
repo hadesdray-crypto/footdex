@@ -4,6 +4,15 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-10-28",
+    titre: "Version 24 : la fenêtre de mise à jour tient dans l'écran",
+    type: "appli",
+    points: [
+      "La fenêtre « Nouvelle mise à jour » est centrée et tient toujours dans l'écran.",
+      "Le texte défile avec le doigt, les boutons restent visibles en bas.",
+    ],
+  },
+  {
+    date: "2026-10-28",
     titre: "Version 23 : Paramètres, jolie voix, et le jongleur qui vole",
     type: "appli",
     points: [
