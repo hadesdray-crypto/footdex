@@ -4,6 +4,19 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-10-28",
+    titre: "Version 21 : le jongleur et son ballon",
+    type: "appli",
+    points: [
+      "Le jongleur et son ballon ne font plus qu'un : le ballon reste à ses pieds, même dans son coin.",
+      "Ses jambes bougent vraiment (hanches, genoux, pieds) : course, conduite de balle, tir, contrôle.",
+      "Les jongles : c'est son pied qui fait monter le ballon, lui reste sur place.",
+      "Le sol est sous ses pieds : le ballon roule, vole et rebondit dessus.",
+      "Prends-lui son ballon et lance-le : il court le récupérer !",
+      "De vrais bruits de ballon : frappe, rebond, contrôle.",
+    ],
+  },
+  {
+    date: "2026-10-28",
     titre: "Version 20 : la voix et l'appli Android",
     type: "appli",
     points: [

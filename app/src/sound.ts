@@ -498,3 +498,34 @@ export function babble(text: string, pitch: number, rate: number, formant = 1, v
     }),
   };
 }
+
+// ------------------------------------------------------------------ the footballer's ball (real-sounding, no beep)
+// A leather ball has no pitch: its sound is a short thud of air (filtered noise) with a low body that drops fast.
+
+/** The boot strikes the ball: a dry "poc", stronger with `power` (0 to 1). */
+export function ballKick(power = 0.6) {
+  const a = ctx();
+  if (!a) return;
+  const t = a.currentTime + 0.001;
+  const v = 0.12 + 0.4 * power;
+  burst(a, t, 900 + 700 * power, 0.7, v, 0.03 + 0.03 * power, "lowpass");
+  burst(a, t, 2600, 0.9, v * 0.35, 0.012);
+  body(a, t, 140 + 60 * power, 55, v * 0.9, 0.06 + 0.05 * power);
+}
+/** The ball lands on the grass: a soft muffled "toum", quieter when it falls from lower. */
+export function ballBounce(power = 0.5) {
+  const a = ctx();
+  if (!a) return;
+  const t = a.currentTime + 0.001;
+  const v = 0.05 + 0.25 * power;
+  burst(a, t, 420 + 300 * power, 0.6, v, 0.05, "lowpass");
+  body(a, t, 95 + 40 * power, 48, v * 0.8, 0.07);
+}
+/** The sole or the inside of the foot cushions the ball: a short brushed "fff-tap". */
+export function ballTrap(power = 0.4) {
+  const a = ctx();
+  if (!a) return;
+  const t = a.currentTime + 0.001;
+  burst(a, t, 1400, 0.5, 0.06 + 0.12 * power, 0.04, "bandpass");
+  body(a, t + 0.005, 110, 60, 0.1 + 0.2 * power, 0.05);
+}

@@ -87,3 +87,11 @@ export function runnerSvg(look: Look, view: View): string {
   }
   return `<svg viewBox="0 0 100 132" aria-hidden="true">${inner}</svg>`;
 }
+
+/** The side-view head of the character (for the footballer drawn joint by joint). */
+export function sideHeadSvg(look: Look): string {
+  const svg = runnerSvg(look, "side");
+  const a = svg.indexOf('<g class="hd">');
+  const b = svg.indexOf('</g><g class="lg lgA"');
+  return a >= 0 && b > a ? svg.slice(a, b) : "";
+}

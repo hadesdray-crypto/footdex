@@ -13,7 +13,8 @@ import { SPEEDS, choosePerso, wornLook, askToTell, continueSpeech, explain, getM
 import { Wardrobe, type Tab } from "./Wardrobe";
 import { go, type Route } from "../router";
 import { createActor } from "./actor";
-import { mountBall, unmountBall } from "./ball";
+import { ensureBall, parkBall, removeBall, spawnFootballer, whenStolen } from "./player";
+import { footballOuting } from "./footScenes";
 import { runScript } from "./scripts";
 
 const W = 74;
@@ -98,14 +99,24 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     if (dm && typeof dm.requestPermission === "function") dm.requestPermission().catch(() => undefined);
   }
 
-  // The juggler's ball: a real ball, on the screen, that falls and rolls.
+  // The juggler's ball: ONE ball, his own, resting at his feet. Take it from him and he runs to get it back.
+  const feet = (p: { x: number; y: number }) => ({ x: p.x + W / 2, y: p.y + H - 3 });
   useEffect(() => {
-    if (perso.mode !== "joueur") return;
-    const p = posRef.current;
-    mountBall(Math.min(window.innerWidth - 30, p.x + W + 20), p.y + 10);
-    return () => unmountBall();
+    if (perso.mode !== "joueur" || m.s.rest) return;
+    const f = feet(posRef.current);
+    ensureBall(f.x + 20, f.y);
+    whenStolen(() => wander(true));
+    return () => {
+      whenStolen(null);
+      removeBall();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perso.mode]);
+  }, [perso.mode, m.s.rest]);
+  useEffect(() => {
+    if (perso.mode !== "joueur" || roam) return;
+    const f = feet(pos);
+    parkBall(f.x + 20, f.y);
+  }, [perso.mode, pos.x, pos.y, roam]);
 
   // Each character has his own habits.
   useEffect(() => {
@@ -136,15 +147,15 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
   }, [perso.mode]);
 
   // He walks about on his own: the actor takes his place on the screen, plays his scene, and goes back home.
-  function wander() {
+  function wander(stolen = false) {
     const st = getMascot();
     const a = act.current;
     const fab = fabRef.current;
+    if (stolen && fab && !a.busy && PERSOS[st.s.perso].mode === "joueur") return footballer(true);
     if (a.busy || !fab || st.busy || st.talking || st.anim || menuRef.current || wardrobeRef.current || document.querySelector(".mm, .wd, .reveal")) return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     const here = posRef.current;
     const mode = PERSOS[getMascot().s.perso].mode;
-    const r = Math.random();
     const finish = () => {
       a.busy = false;
       a.cancel = null;
@@ -152,69 +163,8 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       if (fabRef.current) fabRef.current.style.visibility = "";
       setRoam(null);
     };
-    const anims: Animation[] = [];
-    // Old tricks of the juggler: climbing on an icon, walking behind the buttons, waving, jumping.
-    if (mode === "joueur" && r >= 0.62) {
-      a.busy = true;
-      a.cancel = () => {
-        anims.forEach((x) => x.cancel());
-        finish();
-      };
-      const ox = here.x;
-      const oy = here.y;
-      if (r < 0.76) {
-        const t = pickTarget();
-        if (!t) return finish();
-        const tr = t.getBoundingClientRect();
-        const dx = tr.left + tr.width / 2 - (ox + W / 2);
-        const dy = tr.bottom - 8 - oy;
-        play("cheer", 4200);
-        anims.push(
-          fab.animate(
-            [
-              { transform: "translate(0,0)" },
-              { transform: `translate(${dx * 0.5}px,${dy * 0.5 - 90}px) rotate(${dx > 0 ? 12 : -12}deg)`, offset: 0.18 },
-              { transform: `translate(${dx}px,${dy}px)`, offset: 0.3 },
-              { transform: `translate(${dx}px,${dy - 16}px)`, offset: 0.4 },
-              { transform: `translate(${dx}px,${dy + 2}px)`, offset: 0.5 },
-              { transform: `translate(${dx}px,${dy - 20}px)`, offset: 0.6 },
-              { transform: `translate(${dx}px,${dy + 4}px)`, offset: 0.7 },
-              { transform: `translate(${dx}px,${dy - 6}px) rotate(-6deg)`, offset: 0.76 },
-              { transform: `translate(${dx * 0.5}px,${dy * 0.5 - 70}px)`, offset: 0.88 },
-              { transform: "translate(0,0)" },
-            ],
-            { duration: 4200, easing: "ease-in-out" },
-          ),
-        );
-        window.setTimeout(() => t.animate([{ transform: "rotate(0)" }, { transform: "rotate(-6deg) scale(1.08)" }, { transform: "rotate(5deg)" }, { transform: "rotate(0)" }], { duration: 900, iterations: 3 }), 1100);
-        window.setTimeout(finish, 4300);
-      } else if (r < 0.86) {
-        const top = Math.random() < 0.5;
-        const toX = ox < window.innerWidth / 2 ? window.innerWidth - W - 8 : 8;
-        const toY = top ? 40 - oy : window.innerHeight - H * 0.92 - oy;
-        const dx = toX - ox;
-        rootRef.current?.classList.add("is-behind");
-        const keys: Keyframe[] = [];
-        for (let i = 0; i <= 12; i += 1) {
-          const f = i / 12;
-          const e = f < 0.15 ? f / 0.15 : 1;
-          keys.push({ transform: `translate(${dx * f}px,${toY * e + (i % 2 ? -7 : 0)}px) rotate(${i % 2 ? 3 : -3}deg)`, offset: f });
-        }
-        anims.push(fab.animate(keys, { duration: 5200, easing: "linear" }));
-        window.setTimeout(() => {
-          rootRef.current?.classList.remove("is-behind");
-          anims.push(fab.animate([{ transform: `translate(${dx}px,${toY}px)` }, { transform: `translate(${dx}px,${toY}px)`, offset: 0.1 }, { transform: "translate(0,0)" }], { duration: 1600, easing: "ease-in-out" }));
-        }, 5200);
-        window.setTimeout(finish, 6900);
-      } else if (r < 0.94) {
-        play("wave", 3200);
-        window.setTimeout(finish, 3300);
-      } else {
-        play("jump", 2000);
-        window.setTimeout(finish, 2100);
-      }
-      return;
-    }
+    // The juggler always goes out with his ball (player.ts): never without it.
+    if (mode === "joueur") return footballer(false);
     // Everything else: he really walks on the screen.
     a.busy = true;
     const actor = createActor(getMascot().s.look, here.x + W / 2, here.y + H - 4, {
@@ -239,6 +189,41 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       .then(() => {
         if (actor.dead) return;
         actor.destroy();
+        finish();
+      });
+  }
+
+  /** The juggler goes out with his ball, plays, and comes back to his corner. */
+  function footballer(stolen: boolean) {
+    const a = act.current;
+    const fab = fabRef.current;
+    if (!fab) return;
+    a.busy = true;
+    const here = posRef.current;
+    const home = feet(here);
+    fab.style.visibility = "hidden";
+    const player = spawnFootballer(getMascot().s.look, home.x, home.y, {
+      onTap: () => {
+        a.cancel?.();
+        window.setTimeout(() => setMenu("main"), 30);
+      },
+      onMove: () => undefined,
+    });
+    const finish = () => {
+      a.busy = false;
+      a.cancel = null;
+      if (fabRef.current) fabRef.current.style.visibility = "";
+      setRoam(null);
+    };
+    a.cancel = () => {
+      player.destroy();
+      finish();
+    };
+    footballOuting(player, home, stolen)
+      .catch(() => undefined)
+      .finally(() => {
+        if (player.dead) return;
+        player.destroy();
         finish();
       });
   }

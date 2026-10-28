@@ -328,3 +328,16 @@
 .carac__say { font-size: 12.5px; color: var(--muted); font-style: italic; }
 .mascot__sleep { position: fixed; z-index: 35; right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(80px + env(safe-area-inset-bottom, 0px)); width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line-2); background: rgba(12, 19, 36, .9); font-size: 22px; display: grid; place-items: center; animation: sleepbob 3s ease-in-out infinite; }
 @keyframes sleepbob { 50% { transform: translateY(-4px); } }
+
+/* ---- the footballer and his ball (player.ts): drawn joint by joint, moved every frame */
+.fbp { position: fixed; left: 0; top: 0; width: 66px; height: 86px; z-index: 16; transform-origin: 33px 86px; will-change: transform; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.fbp__fx { width: 100%; height: 100%; transform-origin: 50% 50%; }
+.fbp svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 4px 2px #0006); }
+.fbp .far { filter: brightness(.74); }
+.fbp .sw, .fbp .mt { opacity: 0; }
+.fball { position: fixed; left: 0; top: 0; width: 20px; height: 20px; z-index: 17; touch-action: none; cursor: grab; will-change: transform; -webkit-tap-highlight-color: transparent; }
+.fball__spin { position: absolute; inset: 0; }
+.fball__spin svg { display: block; filter: drop-shadow(0 1px 1px #0005); }
+.fball__shadow { position: absolute; left: 6%; right: 6%; bottom: -3px; height: 5px; border-radius: 50%; background: #000; opacity: .32; transform: translateY(var(--sh, 0px)) scaleX(var(--shs, 1)); }
+.fball.is-held { cursor: grabbing; }
+.fball::after { content: ""; position: absolute; inset: -14px; } /* a bigger area to grab it with a finger */
