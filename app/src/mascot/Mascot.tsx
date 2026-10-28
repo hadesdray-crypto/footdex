@@ -9,7 +9,7 @@ import { PERSOS } from "./lines";
 import { CaracList } from "./Carac";
 import { ballOpen } from "../sound";
 import { piperDownload, piperRemove } from "../piper";
-import { SPEEDS, choosePerso, wornLook, hasMore, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, androidVoices, installAndroidVoices, isApp, type Engine } from "./state";
+import { SPEEDS, choosePerso, wornLook, hasMore, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, VOICE_TYPES, androidVoices, installAndroidVoices, isApp, type Engine } from "./state";
 import { Wardrobe, type Tab } from "./Wardrobe";
 import { go, type Route } from "../router";
 import { createActor } from "./actor";
@@ -36,7 +36,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
   const posRef = useRef({ x: 0, y: 0 });
   const act = useRef<{ busy: boolean; cancel: (() => void) | null }>({ busy: false, cancel: null });
   const [roam, setRoam] = useState<{ x: number; y: number } | null>(null);
-  const g = useRef({ down: false, mode: "wait" as "wait" | "drag" | "swipe", sx: 0, sy: 0, ox: 0, oy: 0, t0: 0, moved: 0, timer: 0, lastTap: 0, tapTimer: 0 });
+  const g = useRef({ down: false, mode: "wait" as "wait" | "drag" | "swipe", sx: 0, sy: 0, ox: 0, oy: 0, t0: 0, moved: 0, timer: 0, lastTap: 0, tapTimer: 0, trail: [] as { t: number; x: number; y: number }[] });
 
   const area = { l: 6, r: size.w - W - 6, t: 66, b: size.h - H - 76 };
   const pos = drag ?? roam ?? { x: area.l + m.s.fx * Math.max(0, area.r - area.l), y: area.t + m.s.fy * Math.max(0, area.b - area.t) };
@@ -194,8 +194,43 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       });
   }
 
+  /** Thrown across the room (any character): real flight with gravity, a fall, a bump, a grumble.
+   *  The juggler then goes back for his ball; the others stay where they landed. */
+  function throwHim(vx: number, vy: number, from?: { x: number; y: number }) {
+    setMenu(null);
+    hideBubble();
+    const fling = { vx: Math.max(-1500, Math.min(1500, vx * 0.9)), vz: Math.max(320, Math.min(1300, -vy * 0.9)), vy: vy > 0 ? Math.min(500, vy * 0.25) : 0 };
+    const strong = Math.hypot(vx, vy) > 1600;
+    if (perso.mode === "joueur") return footballer("thrown", from, fling, strong);
+    const a = act.current;
+    const fab = fabRef.current;
+    if (!fab) return;
+    act.current.cancel?.();
+    a.busy = true;
+    const home = feet(from ?? posRef.current);
+    fab.style.visibility = "hidden";
+    const body = spawnFootballer(getMascot().s.look, home.x, home.y, { onTap: () => undefined, onMove: () => undefined });
+    const land = () => {
+      const x = body.x;
+      const y = body.y;
+      body.destroy();
+      // he stays where he fell
+      update({ fx: Math.min(1, Math.max(0, (x - W / 2 - area.l) / Math.max(1, area.r - area.l))), fy: Math.min(1, Math.max(0, (y - H + 3 - area.t) / Math.max(1, area.b - area.t))) });
+      a.busy = false;
+      a.cancel = null;
+      if (fabRef.current) fabRef.current.style.visibility = "";
+      onThrown(strong);
+    };
+    a.cancel = () => {
+      if (!body.dead) land();
+    };
+    void body.fling(fling.vx, fling.vz, fling.vy).then(() => {
+      if (!body.dead) land();
+    });
+  }
+
   /** The juggler goes out with his ball, plays, and comes back to his corner. */
-  function footballer(why: Outing, at?: { x: number; y: number }, fling?: { vx: number; vz: number; vy: number }) {
+  function footballer(why: Outing, at?: { x: number; y: number }, fling?: { vx: number; vz: number; vy: number }, strong = false) {
     const a = act.current;
     const fab = fabRef.current;
     if (!fab) return;
@@ -226,6 +261,8 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
         if (player.dead) return;
         player.destroy();
         finish();
+        // back home after being thrown: a bump on the head, and he lets you know
+        if (why === "thrown") onThrown(strong);
       });
   }
 
@@ -273,6 +310,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     s.oy = pos.y;
     s.t0 = performance.now();
     s.moved = 0;
+    s.trail = [{ t: s.t0, x: e.clientX, y: e.clientY }];
     window.clearTimeout(s.timer);
     s.timer = window.setTimeout(() => {
       if (s.down && s.mode === "wait" && s.moved < 10) {
@@ -289,6 +327,9 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     const dx = e.clientX - s.sx;
     const dy = e.clientY - s.sy;
     s.moved = Math.max(s.moved, Math.hypot(dx, dy));
+    const now = performance.now();
+    s.trail.push({ t: now, x: e.clientX, y: e.clientY });
+    s.trail = s.trail.filter((p) => now - p.t < 110);
     if (s.mode === "wait" && s.moved >= 12) {
       s.mode = "swipe";
       window.clearTimeout(s.timer);
@@ -305,7 +346,21 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     const dx = e.clientX - s.sx;
     const dy = e.clientY - s.sy;
     const dt = Math.max(1, performance.now() - s.t0);
-    if (s.mode === "drag") {
+    // how fast the finger was going when it let go (px per second)
+    const tr = s.trail;
+    const first = tr[0];
+    const lastP = tr[tr.length - 1];
+    const span = first && lastP ? Math.max(16, lastP.t - first.t) : 1000;
+    const rvx = first && lastP && performance.now() - lastP.t < 90 ? ((lastP.x - first.x) / span) * 1000 : 0;
+    const rvy = first && lastP && performance.now() - lastP.t < 90 ? ((lastP.y - first.y) / span) * 1000 : 0;
+    if (s.mode === "drag" && Math.hypot(rvx, rvy) > 700) {
+      // held, then flung across the room: he flies for real
+      const x = drag?.x ?? pos.x;
+      const y = drag?.y ?? pos.y;
+      setDrag(null);
+      setDragging(false);
+      throwHim(rvx, rvy, { x, y });
+    } else if (s.mode === "drag") {
       const x = drag?.x ?? pos.x;
       const y = drag?.y ?? pos.y;
       // the juggler was moved without his ball: he goes back for it (spawned first, so the ball does not jump to him)
@@ -315,13 +370,11 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       setDragging(false);
     } else if (s.mode === "swipe") {
       const len = Math.hypot(dx, dy);
-      if (len > 45 && len / dt > 0.5 && perso.mode === "joueur") {
-        // the juggler is thrown for real: he flies with gravity, falls, gets up and goes back for his ball
-        setMenu(null);
-        hideBubble();
+      if (len > 45 && len / dt > 0.5) {
+        // every character is thrown for real: he flies with gravity, falls, gets a bump and grumbles
         const k = 1000 / dt;
-        footballer("thrown", undefined, { vx: Math.max(-1500, Math.min(1500, dx * k * 0.9)), vz: Math.max(300, Math.min(1300, -dy * k * 0.9)), vy: dy > 0 ? Math.min(500, dy * k * 0.25) : 0 });
-      } else if (len > 45 && len / dt > 0.5) {
+        throwHim(Math.abs(rvx) + Math.abs(rvy) > 300 ? rvx : dx * k, Math.abs(rvx) + Math.abs(rvy) > 300 ? rvy : dy * k);
+      } else if (false) {
         setMenu(null);
         hideBubble();
         play("thrown", 2700, dx / len, dy / len);
@@ -335,12 +388,11 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       if (now - s.lastTap < 340) {
         s.lastTap = 0;
         setMenu(null);
-        // double tap: goes on with what he was telling; with nothing to tell, he plays
+        // double tap: opens his menu (like in the other apps); if he was telling a story, he goes on
         if (hasMore()) continueSpeech();
-        else if (perso.mode === "joueur") wander();
         else {
-          play(perso.mode === "statue" ? "tip" : "cheer", 1800);
-          sample();
+          stopTalking();
+          setMenu("main");
         }
       } else {
         s.lastTap = now;
@@ -646,6 +698,12 @@ export function VoicePanel() {
 
   return (
     <div className="voicepanel">
+      <p className="mm__label">Type de voix</p>
+      <div className="chips" role="radiogroup" aria-label="Type de voix">
+        {VOICE_TYPES.map((v) => (
+          <button key={v.id} type="button" role="radio" aria-checked={m.s.voiceType === v.id} className={cx("chip", m.s.voiceType === v.id && "chip--on")} onClick={() => { update({ voiceType: v.id }); window.setTimeout(sample, 60); }}>{v.label}</button>
+        ))}
+      </div>
       <p className="mm__label">Comment il parle</p>
       <button type="button" className="btn btn--gold" onClick={() => { const q: Engine[] = ENGINES.map((x) => x.id).filter((id) => id !== "piper" || m.s.piper); test(q[0], q); }}>
         Trouver ma voix, pas à pas

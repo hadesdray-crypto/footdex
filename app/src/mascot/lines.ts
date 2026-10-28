@@ -44,7 +44,7 @@ export const PERSOS: Perso[] = [
     story: ["Hm. Écoute."],
     card: { base: [], rare: [], eclat: [], legende: [], moment: [], shiny: [] },
     shake: ["Hm."],
-    thrown: ["…Aïe."],
+    thrown: ["…Aïe.", "Hm ! Pas content.", "Grmbl. Mon dos…"],
     wardrobe: ["Hm. Bien."],
     done: ["…Voilà."],
   },

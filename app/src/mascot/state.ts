@@ -27,12 +27,20 @@ export const ENGINES_ALL: { id: Engine; name: string; text: string }[] = [
 ];
 /** The ways that exist here: the Android voice only in the app; in the app, the browser voice is the same engine, so it is not shown twice. */
 export const ENGINES = ENGINES_ALL.filter((e) => (isApp() ? e.id !== "phone" : e.id !== "native"));
-export type Settings = { look: Look; perso: number; speed: number; auto: boolean; engine: "auto" | Engine; heard: Partial<Record<Engine, boolean>>; piper: boolean; nativeVoice: number; looks: Record<string, Look>; rest: boolean; narrate: boolean; fx: number; fy: number; day: string };
+/** The kind of voice, for every character: a boy's voice by default (Footdex is Raphaël's). */
+export type VoiceType = "garcon" | "homme" | "grave" | "perso";
+export const VOICE_TYPES: { id: VoiceType; label: string; pitch: number }[] = [
+  { id: "garcon", label: "Garçon", pitch: 1.28 },
+  { id: "homme", label: "Homme", pitch: 0.95 },
+  { id: "grave", label: "Grave", pitch: 0.78 },
+  { id: "perso", label: "Celle du personnage", pitch: 0 },
+];
+export type Settings = { look: Look; perso: number; speed: number; auto: boolean; engine: "auto" | Engine; heard: Partial<Record<Engine, boolean>>; piper: boolean; nativeVoice: number; voiceType: VoiceType; looks: Record<string, Look>; rest: boolean; narrate: boolean; fx: number; fy: number; day: string };
 export type Bubble = { id: number; text: string; top: boolean } | null;
 type Snap = { reading: boolean; s: Settings; eng: Partial<Record<Engine, "ok" | "ko">>; using: Engine | null; bubble: Bubble; talking: boolean; busy: boolean; anim: string | null; animId: number; vx: number; vy: number; hurt: number };
 
 function loadSettings(): Settings {
-  const d: Settings = { look: DEFAULT_LOOK, perso: 0, speed: 1, auto: true, engine: "auto", heard: {}, piper: false, nativeVoice: -1, looks: {}, rest: false, narrate: false, fx: 1, fy: 1, day: "" };
+  const d: Settings = { look: DEFAULT_LOOK, perso: 0, speed: 1, auto: true, engine: "auto", heard: {}, piper: false, nativeVoice: -1, voiceType: "garcon", looks: {}, rest: false, narrate: false, fx: 1, fy: 1, day: "" };
   try {
     const raw = JSON.parse(storageGet(KEY) ?? "null") as Partial<Settings> | null;
     if (!raw) return d;
@@ -53,6 +61,7 @@ function loadSettings(): Settings {
       engine: raw.engine === "native" || raw.engine === "phone" || raw.engine === "piper" || raw.engine === "robot" || raw.engine === "babble" ? raw.engine : "auto",
       heard: raw.heard && typeof raw.heard === "object" ? raw.heard : {},
       piper: raw.piper === true,
+      voiceType: raw.voiceType === "perso" || raw.voiceType === "homme" || raw.voiceType === "grave" ? raw.voiceType : "garcon",
       nativeVoice: typeof raw.nativeVoice === "number" && raw.nativeVoice >= 0 ? Math.floor(raw.nativeVoice) : -1,
       narrate: raw.narrate === true,
       fx: num(raw.fx, 0, 1, 1),
@@ -231,11 +240,13 @@ function runEngine(e: Engine, text: string, my: number, done: () => void, fail: 
   const p = PERSOS[snap.s.perso];
   const rate = Math.max(0.5, Math.min(2, p.rate * SPEEDS[snap.s.speed].factor));
   // A real voice (Android's, the phone's) gets ugly when pushed too high or too fast: only a gentle nudge per character.
-  const softPitch = 1 + (p.pitch - 1) * 0.3;
+  const vt = VOICE_TYPES.find((v) => v.id === snap.s.voiceType);
+  // the chosen kind of voice, with a small touch of the character's own pitch
+  const softPitch = vt && vt.pitch ? vt.pitch * (1 + (p.pitch - 1) * 0.08) : 1 + (p.pitch - 1) * 0.3;
   const softRate = Math.max(0.6, Math.min(1.5, 1 + (p.rate - 1) * 0.45)) * SPEEDS[snap.s.speed].factor;
   const alive = () => my === wake;
   if (e === "robot" || e === "babble") {
-    const r = (e === "robot" ? robotSound : babbleSound)(text, p.pitch, rate, p.voice.formant, p.voice.vib);
+    const r = (e === "robot" ? robotSound : babbleSound)(text, vt && vt.pitch ? vt.pitch * 0.9 : p.pitch, softRate, p.voice.formant, p.voice.vib);
     if (!r) {
       mark(e, "ko");
       return fail();

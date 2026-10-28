@@ -13,7 +13,9 @@ export const NOUVEAUTES: Nouveaute[] = [
       "Lance le jongleur d'un coup de doigt : il vole, tombe, se relève et retourne à son ballon.",
       "Déplace-le : il va chercher son ballon et le ramène à sa nouvelle place.",
       "Nouvelle page Paramètres (bouton ⚙️ en haut) : personnage, voix, sons, mises à jour.",
-      "Deux touchers sur le personnage : il joue (le Jongleur sort avec son ballon).",
+      "Deux touchers sur le personnage : son menu s'ouvre.",
+      "Tous les personnages se lancent : appui long puis lancer, ou coup de doigt. Ils volent, tombent, ont un bobo et râlent !",
+      "Type de voix au choix : Garçon (par défaut), Homme, Grave, ou celle du personnage.",
     ],
   },
   {
