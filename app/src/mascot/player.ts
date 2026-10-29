@@ -1,3 +1,4 @@
+import { depthZ } from "./depth";
 import { hasCast, sideArmCast, sideHead, sideShinCast, wounds } from "./wounds";
 // The footballer and HIS ball: one being, two bodies, drawn and moved together every frame.
 // - The ground is the line under his feet. The ball lives on that ground: it rolls, flies and bounces on it.
@@ -115,7 +116,7 @@ function drawBall() {
   // in front of him when it is at his feet or in the air in front of him (he plays it with his near foot)
   const close = pl && Math.abs(ball.x - pl.x) < 60 * s && Math.abs(ball.y - pl.y) < 30 * s;
   // resting at his feet in his corner: above his button (z 55), so a finger can take it
-  ballEl.style.zIndex = pl ? String(15 + Math.round((close ? Math.max(ball.y, pl.y) : ball.y) / 40) + (close ? 1 : 0)) : "56";
+  ballEl.style.zIndex = String(depthZ(pl && close ? Math.max(ball.y, pl.y) : ball.y) + (close || !pl ? 1 : 0));
   ballEl.style.setProperty("--sh", `${ball.z}px`);
   ballEl.style.setProperty("--shs", String(Math.max(0.35, 1 - ball.z / 160)));
   spinEl.style.transform = `rotate(${ball.rot}deg)`;
@@ -169,6 +170,36 @@ function stepBall(dt: number) {
     b.vy = -Math.abs(b.vy) * 0.5;
   }
   b.rot += ((b.vx * dt) / r) * 57.3;
+  if (Math.hypot(b.vx, b.vy, b.vz) > 90) bump(b, r);
+}
+
+// The ball does not go through the others: it hits the friends on the screen and the visitors, and bounces off them.
+let bodies: { el: HTMLElement; r: DOMRect }[] = [];
+let bodiesAt = 0;
+const lastHit = new WeakMap<HTMLElement, number>();
+function bump(b: Ball, r: number) {
+  const now = performance.now();
+  if (now - bodiesAt > 150) {
+    bodiesAt = now;
+    bodies = [...document.querySelectorAll<HTMLElement>(".buddy, .vis")].map((el) => ({ el, r: el.getBoundingClientRect() }));
+  }
+  for (const { el, r: box } of bodies) {
+    if (b.x < box.left + 8 - r || b.x > box.right - 8 + r) continue;
+    if (Math.abs(b.y - box.bottom) > 30) continue; // not on the same line (he is in front of or behind the ball)
+    if (b.z > box.height * 0.95) continue; // over his head
+    if (now - (lastHit.get(el) ?? 0) < 450) continue;
+    lastHit.set(el, now);
+    const speed = Math.hypot(b.vx, b.vy, b.vz);
+    const fromLeft = b.x < box.left + box.width / 2;
+    // it bounces back, a little up
+    b.vx = (fromLeft ? -1 : 1) * Math.max(80, Math.abs(b.vx) * 0.55);
+    b.vy *= 0.5;
+    b.vz = Math.max(b.vz * 0.4, 140);
+    b.x = fromLeft ? Math.min(b.x, box.left + 6 - r) : Math.max(b.x, box.right - 6 + r);
+    ballBounce(Math.min(1, speed / 700));
+    window.dispatchEvent(new CustomEvent("footdex:ballhit", { detail: { el, h: b.z / Math.max(1, box.height), vx: b.vx, speed } }));
+    break;
+  }
 }
 
 function grabbable(el: HTMLElement) {
@@ -346,7 +377,7 @@ function place(p: Pose) {
   const s = scaleAt(pl.y);
   const rot = p.rot ? ` rotate(${p.rot * pl.dir}deg)` : "";
   pl.el.style.transform = `translate(${pl.x - FIG_W / 2}px,${pl.y - FIG_H - p.lift}px) scale(${s})${rot}`;
-  pl.el.style.zIndex = String(15 + Math.round(pl.y / 40));
+  pl.el.style.zIndex = String(depthZ(pl.y));
   // in the air he tumbles around his middle; on the ground he turns around his feet
   const flying = pl.act.k === "fly" && pl.act.ground === 0;
   pl.el.style.transformOrigin = flying ? "33px 48px" : "33px 86px";

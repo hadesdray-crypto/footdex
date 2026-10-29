@@ -1,3 +1,4 @@
+import { depthZ } from "./depth";
 // The character walking about the screen on his own: runs, walks, gets tired, does push-ups, kicks the ball, kneels before a button.
 import type { Look } from "./look";
 import { runnerSvg, type View } from "./runner";
@@ -90,6 +91,7 @@ export function createActor(look: Look, x: number, y: number, hooks: { onTap: ()
   function place() {
     const s = Math.max(0.78, Math.min(1.2, 0.76 + 0.46 * (me.y / window.innerHeight)));
     el.style.transform = `translate(${me.x - 33}px,${me.y - 86}px) scale(${s})`;
+    el.style.zIndex = String(depthZ(me.y));
     el.style.zIndex = String(15 + Math.round(me.y / 40));
     return s;
   }

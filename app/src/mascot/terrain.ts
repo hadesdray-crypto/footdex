@@ -366,6 +366,17 @@ export function startReferee() {
   loop(true);
 }
 
+// The ball hits a visitor: the Doctor says ouch, the Referee is not happy at all.
+if (typeof window !== "undefined") {
+  window.addEventListener("footdex:ballhit", (e) => {
+    const { el } = (e as CustomEvent<{ el: HTMLElement }>).detail;
+    const v = [doctor, referee].find((x) => x && x.el === el);
+    if (!v || v.dead) return;
+    if (v.kind === "medecin") v.say(pick(["Aïe ! Le docteur est blessé !", "Ouille ! Qui soigne le docteur ?"]), 2200);
+    else v.say(pick(["Hé ! Un ballon sur l'arbitre ?!", "Aïe ! Attention, je surveille !"]), 2200);
+  });
+}
+
 // For checking the scenes in a browser: open the app with « ?essai-terrain » in the address.
 if (typeof location !== "undefined" && location.search.includes("essai-terrain")) {
   (window as unknown as { __terrain?: unknown }).__terrain = { doctorVisit, refereeVisit, refereeSurprise, refereeSendOff, faute };

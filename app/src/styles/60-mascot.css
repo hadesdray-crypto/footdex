@@ -366,7 +366,7 @@
 .vis__fx { width: 100%; height: 100%; }
 .vis svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 4px 2px #0006); }
 .vis .far { filter: brightness(.74); }
-.vis__bubble { position: fixed; left: 0; top: 0; z-index: 70; width: 200px; padding: 8px 12px; border-radius: 16px; background: #eef2fb; color: #10131c; font: 800 14px/1.3 var(--f-body); text-align: center; box-shadow: 0 8px 20px -8px #000c; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.vis__bubble { position: fixed; left: 0; top: 0; z-index: 76; width: 200px; padding: 8px 12px; border-radius: 16px; background: #eef2fb; color: #10131c; font: 800 14px/1.3 var(--f-body); text-align: center; box-shadow: 0 8px 20px -8px #000c; opacity: 0; transition: opacity .2s; pointer-events: none; }
 .vis__bubble.is-on { opacity: 1; }
 .vis__sack { position: fixed; left: 0; top: 0; width: 60px; height: 44px; transform-origin: 30px 44px; pointer-events: none; animation: sackWiggle .5s ease-in-out infinite alternate; }
 @keyframes sackWiggle { from { rotate: -3deg; } to { rotate: 3deg; } }
@@ -435,14 +435,14 @@
 @keyframes fiddle { from { transform: rotate(-4deg); } to { transform: rotate(5deg) translateY(-1px); } }
 
 /* friends on the screen */
-.buddies { position: fixed; inset: 0; pointer-events: none; z-index: 54; }
+.buddies { display: contents; }
 .buddy { position: fixed; width: 64px; height: 74px; padding: 0; border: 0; background: none; pointer-events: auto; touch-action: none; cursor: grab; transition-property: left, top; transition-timing-function: linear; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.5)); -webkit-tap-highlight-color: transparent; }
 .buddy__flip { display: block; transition: transform 0.25s; }
 .buddy.is-walk .mfw { animation: buddyStep 0.42s ease-in-out infinite alternate; }
 .buddy.is-old.is-walk .mfw { animation: buddyOld 0.8s ease-in-out infinite alternate; }
 @keyframes buddyStep { from { transform: translateY(0) rotate(-2deg); } to { transform: translateY(-3px) rotate(2deg); } }
 @keyframes buddyOld { from { transform: translateY(0) rotate(-1deg); } to { transform: translateY(-1px) rotate(3deg); } }
-.buddy__bubble { position: fixed; z-index: 69; width: 180px; padding: 7px 10px; border-radius: 14px; background: #eef2fb; color: #10131c; font: 700 13px/1.3 var(--f-body); text-align: center; box-shadow: 0 8px 20px -8px #000c; pointer-events: none; animation: m-pop 0.25s var(--ease); }
+.buddy__bubble { position: fixed; z-index: 75; width: 180px; padding: 7px 10px; border-radius: 14px; background: #eef2fb; color: #10131c; font: 700 13px/1.3 var(--f-body); text-align: center; box-shadow: 0 8px 20px -8px #000c; pointer-events: none; animation: m-pop 0.25s var(--ease); }
 .buddy__bubble b { display: block; font-size: 11px; color: #6b4a10; }
 .no-bubbles .buddy__bubble { display: none !important; }
 .mfw.a-surprised .armL { transform: rotate(150deg); }
@@ -457,3 +457,24 @@
 @keyframes idolA { 0% { transform: translate(-50%, 6px) scale(0.7); opacity: 0; } 30% { opacity: 1; } 100% { transform: translate(-50%, -22px) scale(1.15); opacity: 0; } }
 @keyframes idolB { 0% { transform: translate(-50%, 4px) scale(0.6) rotate(-8deg); opacity: 0; } 35% { opacity: 1; } 100% { transform: translate(-50%, -26px) scale(1.1) rotate(8deg); opacity: 0; } }
 .mfw.a-pray .mfig { filter: drop-shadow(0 0 6px #ffd76a); }
+
+/* friends: running, trembling with fear, the zombie's arms, his rolling head */
+.buddy.is-run .mfw { animation: buddyStep 0.22s ease-in-out infinite alternate; }
+.buddy.is-scared.s1 .mfw { animation: fearS 0.5s ease-in-out infinite; }
+.buddy.is-scared.s2 .mfw { animation: fearS 0.18s linear infinite; }
+.buddy.is-scared.s3 .mfw { animation: fearL 0.08s linear infinite; }
+.buddy.is-scared.is-run .mfw { animation: buddyStep 0.16s ease-in-out infinite alternate; }
+@keyframes fearS { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(1.5px); } }
+@keyframes fearL { 0%, 100% { transform: translate(-2px, 0) rotate(-2deg); } 50% { transform: translate(2px, -1px) rotate(2deg); } }
+.buddy.is-zombie.is-walk .mfw { animation: zombieShuffle 0.9s ease-in-out infinite alternate; }
+@keyframes zombieShuffle { from { transform: rotate(-4deg) translateY(0); } to { transform: rotate(3deg) translateY(-1px); } }
+.mfw.a-zarms .armL { transform: rotate(118deg); animation: zarmL 0.7s ease-in-out infinite alternate; }
+.mfw.a-zarms .armR { transform: rotate(-118deg); animation: zarmR 0.7s ease-in-out infinite alternate; }
+@keyframes zarmL { from { transform: rotate(110deg); } to { transform: rotate(126deg); } }
+@keyframes zarmR { from { transform: rotate(-126deg); } to { transform: rotate(-110deg); } }
+.mfw.a-zarms .headg { transform: rotate(-8deg); }
+.mfw.a-kneel .mfig { transform: translateY(8px) scaleY(0.9); transform-origin: 50% 100%; transition: transform 0.3s; }
+.mfw.no-head .headg { visibility: hidden; }
+.bhead { position: fixed; width: 64px; pointer-events: none; transition-property: left, top, transform; transition-timing-function: cubic-bezier(0.25, 0.8, 0.4, 1.15); transform-origin: 50% 34%; }
+.bhead .mfig > * { visibility: hidden; }
+.bhead .mfig .headg { visibility: visible; }

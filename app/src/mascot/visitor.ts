@@ -2,6 +2,7 @@
 // Same jointed body as the Jongleur (hips, knees, feet, shoulders, elbows), moved every frame: walking, kneeling,
 // whistling, showing a card, shrugging, dragging a sack. Each one has his own small speech bubble.
 import { visitorSpeak } from "./state";
+import { depthZ } from "./depth";
 import { figSvg, type Look } from "./look";
 import { sideHeadSvg } from "./runner";
 
@@ -301,6 +302,7 @@ export class Visitor {
     set("aBE", `translate(0 13) rotate(${p.eB})`);
     const s = scaleAt(this.y);
     this.el.style.transform = `translate(${this.x - FIG_W / 2}px,${this.y - FIG_H - p.lift}px) scale(${s})`;
+    this.el.style.zIndex = String(depthZ(this.y));
     this.el.style.zIndex = String(57 + Math.round(this.y / 60));
     (this.el.firstElementChild as HTMLElement).style.transform = `scaleX(${this.dir})`;
     const bw = 200;

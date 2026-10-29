@@ -18,6 +18,7 @@ import { ensureBall, parkBall, removeBall, spawnFootballer, whenStolen } from ".
 import { footballOuting, type Outing } from "./footScenes";
 import { doctorVisit, faute, refereeSendOff, refereeSurprise, startReferee, substitution } from "./terrain";
 import { Buddies, BuddyPicker } from "./Buddies";
+import { depthZ } from "./depth";
 import { addBandage, addCast, heal, isOut, onWounds, wounds } from "./wounds";
 import { fallApart } from "./zombie";
 import { runScript } from "./scripts";
@@ -178,7 +179,9 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       /* he stays in his corner */
     } else if (perso.mode === "joueur") every(7000, 15000, () => wander());
     else if (perso.mode === "excite") every(22000, 42000, () => wander());
-    else if (perso.mode === "zombie") every(35000, 60000, () => wander());
+    else if (perso.mode === "zombie") every(12000, 22000, () => wander());
+    // the zombie lifts his arms like in the films, now and then (just a little, for fun)
+    if (perso.mode === "zombie") every(25000, 50000, () => { const st = getMascot(); if (!st.busy && !st.talking && !st.bubble) { play("zarms", 2600); say(pick(["Braaaains… euh… ballons !", "Grrraaaaah…", "Mmmmh… du fooot…"])); } });
     else every(40000, 75000, () => wander());
     return () => timers.forEach((t) => window.clearTimeout(t));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -620,7 +623,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
 
   return (
     <>
-      <div ref={rootRef} className={cx("mascot", m.busy && "is-hidden")} aria-live="polite">
+      <div ref={rootRef} className={cx("mascot", m.busy && "is-hidden")} aria-live="polite" style={{ zIndex: dragging || showAside ? 74 : depthZ(pos.y + H) }}>
         <button
           ref={fabRef}
           type="button"

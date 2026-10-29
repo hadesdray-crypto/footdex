@@ -4,6 +4,18 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-10-29",
+    titre: "Version 29 : tout le monde a peur du Zombie !",
+    type: "appli",
+    points: [
+      "Les personnages passent devant ou derrière les autres, selon qu'ils sont plus haut ou plus bas sur l'écran.",
+      "Le ballon ne traverse plus personne : il rebondit sur les copains, le Médecin et l'Arbitre (qui n'aiment pas ça).",
+      "Le Zombie bouge tout le temps, suit les autres, et lève parfois les bras comme dans les films.",
+      "Tout le monde en a peur, sauf le Médecin : plus il est proche, plus ils crient et s'enfuient… vers les autres, pour faire groupe.",
+      "Un ballon dans la tête du Zombie ? Sa tête tombe et roule par terre ! Il va la chercher et la remet. Les autres hurlent.",
+    ],
+  },
+  {
+    date: "2026-10-29",
     titre: "Version 28 : des réactions tout de suite",
     type: "appli",
     points: [
