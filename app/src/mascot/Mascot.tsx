@@ -10,7 +10,7 @@ import { CaracList } from "./Carac";
 import { VoicePicker } from "./VoicePicker";
 import { ballOpen } from "../sound";
 import { piperDownload, piperRemove } from "../piper";
-import { SPEEDS, inter, interOf, loreToldToday, oupsLines, tellLore, choosePerso, wornLook, hasMore, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, say, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, androidVoices, installAndroidVoices, isApp, type Engine } from "./state";
+import { SPEEDS, sayFx, zopt, inter, interOf, loreToldToday, oupsLines, tellLore, choosePerso, wornLook, hasMore, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, say, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, androidVoices, installAndroidVoices, isApp, type Engine } from "./state";
 import { Wardrobe, type Tab } from "./Wardrobe";
 import { go, type Route } from "../router";
 import { createActor } from "./actor";
@@ -293,7 +293,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       if (!body.dead) land();
     };
     // the Zombie does not break: at the very moment he hits the ground, he falls to pieces (head, arms) that you put back on
-    say(pick(["Waaaah !", "Hiiiii !", "Au secouuurs !", "Pose-moi !"]));
+    sayFx(pick(["Waaaah !", "Hiiiii !", "Au secouuurs !", "Pose-moi !"]), "lance");
     // the very moment he hits the ground: « Aïe ! », and the Doctor sets off at once
     const where = () => (body.dead ? feet(posRef.current) : { x: body.x, y: body.y });
     const ouch = () => {
@@ -301,8 +301,10 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       void afterFall(hurt, where);
       return false;
     };
-    const zombieHit =
-      perso.mode !== "zombie" || hurt === "leger"
+    // the Zombie thrown hard ALWAYS loses his limbs (whatever the injury settings), unless it is turned off
+    const sp = Math.hypot(vx, vy);
+    const limbs = perso.mode === "zombie" && zopt().limbs && sp >= 1500;
+    const zombieHit = !limbs
         ? ouch
         : (x: number, y: number, vx: number) => {
             body.destroy();
@@ -310,7 +312,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
             fallApart(
               getMascot().s.look,
               { x, y },
-              hurt === "casse" ? 3 : Math.random() < 0.5 ? 2 : 1,
+              sp >= 2800 ? 3 : sp >= 2000 ? 2 : Math.random() < 0.5 ? 2 : 1,
               (p) => {
                 update({ fx: Math.min(1, Math.max(0, (p.x - W / 2 - area.l) / Math.max(1, area.r - area.l))), fy: Math.min(1, Math.max(0, (p.y - H + 3 - area.t) / Math.max(1, area.b - area.t))) });
                 a.busy = false;
@@ -591,7 +593,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       askMotion();
       if (getMascot().anim === "sleep") {
         play("wake", 50);
-        say("Hein ? Quoi ? Pelé ? … Ah, c'est toi, petit.");
+        sayFx("Hein ? Quoi ? Pelé ? … Ah, c'est toi, petit.", "reveil");
         s.mode = "wait";
         return;
       }

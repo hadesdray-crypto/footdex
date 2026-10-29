@@ -6,7 +6,7 @@
 // everywhere, he puts everything in his sack and drags it off the screen.
 import { figSvg, type Look } from "./look";
 import { pick } from "./lines";
-import { say } from "./state";
+import { say, sayFx } from "./state";
 import { ballBounce, ballTrap } from "../sound";
 import { doctorRepair, doctorSack, faute } from "./terrain";
 
@@ -89,7 +89,7 @@ export function fallApart(look: Look, at: { x: number; y: number }, count: numbe
     return { id, el, hit, x: start.x, y: start.y, vx, vy: -(420 + 260 * Math.random()), ground: at.y - S[id].off, held: false, on: false };
   });
   if (order.includes("head")) faute("zombie");
-  say(order.includes("head") ? pick(["Ma tête !? Où est ma tête ?", "Grrr… je ne vois plus rien !", "Ma tête est partie toute seule !"]) : pick(["Mon bras ! Rends-moi mon bras !", "Grrr… il me manque un bras !"]));
+  sayFx(order.includes("head") ? pick(["Ma tête !? Où est ma tête ?", "Grrr… je ne vois plus rien !", "Ma tête est partie toute seule !"]) : pick(["Mon bras ! Rends-moi mon bras !", "Grrr… il me manque un bras !"]), "tete");
 
   let raf = 0;
   let last = performance.now();
@@ -299,6 +299,6 @@ export function fallApart(look: Look, at: { x: number; y: number }, count: numbe
     pieces.forEach((p) => p.el.remove());
     trunk.remove();
     done(f);
-    say(byHand ? pick(["Grrr… merci ! Comme neuf !", "Clic ! Tout est à sa place. Grrr… merci.", "Ah… je revois tout ! Merci !"]) : pick(["Grrr… recousu ! Me revoilà !", "Me revoilà… avec des points en plus.", "Le docteur m'a recousu… et il a un goût de métal."]));
+    sayFx(byHand ? pick(["Grrr… merci ! Comme neuf !", "Clic ! Tout est à sa place. Grrr… merci.", "Ah… je revois tout ! Merci !"]) : pick(["Grrr… recousu ! Me revoilà !", "Me revoilà… avec des points en plus.", "Le docteur m'a recousu… et il a un goût de métal."]), "merci");
   }
 }

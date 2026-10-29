@@ -238,3 +238,5 @@
 .bruit__btn { height: 44px; border-radius: 12px; border: 1px solid var(--line-2); background: #ffffff0d; font-size: 1.1rem; cursor: pointer; }
 .bruit__btn:disabled { opacity: 0.3; }
 .bruit__live { font-weight: 800; color: #ff6680; }
+.bruit__row.is-rec { border-color: #ff3355; box-shadow: 0 0 14px #ff335566; }
+.bruit__live { position: sticky; top: 70px; z-index: 5; background: #2a0b14; border: 1px solid #ff3355; border-radius: 12px; padding: 8px 12px; }

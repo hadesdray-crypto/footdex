@@ -2,7 +2,7 @@
 import { useState, useSyncExternalStore } from "react";
 import { LuShieldCheck, LuShirt } from "react-icons/lu";
 import { CaracList } from "../mascot/Carac";
-import { Atelier } from "../mascot/Atelier";
+import { Atelier, ZombieOptions } from "../mascot/Atelier";
 import { Bruitages } from "../mascot/Bruitages";
 import { BuddyPicker } from "../mascot/Buddies";
 import { VoicePanel } from "../mascot/Mascot";
@@ -64,6 +64,10 @@ export function Reglages() {
 
       <Section title="Change ma voix !" kicker="Une voix pour chaque personnage, le Médecin et l'Arbitre">
         <VoicePicker />
+      </Section>
+
+      <Section title="Le Zombie" kicker="Comment il joue avec les autres">
+        <ZombieOptions />
       </Section>
 
       <Section title="Mes bruitages" kicker="Enregistre les bruits des personnages">

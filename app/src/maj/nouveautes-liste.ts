@@ -4,6 +4,17 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-10-29",
+    titre: "Version 31 : 26 bruitages et les options du Zombie",
+    type: "appli",
+    points: [
+      "Mes bruitages : 26 moments par personnage (lancé, atterrissage, ballon dans la figure, victoire, carte rare, coffre, ola, carton, check-up, chat…). Touche 🎙️ pour enregistrer, ⏹️ pour arrêter.",
+      "Chaque bruit est joué exactement au moment de l'action.",
+      "Le Zombie perd toujours sa tête et ses bras quand on le lance fort, même quand il est un copain.",
+      "Nouveau réglage « Le Zombie » : membres, peur des autres, poursuite, tête et ballon, éternuement, chat du stade.",
+    ],
+  },
+  {
+    date: "2026-10-29",
     titre: "Version 30 : de la vraie physique, des scènes et tes bruitages",
     type: "appli",
     points: [

@@ -5,7 +5,7 @@ import { cx } from "../util";
 import { Fig } from "./Fig";
 import { PERSOS } from "./lines";
 import { CARAC } from "./caractere";
-import { interOf, setInter, setInterOf, useMascot, type PersoInter } from "./state";
+import { interOf, setInter, setInterOf, setZopt, useMascot, type PersoInter } from "./state";
 import { heal, onWounds, wounds } from "./wounds";
 
 const TALK = ["Muet", "Peu", "Normal", "Beaucoup"] as const;
@@ -58,6 +58,28 @@ export function Atelier() {
       <Chips label="Visites de l'Arbitre" value={it.refVisits} items={yesNo} onPick={(v) => setInter({ refVisits: v })} />
       <p className="mm__label">Son caractère</p>
       <Chips label="Caractère de l'Arbitre" value={it.refMood} items={[{ v: 0, t: "Gentil (pas de carton)" }, { v: 1, t: "Normal" }, { v: 2, t: "Sévère" }]} onPick={(v) => setInter({ refMood: v as 0 | 1 | 2 })} />
+    </div>
+  );
+}
+
+/** « Le Zombie » : how he plays with the others. */
+export function ZombieOptions() {
+  const m = useMascot();
+  const z = m.s.zopt;
+  return (
+    <div className="atelier">
+      <p className="atelier__q">Il perd sa tête et ses bras quand on le lance fort :</p>
+      <Chips label="Il perd ses membres" value={z.limbs} items={yesNo} onPick={(v) => setZopt({ limbs: v })} />
+      <p className="atelier__q">Les autres ont peur de lui :</p>
+      <Chips label="La peur" value={z.fear} items={[{ v: 2, t: "Très peur" }, { v: 1, t: "Un peu" }, { v: 0, t: "Pas du tout" }]} onPick={(v) => setZopt({ fear: v as 0 | 1 | 2 })} />
+      <p className="atelier__q">Il poursuit les autres :</p>
+      <Chips label="La poursuite" value={z.chase} items={yesNo} onPick={(v) => setZopt({ chase: v })} />
+      <p className="atelier__q">Sa tête tombe quand le ballon le touche :</p>
+      <Chips label="Tête et ballon" value={z.ballHead} items={yesNo} onPick={(v) => setZopt({ ballHead: v })} />
+      <p className="atelier__q">Il éternue (et sa tête s'envole) :</p>
+      <Chips label="Éternuement" value={z.sneeze} items={yesNo} onPick={(v) => setZopt({ sneeze: v })} />
+      <p className="atelier__q">Le chat du stade passe de temps en temps :</p>
+      <Chips label="Le chat" value={z.cat} items={yesNo} onPick={(v) => setZopt({ cat: v })} />
     </div>
   );
 }

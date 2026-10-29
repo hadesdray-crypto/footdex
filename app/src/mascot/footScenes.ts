@@ -1,6 +1,7 @@
 // What the Jongleur does with his ball when he goes out on the screen. One player, one ball, always together.
-import { pick } from "./lines";
-import { say as sayIt } from "./state";
+import { PERSOS, pick } from "./lines";
+import { playFx } from "./bruits";
+import { getMascot, say as sayIt } from "./state";
 // While he plays, his words show at the top of the screen: the bubble must not hide his legs.
 const say = (t: string) => sayIt(t, { top: true });
 import { ballInfo, behindBall, trapBall, type Footballer } from "./player";
@@ -77,7 +78,7 @@ export async function footballOuting(f: Footballer, home: Pt, why: Outing = "pla
   try {
     if (why === "thrown" && fling) {
       // Thrown away from his ball: he flies, falls, gets up, and goes back for his ball.
-      say(pick(["Aaaaaah !", "Wouaaah ! Pose-moi !", "Au secouuuurs !"]));
+      if (!playFx("joueur", "lance")) say(pick(["Aaaaaah !", "Wouaaah ! Pose-moi !", "Au secouuuurs !"]));
       // the shock: he reacts at once, and if he is hurt, he waits for the Doctor before going back to his ball
       const hit: { care: Promise<"out" | void> | null } = { care: null };
       await f.fling(fling.vx, fling.vz, fling.vy, () => {
@@ -108,7 +109,7 @@ export async function footballOuting(f: Footballer, home: Pt, why: Outing = "pla
       // a pass to a friend… who does not always catch it
       await getBall(f);
       await dribbleTo(f, { x: Math.max(60, Math.min(window.innerWidth - 60, to.x + (to.x > f.x ? -170 : 170))), y: to.y }, 220);
-      say(pick(["Attrape !", "Tiens, à toi !", "Passe !"]));
+      if (!playFx(PERSOS[getMascot().s.perso].mode, "passe")) say(pick(["Attrape !", "Tiens, à toi !", "Passe !"]));
       await f.kick(to.x > f.x ? 1 : -1, 0.35);
       await f.wait(1800);
       await getBall(f);

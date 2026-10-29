@@ -6,7 +6,9 @@ import { CHEST_COINS, CHEST_STARS, freeChestToday, openChest, useCollec, type Lo
 import { spendStars, useStore } from "../store";
 import { Chest } from "../pages/coffre";
 import { Fig } from "../mascot/Fig";
-import { say, update } from "../mascot/state";
+import { getMascot, say, update } from "../mascot/state";
+import { PERSOS } from "../mascot/lines";
+import { playFx } from "../mascot/bruits";
 import { click, coins as coinSound, fanfare, flip, tear, thump } from "../sound";
 
 const Art = ({ id, size }: { id: string; size: number }) => {
@@ -91,6 +93,7 @@ export function ChestModal({ onClose }: { onClose: () => void }) {
     click("button");
     setLoot(got);
     setPhase("shake");
+    playFx(PERSOS[getMascot().s.perso].mode, "coffre");
     thump();
     window.setTimeout(() => {
       setPhase("open");

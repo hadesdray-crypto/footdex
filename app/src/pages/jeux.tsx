@@ -4,6 +4,7 @@ import { LuArrowLeft, LuCircleCheck, LuGem, LuLayers, LuPlay, LuRotateCcw, LuSta
 import { Fig } from "../mascot/Fig";
 import { PERSOS } from "../mascot/lines";
 import { emit, sayLabel, stopTalking, useMascot } from "../mascot/state";
+import { playFx } from "../mascot/bruits";
 import { gameReward, useStore } from "../store";
 import { PageTitle } from "../ui/bits";
 import { click } from "../sound";
@@ -845,7 +846,8 @@ function GameFrame({ game, onExit, lv, setLv }: { game: Game; onExit: () => void
     setOver({ win, text, stars });
     const full = `${win ? "Bravo ! " : ""}${text}${stars ? ` Tu gagnes ${stars} étoiles !` : ""}`;
     setMsg(full);
-    sayLabel(full);
+    // his recorded « victoire ! » or « oh non… », exactly now; otherwise he says it
+    if (!playFx(perso.mode, win ? "victoire" : "defaite")) sayLabel(full);
   };
   const Comp = game.Comp;
   return (

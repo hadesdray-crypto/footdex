@@ -9,9 +9,10 @@ import { useEffect, useRef, useState } from "react";
 import { Fig } from "./Fig";
 import { CARAC } from "./caractere";
 import { LORE_HINTS, OLD_STORIES, PERSOS, pick, type Mode } from "./lines";
-import { DOCTOR_LOOK, getMascot, play, say, speakAs, update, useMascot, type Buddy } from "./state";
+import { DOCTOR_LOOK, getMascot, play, say, sayFx, speakAs, update, useMascot, zopt, type Buddy } from "./state";
+import { fallApart } from "./zombie";
 import { figSvg, type Look } from "./look";
-import { playFx, type Slot } from "./bruits";
+import { hasFx, playFx, type Slot } from "./bruits";
 import { cough, hiss, meow, sneeze, thud } from "../sound";
 import { cx } from "../util";
 import { depthZ } from "./depth";
@@ -83,6 +84,7 @@ type Body = {
   scared: number;
   pursuit: { dir: 1 | -1; until: number } | null; // the zombie keeps running in one direction (a chase)
   pause: number;
+  throwSpeed: number; // how hard he was thrown (the zombie loses his limbs when it is hard)
   say: (text: string, force?: boolean, slot?: Slot) => void;
   act: (name: string, ms: number) => void;
   hidden: boolean;
@@ -120,6 +122,7 @@ function knock(b: Body, vx: number) {
   b.goal?.done(false);
   b.goal = null;
   b.mode = "fly";
+  b.throwSpeed = Math.abs(vx);
   b.vx = vx * 0.6 + Math.sign(vx || 1) * 60;
   b.vz = 280;
   b.vy = 0;
@@ -161,15 +164,34 @@ function step(t: number) {
           b.vz = -b.vz * 0.3;
           b.vx *= 0.5;
           thud();
+        } else if (b.key === "zombie" && zopt().limbs && b.throwSpeed >= 1000) {
+          // the zombie thrown hard: at the shock, his head and arms come off (put them back, or he looks for them)
+          const zb = b;
+          zb.mode = "free";
+          zb.vz = 0;
+          zb.vx = 0;
+          zb.hidden = true;
+          zb.el.style.display = "none";
+          const sp = zb.throwSpeed;
+          zb.throwSpeed = 0;
+          fallApart(zb.look, { x: zb.x, y: zb.y }, sp >= 1800 ? 3 : sp >= 1300 ? 2 : 1, (p) => {
+            zb.x = p.x;
+            zb.y = p.y;
+            zb.hidden = false;
+            zb.el.style.display = "";
+          }, { vx: zb.vx || (Math.random() < 0.5 ? -300 : 300) });
+          thud();
+          window.dispatchEvent(new CustomEvent("footdex:zombiehead", { detail: { x: zb.x, y: zb.y } }));
         } else {
           b.mode = "down";
           b.vz = 0;
           b.vx = 0;
+          b.throwSpeed = 0;
           b.downUntil = t + 1300;
           thud();
           b.el.classList.add("is-down");
           const who = b;
-          window.setTimeout(() => who.say(who.key === "zombie" ? "Grrr… atterrissage…" : who.key === "statue" ? "Ouille… mon dos…" : pick(["Aïe !", "Ouille…", "Ouf ! Ça va…"]), true, "aie"), 120);
+          window.setTimeout(() => who.say(who.key === "zombie" ? "Grrr… atterrissage…" : who.key === "statue" ? "Ouille… mon dos…" : pick(["Aïe !", "Ouille…", "Ouf ! Ça va…"]), true, "atterrit"), 120);
         }
       }
     } else if (b.mode === "down") {
@@ -284,6 +306,11 @@ function think() {
       }
       b.pursuit = null;
       b.wrap = false;
+      if (!zopt().chase) {
+        // he does not chase anybody: he just wanders about
+        if (Math.random() < 0.15) b.wish = { x: (Math.random() - 0.5) * 50, y: (Math.random() - 0.5) * 16 };
+        continue;
+      }
       const prey = [main && mainMode() !== "zombie" ? main : null, ...others(b).map((o) => ({ x: o.x, y: o.y }))].filter(Boolean) as Pos[];
       const target = prey.sort((p, q) => Math.hypot(p.x - b.x, p.y - b.y) - Math.hypot(q.x - b.x, q.y - b.y))[0];
       if (!target) {
@@ -304,10 +331,11 @@ function think() {
       } else b.wish = { x: (dx / d) * 30, y: (dy / d) * 14 };
       continue;
     }
-    if (fearful(b.key) && z) {
+    const fearK = [0, 0.6, 1][zopt().fear];
+    if (fearful(b.key) && z && fearK > 0) {
       const dx = b.x - z.x;
       const dy = (b.y - z.y) * 1.6;
-      const d = Math.hypot(dx, dy);
+      const d = Math.hypot(dx, dy) / fearK;
       const level = d < 95 ? 3 : d < 165 ? 2 : d < 260 ? 1 : 0;
       // the Papi asleep does not move… unless the zombie is right next to him
       if (b.el.classList.contains("is-asleep")) {
@@ -416,7 +444,7 @@ async function fetchHead(z: Body) {
   z.act("kneel", 900);
   await wait(700);
   headBack(z);
-  z.say(pick(["Clic ! Grrr… ma tête est revenue.", "Ah… je revois tout. Grrr.", "Qui a fait ça ? Grrrr !"]), true);
+  z.say(pick(["Clic ! Grrr… ma tête est revenue.", "Ah… je revois tout. Grrr.", "Qui a fait ça ? Grrrr !"]), true, "merci");
 }
 
 // ------------------------------------------------------------------ the little scenes
@@ -440,7 +468,7 @@ const sneezeScene = () =>
     z.pause = now() + 6000;
     z.say("Aaah… AAAAH…", true);
     await wait(1300);
-    z.say("ATCHOUM !", true);
+    z.say("ATCHOUM !", true, "eternue");
     sneeze();
     dropHead(z, (Math.random() < 0.5 ? -1 : 1) * 200, 160);
     await wait(1500);
@@ -453,10 +481,10 @@ const sneezeScene = () =>
     const h1 = curHead();
     if (!h1) return;
     h1.carrier = brave;
-    brave.say(pick(["Beurk… elle est toute molle !", "Je la tiens… je la tiens…"]), true);
+    brave.say(pick(["Beurk… elle est toute molle !", "Je la tiens… je la tiens…"]), true, "beurk");
     await goTo(brave, z.x + (brave.x > z.x ? 40 : -40), z.y, 55, { stop: 8, timeout: 9000 });
     headBack(z);
-    z.say("Grrr… merci… Tu veux un câlin ?", true);
+    z.say("Grrr… merci… Tu veux un câlin ?", true, "merci");
     await wait(900);
     brave.say("NON MERCI ! AAAAH !", true, "peur");
     await goTo(brave, brave.x > z.x ? window.innerWidth + 120 : -120, brave.y, 300, { wrap: true, timeout: 6000 });
@@ -499,9 +527,9 @@ const checkupScene = () =>
     d.act("work", 2000);
     d.say("Dites… trente-trois !", true);
     await wait(1600);
-    if (p) p.say(p.key === "zombie" ? "Grrrente-trois… kof kof !" : "Trente-trois… kof kof !", true);
-    else say("Trente-trois… kof kof !");
-    cough();
+    if (p) p.say(p.key === "zombie" ? "Grrrente-trois… kof kof !" : "Trente-trois… kof kof !", true, "toux");
+    else sayFx("Trente-trois… kof kof !", "toux");
+    if (!(p ? hasFx(p.key, "toux") : hasFx(mainMode(), "toux"))) cough();
     await wait(1600);
     d.say(pick(["Rien de grave ! Un peu de sport, et ça ira.", "Excellent ! Bon pour le match !"]), true);
   });
@@ -513,17 +541,17 @@ const sleepScene = () =>
     if (p && !p.hidden && p.mode === "free") {
       p.wish = { x: 0, y: 0 };
       p.el.classList.add("is-asleep");
-      p.say("Zzzz… Pelé… zzz…", true);
+      p.say("Zzzz… Pelé… zzz…", true, "dodo");
       await wait(16000);
       if (p.el.classList.contains("is-asleep")) {
         p.el.classList.remove("is-asleep");
-        p.say("Hein ? Quoi ? J'ai dormi ? Non !", true);
+        p.say("Hein ? Quoi ? J'ai dormi ? Non !", true, "reveil");
       }
       return;
     }
     if (mainMode() === "statue" && !getMascot().busy) {
       play("sleep", 16000);
-      say("Zzzz… Pelé… zzz…");
+      sayFx("Zzzz… Pelé… zzz…", "dodo");
     }
   });
 
@@ -532,7 +560,7 @@ const passScene = () =>
   scene(async () => {
     const target = [...bodies.values()].filter((b) => !b.hidden && b.mode === "free" && b.key !== "zombie")[0] ?? bodies.get("zombie");
     if (!target || target.hidden || mainMode() !== "joueur") return;
-    target.say("Passe ! Passe-la moi !", true);
+    target.say("Passe ! Passe-la moi !", true, "passe");
     await wait(900);
     window.dispatchEvent(new CustomEvent("footdex:pass", { detail: { x: target.x, y: target.y } }));
   });
@@ -562,11 +590,10 @@ async function ola() {
     window.setTimeout(() => {
       if (b === "main") {
         play("cheer", 1600);
-        if (!playFx(mainMode(), "joie")) say("OLAAAA !");
-        else say("OLAAAA !", { quiet: true });
+        sayFx("OLAAAA !", "ola");
       } else {
         b.act("cheer", 1500);
-        b.say(i === 0 ? "OLAAAA !" : "Ola !", true, "joie");
+        b.say(i === 0 ? "OLAAAA !" : "Ola !", true, "ola");
       }
     }, i * 380),
   );
@@ -593,8 +620,8 @@ async function catScene() {
     };
     meow();
     const others0 = [...bodies.values()].filter((b) => !b.hidden && b.key !== "zombie");
-    if (others0[0]) others0[0].say(pick(["Oh ! Un chat !", "Un chat sur le terrain !"]), true);
-    else say(pick(["Oh ! Un chat !", "Tiens, un chat !"]));
+    if (others0[0]) others0[0].say(pick(["Oh ! Un chat !", "Un chat sur le terrain !"]), true, "chat");
+    else sayFx(pick(["Oh ! Un chat !", "Tiens, un chat !"]), "chat");
     const z = bodies.get("zombie");
     let met = false;
     let last = now();
@@ -619,8 +646,8 @@ async function catScene() {
             z.say("AAAAAH ! UN CHAT ! AU SECOURS !", true, "peur");
             await goTo(z, z.x < c.x ? -120 : window.innerWidth + 120, z.y, 260, { wrap: true, timeout: 5000 });
             const brave = [...bodies.values()].find((b) => !b.hidden && fearful(b.key));
-            if (brave) brave.say(pick(["Le zombie a peur d'un chat ! Ha ha !", "Ha ha ! Un chat a fait peur au zombie !"]), true, "joie");
-            else say("Ha ha ! Le zombie a peur des chats !");
+            if (brave) brave.say(pick(["Le zombie a peur d'un chat ! Ha ha !", "Ha ha ! Un chat a fait peur au zombie !"]), true, "rire");
+            else sayFx("Ha ha ! Le zombie a peur des chats !", "rire");
             await wait(800);
             el.classList.remove("is-hiss");
             c.state = "walk";
@@ -663,6 +690,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
   /** He says something: his bubble, his voice (or the noise recorded for him), his mouth. */
   const speak = (text: string, force = false, slot?: Slot) => {
     if (!text) return;
+    if (slot && hasFx(b, slot)) force = true; // a recorded noise always plays, exactly at its moment
     if (!force && Date.now() < talkingUntil) return;
     const ms = Math.max(2400, text.length * 68);
     talkingUntil = Date.now() + ms + 300;
@@ -709,6 +737,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
       scared: 0,
       pursuit: null,
       pause: 0,
+      throwSpeed: 0,
       say: speak,
       act: doAct,
       hidden: false,
@@ -717,7 +746,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
     bodies.set(b, body);
     wake();
     if (!thinker) thinker = window.setInterval(think, 250);
-    later(2500 + index * 2200, () => speak(pick(TALK[b])));
+    later(2500 + index * 2200, () => speak(pick(TALK[b]), false, "bonjour"));
 
     // his own little life (talks, chats, waves; the zombie groans and lifts his arms)
     const life = () => {
@@ -769,7 +798,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
           });
           return;
         }
-        if (Math.random() < 0.4) later(400, () => speak(pick(REACT.doctor[b] ?? REACT.doctor.all)));
+        if (Math.random() < 0.4) later(400, () => speak(pick(REACT.doctor[b] ?? REACT.doctor.all), false, "soigne"));
         return;
       }
       if (ev === "doctor-out") {
@@ -785,7 +814,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
         if (Math.random() < 0.8) later(150 + index * 250, () => speak(pick(REACT.thrown[b] ?? REACT.thrown.all), index === 0));
         return;
       }
-      if (ev === "card" && Math.random() < 0.6) later(1400 + index * 300, () => speak(pick(REACT.card[b] ?? REACT.card.all)));
+      if (ev === "card" && Math.random() < 0.6) later(1400 + index * 300, () => speak(pick(REACT.card[b] ?? REACT.card.all), false, "carton"));
       if (ev === "lore" && b !== "statue") doAct("listen", 30000);
     };
     window.addEventListener("footdex:terrain", onEv);
@@ -793,8 +822,8 @@ function One({ b, index }: { b: Buddy; index: number }) {
     const onBall = (e: Event) => {
       const { el: hit, h, vx, speed } = (e as CustomEvent<{ el: HTMLElement; h: number; vx: number; speed: number }>).detail;
       if (hit !== el) return;
-      if (b === "zombie" && h > 0.5 && speed > 160 && !head) {
-        speak("Mmmf ! MA TÊTE !", true, "aie");
+      if (b === "zombie" && zopt().ballHead && h > 0.5 && speed > 160 && !head) {
+        speak("Mmmf ! MA TÊTE !", true, "tete");
         dropHead(body, (vx >= 0 ? 1 : -1) * (160 + Math.random() * 90));
         void fetchHead(body);
         return;
@@ -804,7 +833,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
       speak(
         b === "zombie" ? pick(["Grrr ?", "Grrr… pas dans le ventre !"]) : b === "statue" ? pick(["Aïe ! Mes vieux os !", "Hm ! De mon temps, on visait le but !"]) : b === "medecin" ? "Aïe ! Qui soigne le docteur ?" : pick(["Aïe !", "Hé ! Fais attention !", "Ouille, mon nez !"]),
         true,
-        "aie",
+        "ballon",
       );
     };
     window.addEventListener("footdex:ballhit", onBall);
@@ -821,7 +850,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
       const d = Math.hypot(body.x - z.x, body.y - z.y);
       const level = d < 140 ? 3 : d < 260 ? 2 : 1;
       later(150 + Math.random() * 300, () => {
-        speak(level === 3 ? pick(["AAAAAH ! SA TÊTE !", "IIIIIH ! ELLE ROULE !", "BEUUUURK !"]) : level === 2 ? pick(["Oh non, sa tête !", "Beurk… elle roule par ici !"]) : "Euh… il a perdu quelque chose…", level === 3, "peur");
+        speak(level === 3 ? pick(["AAAAAH ! SA TÊTE !", "IIIIIH ! ELLE ROULE !", "BEUUUURK !"]) : level === 2 ? pick(["Oh non, sa tête !", "Beurk… elle roule par ici !"]) : "Euh… il a perdu quelque chose…", level === 3, "beurk");
         doAct("surprised", 1400);
       });
     };
@@ -886,9 +915,9 @@ function One({ b, index }: { b: Buddy; index: number }) {
     if (!d.moved) {
       if (body.el.classList.contains("is-asleep")) {
         body.el.classList.remove("is-asleep");
-        return speak("Hein ? Quoi ? Pelé ? … Ah, c'est toi.", true);
+        return speak("Hein ? Quoi ? Pelé ? … Ah, c'est toi.", true, "reveil");
       }
-      return speak(pick(TALK[b]), true, b === "zombie" ? "bruit" : undefined);
+      return speak(pick(TALK[b]), true, "bonjour");
     }
     const a = d.pts[0];
     const z = d.pts[d.pts.length - 1];
@@ -898,10 +927,11 @@ function One({ b, index }: { b: Buddy; index: number }) {
     if (Math.hypot(vx, vy) > 650) {
       // thrown!
       body.mode = "fly";
+      body.throwSpeed = Math.hypot(vx, vy);
       body.vx = Math.max(-1400, Math.min(1400, vx * 0.8));
       body.vz = Math.max(260, Math.min(1000, -vy * 0.8));
       body.vy = 0;
-      speak(b === "zombie" ? "Grrraaaah ! Je vole !" : b === "statue" ? "Hé ! Pas les vieux ! AAAAH !" : pick(["Waaaah !", "Hiiiii !", "Pose-moi !"]), true, "peur");
+      speak(b === "zombie" ? "Grrraaaah ! Je vole !" : b === "statue" ? "Hé ! Pas les vieux ! AAAAH !" : pick(["Waaaah !", "Hiiiii !", "Pose-moi !"]), true, "lance");
       return;
     }
     body.mode = "free";
@@ -953,13 +983,14 @@ export function Buddies() {
       const me = mainSpot();
       const z = bodies.get("zombie");
       if (!me || !z || z.hidden) return;
-      const d = Math.hypot(me.x - z.x, (me.y - z.y) * 1.6);
+      const k = [0, 0.6, 1][zopt().fear];
+      if (!k) return;
+      const d = Math.hypot(me.x - z.x, (me.y - z.y) * 1.6) / k;
       const level = d < 95 ? 3 : d < 165 ? 2 : 0;
       if (!level || Date.now() < at) return;
       at = Date.now() + (level === 3 ? 3000 : 6000);
       const text = mode === "statue" ? pick(STATUE_SCARED) : mainScared(level);
-      if (playFx(mode, "peur")) say(text, { quiet: true });
-      else say(text);
+      sayFx(text, "peur");
       play(level === 3 ? "surprised" : "shake", 1400);
     }, 500);
     const onHead = (e: Event) => {
@@ -968,7 +999,7 @@ export function Buddies() {
       if (!me) return;
       const d = Math.hypot(me.x - z.x, me.y - z.y);
       window.setTimeout(() => {
-        say(d < 160 ? pick(["AAAAAH ! SA TÊTE !", "IIIIH ! Elle a roulé jusqu'à moi !"]) : pick(["Oh non… sa tête !", "Beurk !"]));
+        sayFx(d < 160 ? pick(["AAAAAH ! SA TÊTE !", "IIIIH ! Elle a roulé jusqu'à moi !"]) : pick(["Oh non… sa tête !", "Beurk !"]), "beurk");
         play("surprised", 1500);
       }, 200);
     };
@@ -989,7 +1020,7 @@ export function Buddies() {
           if (!document.hidden && !st.busy && !st.s.rest && !document.querySelector(".mm, .wd, .reveal, .chm, .subst")) {
             const has = (k: Buddy) => !!bodies.get(k) && !bodies.get(k)?.hidden;
             const options: (() => Promise<unknown> | void)[] = [];
-            if (has("zombie")) options.push(sneezeScene);
+            if (has("zombie") && zopt().sneeze) options.push(sneezeScene);
             if (has("zombie") && [...bodies.values()].some((b) => fearful(b.key))) options.push(hideScene);
             if (has("medecin")) options.push(checkupScene);
             if (has("statue") || mode === "statue") options.push(sleepScene);
@@ -1004,13 +1035,16 @@ export function Buddies() {
       timers.push(
         window.setTimeout(() => {
           const st = getMascot();
-          if (!document.hidden && !st.s.rest && !document.querySelector(".mm, .wd, .reveal, .chm, .subst")) void catScene();
+          if (zopt().cat && !document.hidden && !st.s.rest && !document.querySelector(".mm, .wd, .reveal, .chm, .subst")) void catScene();
           catLoop();
         }, (360000 + Math.random() * 360000) * (bodies.has("zombie") ? 0.5 : 1)),
       );
     catLoop();
     const onEv = (e: Event) => {
       const ev = (e as CustomEvent<string>).detail;
+      if (ev === "card") playFx(mode, "carton");
+      if (ev === "doctor-in") playFx(mode, "soigne");
+      if (ev === "doctor-out") window.setTimeout(() => playFx(mode, "merci"), 300);
       if (ev === "goal") void ola();
       if (ev === "recre") void recre();
     };

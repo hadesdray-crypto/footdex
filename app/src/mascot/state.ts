@@ -7,7 +7,7 @@ import { storageGet, storageSet } from "../util";
 import { AFTER_2000, IDOLS, IDOL_LINES, LORE, LORE_HINTS, OLD_STORIES, OUPS, OUPS_BACK, PAGES, PERSOS, pick, type Kind, type Mode } from "./lines";
 import { DEFAULT_LOOK, sanitizeLook, type Look } from "./look";
 import { CARAC } from "./caractere";
-import { playFx } from "./bruits";
+import { playFx, type Slot } from "./bruits";
 
 const KEY = "footdex.mascotte.v1";
 export const SPEEDS = [
@@ -55,6 +55,14 @@ export type PVoice = { engine: "auto" | Engine; native: number; phone: string; p
 /** Who has a voice: the six characters, and the two visitors of the pitch. */
 export type VoiceKey = Mode | "medecin" | "arbitre";
 
+/** How the Zombie plays with the others (changed in the settings). fear: 0 none, 1 a little, 2 a lot. */
+export type ZOpt = { limbs: boolean; fear: 0 | 1 | 2; chase: boolean; ballHead: boolean; sneeze: boolean; cat: boolean };
+export const ZOPT_DEFAULT: ZOpt = { limbs: true, fear: 2, chase: true, ballHead: true, sneeze: true, cat: true };
+export const zopt = (): ZOpt => snap.s.zopt;
+export function setZopt(patch: Partial<ZOpt>) {
+  update({ zopt: { ...snap.s.zopt, ...patch } });
+}
+
 /** Friends on the screen next to the character: the other characters, and the Doctor. */
 export type Buddy = Mode | "medecin";
 export const BUDDIES: Buddy[] = ["statue", "excite", "poli", "joueur", "pointu", "zombie", "medecin"];
@@ -85,12 +93,12 @@ export function setVoiceOf(mode: VoiceKey, patch: Partial<PVoice>) {
 }
 /** For a moment, a voice to try (in the voice picker): used by the next sentence instead of the chosen one. */
 let trying: PVoice | null = null;
-export type Settings = { look: Look; perso: number; speed: number; auto: boolean; engine: "auto" | Engine; heard: Partial<Record<Engine, boolean>>; piper: boolean; nativeVoice: number; voiceType: VoiceType; pvoice: Partial<Record<VoiceKey, PVoice>>; inter: Inter; bubbles: boolean; buddies: Buddy[]; buddyPos: Record<string, { fx: number; fy: number }>; looks: Record<string, Look>; rest: boolean; narrate: boolean; fx: number; fy: number; day: string };
+export type Settings = { look: Look; perso: number; speed: number; auto: boolean; engine: "auto" | Engine; heard: Partial<Record<Engine, boolean>>; piper: boolean; nativeVoice: number; voiceType: VoiceType; pvoice: Partial<Record<VoiceKey, PVoice>>; inter: Inter; zopt: ZOpt; bubbles: boolean; buddies: Buddy[]; buddyPos: Record<string, { fx: number; fy: number }>; looks: Record<string, Look>; rest: boolean; narrate: boolean; fx: number; fy: number; day: string };
 export type Bubble = { id: number; text: string; top: boolean } | null;
 type Snap = { reading: boolean; s: Settings; eng: Partial<Record<Engine, "ok" | "ko">>; using: Engine | null; bubble: Bubble; talking: boolean; busy: boolean; anim: string | null; animId: number; vx: number; vy: number; hurt: number };
 
 function loadSettings(): Settings {
-  const d: Settings = { look: DEFAULT_LOOK, perso: 0, speed: 1, auto: true, engine: "auto", heard: {}, piper: false, nativeVoice: -1, voiceType: "garcon", pvoice: {}, inter: INTER_DEFAULT, bubbles: true, buddies: [], buddyPos: {}, looks: {}, rest: false, narrate: false, fx: 1, fy: 1, day: "" };
+  const d: Settings = { look: DEFAULT_LOOK, perso: 0, speed: 1, auto: true, engine: "auto", heard: {}, piper: false, nativeVoice: -1, voiceType: "garcon", pvoice: {}, inter: INTER_DEFAULT, zopt: ZOPT_DEFAULT, bubbles: true, buddies: [], buddyPos: {}, looks: {}, rest: false, narrate: false, fx: 1, fy: 1, day: "" };
   try {
     const raw = JSON.parse(storageGet(KEY) ?? "null") as Partial<Settings> | null;
     if (!raw) return d;
@@ -117,6 +125,7 @@ function loadSettings(): Settings {
       nativeVoice: typeof raw.nativeVoice === "number" && raw.nativeVoice >= 0 ? Math.floor(raw.nativeVoice) : -1,
       narrate: raw.narrate === true,
       bubbles: raw.bubbles !== false,
+      zopt: raw.zopt && typeof raw.zopt === "object" ? { ...ZOPT_DEFAULT, ...raw.zopt } : ZOPT_DEFAULT,
       buddies: Array.isArray(raw.buddies) ? (raw.buddies.filter((b) => BUDDIES.includes(b as Buddy)) as Buddy[]).slice(0, 3) : [],
       buddyPos: raw.buddyPos && typeof raw.buddyPos === "object" ? raw.buddyPos : {},
       fx: num(raw.fx, 0, 1, 1),
@@ -670,10 +679,15 @@ export function sayLabel(text: string) {
 }
 
 
+/** The main character says something at a precise moment: his recorded noise for it if there is one, otherwise his voice. */
+export function sayFx(text: string, slot: Slot, opts: { top?: boolean } = {}) {
+  if (playFx(P().mode, slot)) say(text, { ...opts, quiet: true });
+  else say(text, opts);
+}
 export function greet() {
   // now and then, very quietly, a word about Raphaël (the others know, but do not talk about it much)
   if (P().mode !== "statue" && Math.random() < 0.12) return say(pick(LORE_HINTS));
-  if (P().greet.length) say(pick(P().greet));
+  if (P().greet.length) sayFx(pick(P().greet), "bonjour");
 }
 
 /** The Papi's monologue: the story of the world, told piece by piece, each one after the previous one is said. */
@@ -773,7 +787,7 @@ export function isIdol(name: string): boolean {
 }
 /** The Jongleur meets one of his idols: on his knees, hearts and stars over his head. */
 function idol(name: string) {
-  say(pick(IDOL_LINES).replace("{n}", name), { top: true });
+  sayFx(pick(IDOL_LINES).replace("{n}", name), "carte_rare", { top: true });
   play("pray", 5600);
 }
 const idolSeen = new Set<string>();
@@ -792,7 +806,7 @@ export function onCard(info: { name: string; rarity: string; shiny: boolean }) {
   const chance = P().mode === "poli" ? (high ? 1 : 0) : kind === "base" ? 0.35 : kind === "rare" ? 0.7 : 1;
   if (Math.random() > chance) return;
   const more = P().mode === "pointu" && kind !== "base" ? ` ${P().extra[1] ?? ""}` : "";
-  say(pick(lines).replace("{n}", info.name) + more, { top: true });
+  sayFx(pick(lines).replace("{n}", info.name) + more, high ? "carte_rare" : "carte", { top: true });
   if (P().mode === "joueur") {
     // The more beautiful the card, the bigger his reaction: a small wave, arms up, a jump…
     // and on his knees, with hearts and stars over his head, only for his idols.
