@@ -287,3 +287,8 @@ export const OUPS: string[] = [
   "Oh là là… Euh… Ne regardez pas. Je dois m'absenter un instant.",
 ];
 export const OUPS_BACK: string[] = ["Hm. Voilà. Ça va mieux. On n'en parle plus.", "… Me revoilà. Tout propre. On n'en parle plus, hein ?"];
+
+
+// ------------------------------------------------------------------ the Jongleur's idols: for them, and only them, he falls to his knees
+export const IDOLS = ["mbappe", "zidane", "messi", "ronaldo", "pele", "maradona", "henry", "platini", "ronaldinho", "neymar", "griezmann", "benzema", "haaland", "cruyff", "beckenbauer", "papin", "cantona", "dembele", "yamal", "bellingham"];
+export const IDOL_LINES = ["{n} ! C'EST MON IDOLE ! Je ne suis pas digne !", "Non… {n} ! Je me mets à genoux ! Mon héros !", "{n}… Le plus grand ! J'en ai des étoiles plein les yeux !"];

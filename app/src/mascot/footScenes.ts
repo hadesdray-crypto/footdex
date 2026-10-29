@@ -73,20 +73,32 @@ async function juggling(f: Footballer) {
 /** One outing: dribbles, shots, juggling, a sprint, push-ups… then home, with the ball at his feet. */
 export type Outing = "play" | "stolen" | "thrown" | "moved";
 
-export async function footballOuting(f: Footballer, home: Pt, why: Outing = "play", fling?: { vx: number; vz: number; vy: number }, broken = false): Promise<"banc" | void> {
+export async function footballOuting(f: Footballer, home: Pt, why: Outing = "play", fling?: { vx: number; vz: number; vy: number }, broken = false, onHit?: () => Promise<"out" | void> | void): Promise<"banc" | void> {
   try {
     if (why === "thrown" && fling) {
       // Thrown away from his ball: he flies, falls, gets up, and goes back for his ball.
       say(pick(["Aaaaaah !", "Wouaaah ! Pose-moi !", "Au secouuuurs !"]));
-      await f.fling(fling.vx, fling.vz, fling.vy);
+      // the shock: he reacts at once, and if he is hurt, he waits for the Doctor before going back to his ball
+      const hit: { care: Promise<"out" | void> | null } = { care: null };
+      await f.fling(fling.vx, fling.vz, fling.vy, () => {
+        const c = onHit?.();
+        if (c) hit.care = c;
+        return false;
+      });
+      const care = hit.care;
       if (f.dead) return;
+      if (care) {
+        const r = await care;
+        if (f.dead) return;
+        if (r === "out") broken = true;
+      }
       if (broken) {
         // a broken leg: no more football today, he hobbles off the pitch
         say(pick(["Aïe ! Ma jambe ! Je sors…", "Ouille… je crois que c'est cassé !"]));
         await f.run({ x: f.x < window.innerWidth / 2 ? -80 : window.innerWidth + 80, y: f.y }, { speed: 70, limp: true, timeout: 20000 });
         return "banc";
       }
-      say(pick(["Aïe… Bon. Mon ballon !", "Ouille. Où est mon ballon ?", "Pas drôle ! Je retourne à mon ballon."]));
+      if (!care) say(pick(["Aïe… Bon. Mon ballon !", "Ouille. Où est mon ballon ?", "Pas drôle ! Je retourne à mon ballon."]));
       await getBall(f);
     } else if (why === "moved") {
       // Moved to another place: his ball stayed behind. He goes for it and brings it to his new spot.

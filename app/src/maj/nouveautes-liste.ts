@@ -4,6 +4,17 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-10-29",
+    titre: "Version 28 : des réactions tout de suite",
+    type: "appli",
+    points: [
+      "Les personnages réagissent tout de suite : « Waaah ! » dès qu'on les lance, « Aïe ! » au moment du choc, et le Médecin part aussitôt.",
+      "La voix démarre plus vite.",
+      "Le Jongleur ne se met à genoux que pour ses idoles (Mbappé, Zidane, Messi, Pelé…), avec des cœurs et des étoiles au-dessus de la tête. Même quand tu ouvres leur fiche !",
+      "Les copains à l'écran réagissent plus vite.",
+    ],
+  },
+  {
+    date: "2026-10-29",
     titre: "Version 27 : la Collection, les Footballinis, le Papi et les copains",
     type: "appli",
     points: [

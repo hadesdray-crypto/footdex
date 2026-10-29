@@ -4,7 +4,7 @@ import { babble as babbleSound, robot as robotSound } from "../sound";
 import { piperWav } from "../piper";
 import { appeler, moduleDisponible } from "../natif";
 import { storageGet, storageSet } from "../util";
-import { AFTER_2000, LORE, LORE_HINTS, OLD_STORIES, OUPS, OUPS_BACK, PAGES, PERSOS, pick, type Kind, type Mode } from "./lines";
+import { AFTER_2000, IDOLS, IDOL_LINES, LORE, LORE_HINTS, OLD_STORIES, OUPS, OUPS_BACK, PAGES, PERSOS, pick, type Kind, type Mode } from "./lines";
 import { DEFAULT_LOOK, sanitizeLook, type Look } from "./look";
 import { CARAC } from "./caractere";
 
@@ -413,15 +413,11 @@ function runEngine(e: Engine, text: string, my: number, done: () => void, fail: 
     window.clearTimeout(talkTimer);
     set({ talking: true });
     mark(e, "ok");
-    appeler("TextToSpeech", "stop")
-      .catch(() => undefined)
-      .then(() => {
-        if (!alive()) return;
-        const opts: Record<string, unknown> = { text, lang: "fr-FR", rate: softRate, pitch: softPitch, volume: 1, category: "playback" };
-        if (pv.native >= 0) opts.voice = pv.native;
-        else if (snap.s.nativeVoice >= 0) opts.voice = snap.s.nativeVoice;
-        return appeler("TextToSpeech", "speak", opts);
-      })
+    // no second « stop » here (stopTalking has just done it): the voice starts at once
+    const opts: Record<string, unknown> = { text, lang: "fr-FR", rate: softRate, pitch: softPitch, volume: 1, category: "playback" };
+    if (pv.native >= 0) opts.voice = pv.native;
+    else if (snap.s.nativeVoice >= 0) opts.voice = snap.s.nativeVoice;
+    appeler("TextToSpeech", "speak", opts)
       .then(
         () => {
           if (!alive()) return;
@@ -499,7 +495,7 @@ function runEngine(e: Engine, text: string, my: number, done: () => void, fail: 
         mark(e, "ko");
         fail();
       }
-    }, 90);
+    }, pickVoice ? 0 : 60);
   };
   attempt(true);
 }
@@ -577,6 +573,14 @@ export function testEngine(e: Engine, result: (ok: boolean) => void) {
 
 /** Wakes the phone's voice at the first touch (some phones keep it asleep until then), and loads the list of voices. */
 export function warmVoice() {
+  // the phone's voice (in the app) is woken up with a silent word, so that the first real sentence starts at once
+  if (isApp()) {
+    const wakeNative = () => {
+      document.removeEventListener("pointerdown", wakeNative, true);
+      appeler("TextToSpeech", "speak", { text: " ", lang: "fr-FR", volume: 0, rate: 1, pitch: 1, category: "playback" }).catch(() => undefined);
+    };
+    document.addEventListener("pointerdown", wakeNative, true);
+  }
   if (!hasVoice()) return;
   try {
     window.speechSynthesis.getVoices();
@@ -760,7 +764,26 @@ export function readPage() {
 export function sample() {
   say(P().sample);
 }
+const fold = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+/** One of the Jongleur's idols? (by name: « Kylian Mbappé », « Zinédine Zidane »…) */
+export function isIdol(name: string): boolean {
+  const n = fold(name).split(/[^a-z]+/);
+  return IDOLS.some((i) => n.includes(i));
+}
+/** The Jongleur meets one of his idols: on his knees, hearts and stars over his head. */
+function idol(name: string) {
+  say(pick(IDOL_LINES).replace("{n}", name), { top: true });
+  play("pray", 5600);
+}
+const idolSeen = new Set<string>();
+/** A player's page is open: if it is one of his idols, the Jongleur cannot hold back (once per player and per day). */
+export function onFiche(name: string) {
+  if (P().mode !== "joueur" || !isIdol(name) || idolSeen.has(name) || snap.s.rest) return;
+  idolSeen.add(name);
+  idol(name);
+}
 export function onCard(info: { name: string; rarity: string; shiny: boolean }) {
+  if (P().mode === "joueur" && isIdol(info.name)) return idol(info.name);
   const kind: Kind = info.shiny ? "shiny" : (["base", "rare", "eclat", "legende", "moment"].includes(info.rarity) ? (info.rarity as Kind) : "base");
   const lines = P().card[kind];
   if (!lines.length) return;
@@ -770,11 +793,12 @@ export function onCard(info: { name: string; rarity: string; shiny: boolean }) {
   const more = P().mode === "pointu" && kind !== "base" ? ` ${P().extra[1] ?? ""}` : "";
   say(pick(lines).replace("{n}", info.name) + more, { top: true });
   if (P().mode === "joueur") {
-    // The more beautiful the card, the bigger his reaction: a small wave, arms up, a jump, then on his knees.
+    // The more beautiful the card, the bigger his reaction: a small wave, arms up, a jump…
+    // and on his knees, with hearts and stars over his head, only for his idols.
+    if (isIdol(info.name)) return idol(info.name);
     if (kind === "base") play("wave", 2400);
     else if (kind === "rare") play("cheer", 2600);
-    else if (kind === "eclat") play("jump", 2200);
-    else play("pray", 5200);
+    else play("jump", 2400);
     return;
   }
   if (kind !== "base" && kind !== "rare") play("cheer", 2600);
@@ -782,6 +806,10 @@ export function onCard(info: { name: string; rarity: string; shiny: boolean }) {
 export function onShake() {
   play("shake", 1300);
   say(pick(P().shake));
+}
+/** A short cry, right when something happens (he is thrown, he falls): no waiting. */
+export function shout(lines: string[]) {
+  say(pick(lines));
 }
 export function onThrown(strong = false) {
   say(pick(P().thrown));

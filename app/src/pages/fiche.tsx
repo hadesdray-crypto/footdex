@@ -1,3 +1,4 @@
+import { onFiche } from "../mascot/state";
 import { useEffect } from "react";
 import { LuChevronLeft, LuChevronRight, LuExternalLink, LuHeart } from "react-icons/lu";
 import { GROUPS, RARITY, albumCard } from "../cards";
@@ -18,6 +19,8 @@ export function Fiche({ album, id }: { album: Album; id: string }) {
   const state = useStore();
   useEffect(() => {
     if (player) markSeen(player.id);
+    // the Jongleur and his idols
+    if (player) window.setTimeout(() => onFiche(player.display), 700);
   }, [player]);
   if (!player) {
     return (

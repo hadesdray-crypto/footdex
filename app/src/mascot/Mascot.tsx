@@ -29,6 +29,7 @@ const H = 84;
 export function Mascot({ album, page }: { album: Album; page: string }) {
   const m = useMascot();
   const [wd, setWd] = useState(wounds);
+  const treating = useRef(false);
   useEffect(() => onWounds(() => setWd(wounds())), []);
   // « Afficher ce qu'il dit » off: no speech bubbles at all (his, the Doctor's, the Referee's)
   useEffect(() => {
@@ -258,19 +259,26 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       body.destroy();
       // he stays where he fell
       update({ fx: Math.min(1, Math.max(0, (x - W / 2 - area.l) / Math.max(1, area.r - area.l))), fy: Math.min(1, Math.max(0, (y - H + 3 - area.t) / Math.max(1, area.b - area.t))) });
-      a.busy = false;
+      a.busy = treating.current; // the Doctor may already be on his way
       a.cancel = null;
       if (fabRef.current) fabRef.current.style.visibility = "";
-      onThrown(hurt !== "leger");
-      afterFall(hurt);
     };
     a.cancel = () => {
       if (!body.dead) land();
     };
     // the Zombie does not break: at the very moment he hits the ground, he falls to pieces (head, arms) that you put back on
+    say(pick(["Waaaah !", "Hiiiii !", "Au secouuurs !", "Pose-moi !"]));
+    // the very moment he hits the ground: « Aïe ! », and the Doctor sets off at once
+    const where = () => (body.dead ? feet(posRef.current) : { x: body.x, y: body.y });
+    const ouch = () => {
+      onThrown(hurt !== "leger");
+      void afterFall(hurt, where);
+      return false;
+    };
     const zombieHit =
-      perso.mode === "zombie" && hurt !== "leger"
-        ? (x: number, y: number, vx: number) => {
+      perso.mode !== "zombie" || hurt === "leger"
+        ? ouch
+        : (x: number, y: number, vx: number) => {
             body.destroy();
             a.cancel = null;
             fallApart(
@@ -285,8 +293,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
               { vx },
             );
             return true;
-          }
-        : undefined;
+          };
     void body.fling(fling.vx, fling.vz, fling.vy, zombieHit).then(async () => {
       if (body.dead) return;
       land();
@@ -295,25 +302,25 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
 
   /** After a bad fall: the Doctor comes to where the character IS (he follows him if he moves), and puts on a bandage
    *  or a cast that stays. One leg in a cast: the Referee comes, astonished. Both legs, or too many bandages: he is sent off. */
-  function afterFall(hurt: Hurt) {
+  async function afterFall(hurt: Hurt, where: () => { x: number; y: number } = () => feet(posRef.current), own = true): Promise<"out" | void> {
     if (hurt === "leger") return;
     const a = act.current;
     const cast = hurt === "casse";
-    window.setTimeout(() => {
-      a.busy = true;
-      const where = () => feet(posRef.current);
-      let part = "";
-      void doctorVisit(where, { cast, apply: () => (cast ? (part = addCast()) : addBandage()) }).then(async () => {
-        if (isOut()) {
-          const w = wounds();
-          await refereeSendOff(where, w.legA && w.legB ? "platres" : "bandages");
-          sendOff();
-          return;
-        }
-        a.busy = false;
-        if (part === "legA" || part === "legB") void refereeSurprise(where);
-      });
-    }, 900);
+    treating.current = true;
+    if (own) a.busy = true;
+    // the Doctor sets off right away (he arrives while the character is still on the ground)
+    await new Promise((r) => window.setTimeout(r, 300));
+    let part = "";
+    await doctorVisit(where, { cast, apply: () => (cast ? (part = addCast()) : addBandage()) });
+    treating.current = false;
+    if (isOut()) {
+      const w = wounds();
+      await refereeSendOff(where, w.legA && w.legB ? "platres" : "bandages");
+      if (own) sendOff();
+      return "out";
+    }
+    if (own) a.busy = false;
+    if (part === "legA" || part === "legB") void refereeSurprise(where);
   }
 
   // For checking the scenes in a browser (« ?essai-terrain » in the address): window.__fall("moyen" | "casse").
@@ -422,18 +429,20 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       player.destroy();
       finish();
     };
-    footballOuting(player, home, why, fling)
+    const ouch =
+      why === "thrown"
+        ? () => {
+            onThrown(hurt !== "leger");
+            return afterFall(hurt, () => (player.dead ? feet(posRef.current) : { x: player.x, y: player.y }), false);
+          }
+        : undefined;
+    footballOuting(player, home, why, fling, false, ouch)
       .catch(() => undefined)
       .then((r) => {
         if (player.dead) return;
         player.destroy();
         if (r === "banc") return bench(here);
         finish();
-        // back home after being thrown: a bump or a cast, and he lets you know (the Doctor comes for a bad fall)
-        if (why === "thrown") {
-          onThrown(hurt !== "leger");
-          afterFall(hurt);
-        }
       });
   }
 

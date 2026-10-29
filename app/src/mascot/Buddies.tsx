@@ -151,7 +151,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
           later(700, () => setHidden(true));
           return;
         }
-        if (Math.random() < 0.4) later(1200, () => speak(pick(REACT.doctor[b] ?? REACT.doctor.all)));
+        if (Math.random() < 0.4) later(400, () => speak(pick(REACT.doctor[b] ?? REACT.doctor.all)));
         return;
       }
       if (ev === "doctor-out") {
@@ -161,10 +161,10 @@ function One({ b, index }: { b: Buddy; index: number }) {
       if (ev === "thrown") {
         setAct("surprised");
         later(1800, () => setAct(""));
-        if (Math.random() < 0.7) later(900 + index * 700, () => speak(pick(REACT.thrown[b] ?? REACT.thrown.all)));
+        if (Math.random() < 0.8) later(150 + index * 250, () => speak(pick(REACT.thrown[b] ?? REACT.thrown.all), index === 0));
         return;
       }
-      if (ev === "card" && Math.random() < 0.6) later(2200 + index * 600, () => speak(pick(REACT.card[b] ?? REACT.card.all)));
+      if (ev === "card" && Math.random() < 0.6) later(1400 + index * 300, () => speak(pick(REACT.card[b] ?? REACT.card.all)));
       if (ev === "lore" && b !== "statue") {
         // the others know the story… and listen quietly
         setAct("listen");
