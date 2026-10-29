@@ -10,13 +10,15 @@ import { CaracList } from "./Carac";
 import { VoicePicker } from "./VoicePicker";
 import { ballOpen } from "../sound";
 import { piperDownload, piperRemove } from "../piper";
-import { SPEEDS, choosePerso, wornLook, hasMore, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, say, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, androidVoices, installAndroidVoices, isApp, type Engine } from "./state";
+import { SPEEDS, inter, interOf, loreToldToday, oupsLines, tellLore, choosePerso, wornLook, hasMore, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, say, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, androidVoices, installAndroidVoices, isApp, type Engine } from "./state";
 import { Wardrobe, type Tab } from "./Wardrobe";
 import { go, type Route } from "../router";
 import { createActor } from "./actor";
 import { ensureBall, parkBall, removeBall, spawnFootballer, whenStolen } from "./player";
 import { footballOuting, type Outing } from "./footScenes";
-import { doctorVisit, faute, startReferee, substitution } from "./terrain";
+import { doctorVisit, faute, refereeSendOff, refereeSurprise, startReferee, substitution } from "./terrain";
+import { Buddies, BuddyPicker } from "./Buddies";
+import { addBandage, addCast, heal, isOut, onWounds, wounds } from "./wounds";
 import { fallApart } from "./zombie";
 import { runScript } from "./scripts";
 
@@ -26,6 +28,12 @@ const H = 84;
 /** The character: always there, in a corner. Tap for his menu, hold to move him, flick him away (he will not like it). */
 export function Mascot({ album, page }: { album: Album; page: string }) {
   const m = useMascot();
+  const [wd, setWd] = useState(wounds);
+  useEffect(() => onWounds(() => setWd(wounds())), []);
+  // « Afficher ce qu'il dit » off: no speech bubbles at all (his, the Doctor's, the Referee's)
+  useEffect(() => {
+    document.documentElement.classList.toggle("no-bubbles", !m.s.bubbles);
+  }, [m.s.bubbles]);
   const perso = PERSOS[m.s.perso];
   const [menu, setMenu] = useState<null | "main" | "settings" | "go" | "voix">(null);
   const [wardrobe, setWardrobe] = useState<false | Tab>(false);
@@ -130,7 +138,13 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
   // Each character has his own habits.
   useEffect(() => {
     const timers: number[] = [];
+    // the parents may make him quieter or livelier, or keep him in his corner
+    const it = interOf(perso.mode);
+    const k = [0, 2, 1, 0.6][it.talk];
     const every = (min: number, max: number, fn: () => void) => {
+      if (!k) return;
+      min *= k;
+      max *= k;
       const loop = () => {
         timers.push(
           window.setTimeout(() => {
@@ -142,19 +156,32 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       loop();
     };
     if (perso.mode === "statue") every(16000, 30000, () => play("tip", 1500));
+    // now and then, the Papi has a little accident… and has to leave the screen for a moment, with his cane
+    if (perso.mode === "statue") every(1500000, 3000000, () => { if (Math.random() < 0.6) oups(); });
+    // once a day, the Papi tells the story of the world (why everything here exists: for Raphaël)
+    if (perso.mode === "statue" && !loreToldToday()) {
+      timers.push(
+        window.setTimeout(() => {
+          const s = getMascot();
+          if (!loreToldToday() && !s.bubble && !s.busy && !s.talking && !document.hidden && !menuRef.current) tellLore();
+        }, 180000 + Math.random() * 420000),
+      );
+    }
     if (perso.mode === "excite") {
       every(70000, 120000, () => {
         const s = getMascot();
         if (!s.bubble && !s.busy && !s.talking) askToTell(album.matches);
       });
     }
-    if (perso.mode === "joueur") every(7000, 15000, () => wander());
+    if (!it.wander) {
+      /* he stays in his corner */
+    } else if (perso.mode === "joueur") every(7000, 15000, () => wander());
     else if (perso.mode === "excite") every(22000, 42000, () => wander());
     else if (perso.mode === "zombie") every(35000, 60000, () => wander());
     else every(40000, 75000, () => wander());
     return () => timers.forEach((t) => window.clearTimeout(t));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perso.mode]);
+  }, [perso.mode, JSON.stringify(interOf(perso.mode))]);
 
   // He walks about on his own: the actor takes his place on the screen, plays his scene, and goes back home.
   function wander(stolen = false) {
@@ -177,7 +204,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     if (mode === "joueur") return footballer("play");
     // Everything else: he really walks on the screen.
     a.busy = true;
-    const actor = createActor(getMascot().s.look, here.x + W / 2, here.y + H - 4, {
+    const actor = createActor(wornLook(), here.x + W / 2, here.y + H - 4, {
       onTap: () => {
         a.cancel?.();
         const cx = Math.min(1, Math.max(0, (actor.x - W / 2 - area.l) / Math.max(1, area.r - area.l)));
@@ -205,7 +232,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
 
   /** How bad the fall is, from the speed of the throw: a bump, a cast (the Doctor comes), or a broken leg (he leaves the pitch). */
   type Hurt = "leger" | "moyen" | "casse";
-  const severity = (sp: number): Hurt => (sp < 1800 ? "leger" : sp < 3000 || Math.random() < 0.5 ? "moyen" : "casse");
+  const severity = (sp: number): Hurt => (!inter().injuries || sp < 1800 ? "leger" : sp < 3000 || Math.random() < 0.5 ? "moyen" : "casse");
 
   /** Thrown across the room (any character): real flight with gravity, a fall, an injury that depends on the force,
    *  the Doctor for a bad fall, and for a broken leg he hobbles off the pitch and the Referee asks for a substitute. */
@@ -224,7 +251,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     const origin = from ?? posRef.current;
     const home = feet(origin);
     fab.style.visibility = "hidden";
-    const body = spawnFootballer(getMascot().s.look, home.x, home.y, { onTap: () => undefined, onMove: () => undefined });
+    const body = spawnFootballer(wornLook(), home.x, home.y, { onTap: () => undefined, onMove: () => undefined });
     const land = () => {
       const x = body.x;
       const y = body.y;
@@ -235,30 +262,111 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       a.cancel = null;
       if (fabRef.current) fabRef.current.style.visibility = "";
       onThrown(hurt !== "leger");
-      if (hurt === "moyen") window.setTimeout(() => void doctorVisit({ x, y }), 900);
+      afterFall(hurt);
     };
     a.cancel = () => {
       if (!body.dead) land();
     };
-    void body.fling(fling.vx, fling.vz, fling.vy).then(async () => {
+    // the Zombie does not break: at the very moment he hits the ground, he falls to pieces (head, arms) that you put back on
+    const zombieHit =
+      perso.mode === "zombie" && hurt !== "leger"
+        ? (x: number, y: number, vx: number) => {
+            body.destroy();
+            a.cancel = null;
+            fallApart(
+              getMascot().s.look,
+              { x, y },
+              hurt === "casse" ? 3 : Math.random() < 0.5 ? 2 : 1,
+              (p) => {
+                update({ fx: Math.min(1, Math.max(0, (p.x - W / 2 - area.l) / Math.max(1, area.r - area.l))), fy: Math.min(1, Math.max(0, (p.y - H + 3 - area.t) / Math.max(1, area.b - area.t))) });
+                a.busy = false;
+                if (fabRef.current) fabRef.current.style.visibility = "";
+              },
+              { vx },
+            );
+            return true;
+          }
+        : undefined;
+    void body.fling(fling.vx, fling.vz, fling.vy, zombieHit).then(async () => {
       if (body.dead) return;
-      // the Zombie does not break: he falls to pieces (head, arms) that you put back on
-      if (perso.mode === "zombie" && hurt !== "leger") {
-        const at = { x: body.x, y: body.y };
-        body.destroy();
-        a.cancel = null;
-        fallApart(getMascot().s.look, at, hurt === "casse" ? 3 : Math.random() < 0.5 ? 2 : 1, (p) => {
-          update({ fx: Math.min(1, Math.max(0, (p.x - W / 2 - area.l) / Math.max(1, area.r - area.l))), fy: Math.min(1, Math.max(0, (p.y - H + 3 - area.t) / Math.max(1, area.b - area.t))) });
-          a.busy = false;
+      land();
+    });
+  }
+
+  /** After a bad fall: the Doctor comes to where the character IS (he follows him if he moves), and puts on a bandage
+   *  or a cast that stays. One leg in a cast: the Referee comes, astonished. Both legs, or too many bandages: he is sent off. */
+  function afterFall(hurt: Hurt) {
+    if (hurt === "leger") return;
+    const a = act.current;
+    const cast = hurt === "casse";
+    window.setTimeout(() => {
+      a.busy = true;
+      const where = () => feet(posRef.current);
+      let part = "";
+      void doctorVisit(where, { cast, apply: () => (cast ? (part = addCast()) : addBandage()) }).then(async () => {
+        if (isOut()) {
+          const w = wounds();
+          await refereeSendOff(where, w.legA && w.legB ? "platres" : "bandages");
+          sendOff();
+          return;
+        }
+        a.busy = false;
+        if (part === "legA" || part === "legB") void refereeSurprise(where);
+      });
+    }, 900);
+  }
+
+  // For checking the scenes in a browser (« ?essai-terrain » in the address): window.__fall("moyen" | "casse").
+  if (typeof location !== "undefined" && location.search.includes("essai-terrain")) (window as unknown as { __fall?: unknown }).__fall = afterFall;
+
+  /** The Papi's little accident: « J'ai un petit problème… » He walks off slowly with his cane, and comes back clean. */
+  function oups() {
+    const a = act.current;
+    const fab = fabRef.current;
+    const st = getMascot();
+    if (!fab || a.busy || st.busy || st.talking || menuRef.current || document.querySelector(".mm, .wd, .reveal, .chm")) return;
+    a.busy = true;
+    const lines = oupsLines();
+    say(lines.go);
+    fab.classList.add("is-oups");
+    play("oups", 2600);
+    window.setTimeout(() => {
+      fab.classList.remove("is-oups");
+      const origin = posRef.current;
+      const home = feet(origin);
+      fab.style.visibility = "hidden";
+      const body = spawnFootballer(wornLook(), home.x, home.y, { onTap: () => undefined, onMove: () => undefined });
+      document.querySelector(".fbp")?.classList.add("is-oups");
+      const out = home.x < window.innerWidth / 2 ? -90 : window.innerWidth + 90;
+      void body
+        .run({ x: out, y: home.y }, { speed: 42, timeout: 40000 })
+        .then(() => body.wait(12000))
+        .then(() => {
+          document.querySelector(".fbp")?.classList.remove("is-oups");
+          return body.run(home, { speed: 42, timeout: 40000 });
+        })
+        .then(() => {
+          body.destroy();
           if (fabRef.current) fabRef.current.style.visibility = "";
+          a.busy = false;
+          say(lines.back);
         });
-        return;
-      }
-      if (hurt !== "casse") return land();
-      // broken leg: he hobbles off the pitch
-      say(pick(["Aïe ! Ma jambe !", "Ouille ouille… je sors !", "Je crois que c'est cassé…"]));
-      a.cancel = null;
-      await body.run({ x: body.x < window.innerWidth / 2 ? -80 : window.innerWidth + 80, y: body.y }, { speed: 70, limp: true, timeout: 20000 });
+    }, 2800);
+  }
+  if (typeof location !== "undefined" && location.search.includes("essai-terrain")) (window as unknown as { __oups?: unknown }).__oups = oups;
+
+  /** Sent off: he hobbles off the pitch, and the Referee asks for a substitute. */
+  function sendOff() {
+    const a = act.current;
+    const fab = fabRef.current;
+    if (!fab) return;
+    a.busy = true;
+    const origin = posRef.current;
+    const home = feet(origin);
+    fab.style.visibility = "hidden";
+    const body = spawnFootballer(wornLook(), home.x, home.y, { onTap: () => undefined, onMove: () => undefined });
+    say(pick(["Aïe aïe aïe… je sors.", "Ouille ouille… au vestiaire !", "Bon… je crois que c'est fini pour aujourd'hui."]));
+    void body.run({ x: home.x < window.innerWidth / 2 ? -80 : window.innerWidth + 80, y: home.y }, { speed: 70, limp: true, timeout: 20000 }).then(() => {
       body.destroy();
       bench(origin);
     });
@@ -271,17 +379,17 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     const home = feet(origin);
     const was = getMascot().s.perso;
     substitution(home, (i) => {
+      heal(); // a fresh player (or the same one, all healed)
       if (i !== was) choosePerso(i);
       const fromLeft = home.x > window.innerWidth / 2;
-      const p = spawnFootballer(getMascot().s.look, fromLeft ? -60 : window.innerWidth + 60, home.y, { onTap: () => undefined, onMove: () => undefined });
-      void p.run(home, { speed: i === was ? 90 : 300, limp: i === was, timeout: 15000 }).then(() => {
+      const p = spawnFootballer(wornLook(), fromLeft ? -60 : window.innerWidth + 60, home.y, { onTap: () => undefined, onMove: () => undefined });
+      void p.run(home, { speed: 300, timeout: 15000 }).then(() => {
         p.destroy();
         update({ fx: Math.min(1, Math.max(0, (origin.x - area.l) / Math.max(1, area.r - area.l))), fy: Math.min(1, Math.max(0, (origin.y - area.t) / Math.max(1, area.b - area.t))) });
         a.busy = false;
         a.cancel = null;
         if (fabRef.current) fabRef.current.style.visibility = "";
-        if (i === was) onThrown(true);
-        else greet();
+        greet();
         // the juggler goes back for his ball, wherever it rolled
         if (PERSOS[i].mode === "joueur") window.setTimeout(() => footballer("moved"), 1500);
       });
@@ -297,7 +405,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     const here = at ?? posRef.current;
     const home = feet(here);
     fab.style.visibility = "hidden";
-    const player = spawnFootballer(getMascot().s.look, home.x, home.y, {
+    const player = spawnFootballer(wornLook(), home.x, home.y, {
       onTap: () => {
         a.cancel?.();
         window.setTimeout(() => setMenu("main"), 30);
@@ -314,7 +422,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       player.destroy();
       finish();
     };
-    footballOuting(player, home, why, fling, hurt === "casse")
+    footballOuting(player, home, why, fling)
       .catch(() => undefined)
       .then((r) => {
         if (player.dead) return;
@@ -324,7 +432,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
         // back home after being thrown: a bump or a cast, and he lets you know (the Doctor comes for a bad fall)
         if (why === "thrown") {
           onThrown(hurt !== "leger");
-          if (hurt === "moyen") window.setTimeout(() => void doctorVisit(home), 900);
+          afterFall(hurt);
         }
       });
   }
@@ -416,7 +524,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     const span = first && lastP ? Math.max(16, lastP.t - first.t) : 1000;
     const rvx = first && lastP && performance.now() - lastP.t < 90 ? ((lastP.x - first.x) / span) * 1000 : 0;
     const rvy = first && lastP && performance.now() - lastP.t < 90 ? ((lastP.y - first.y) / span) * 1000 : 0;
-    if (s.mode === "drag" && Math.hypot(rvx, rvy) > 700) {
+    if (s.mode === "drag" && Math.hypot(rvx, rvy) > 700 && interOf(perso.mode).throwable) {
       // held, then flung across the room: he flies for real
       const x = drag?.x ?? pos.x;
       const y = drag?.y ?? pos.y;
@@ -433,7 +541,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       setDragging(false);
     } else if (s.mode === "swipe") {
       const len = Math.hypot(dx, dy);
-      if (len > 45 && len / dt > 0.5) {
+      if (len > 45 && len / dt > 0.5 && interOf(perso.mode).throwable) {
         // every character is thrown for real: he flies with gravity, falls, gets a bump and grumbles
         const k = 1000 / dt;
         throwHim(Math.abs(rvx) + Math.abs(rvy) > 300 ? rvx : dx * k, Math.abs(rvx) + Math.abs(rvy) > 300 ? rvy : dy * k);
@@ -521,7 +629,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
             }
           }}
         >
-          <Fig look={wornLook()} size={W} crop="full" mouth={perso.mouth} talk={m.talking} cheer={m.anim === "cheer"} hurt={m.hurt} mode={perso.mode} tip={m.anim === "tip"} act={m.anim ?? ""} />
+          <Fig wounds={wd} look={wornLook()} size={W} crop="full" mouth={perso.mouth} talk={m.talking} cheer={m.anim === "cheer"} hurt={m.hurt} mode={perso.mode} tip={m.anim === "tip"} act={m.anim ?? ""} />
         </button>
         {showAside ? (
           <div className={cx("mascot__bubble", right && "is-right", below && "is-below")} style={{ left: `${bx}px`, ...(below ? { top: `${pos.y + H + 8}px` } : { bottom: `${size.h - pos.y + 6}px` }), width: `${bw}px` }}>
@@ -535,12 +643,13 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       {bubble && bubble.top
         ? createPortal(
             <div className="mascot__top" role="status">
-              <Fig look={wornLook()} size={64} crop="bust" mouth={perso.mouth} talk={m.talking} cheer={m.anim === "cheer"} act={m.anim ?? ""} mode={perso.mode} />
+              <Fig wounds={wd} look={wornLook()} size={64} crop="bust" mouth={perso.mouth} talk={m.talking} cheer={m.anim === "cheer"} act={m.anim ?? ""} mode={perso.mode} />
               <p>{bubble.text}</p>
             </div>,
             document.body,
           )
         : null}
+      <Buddies />
       {menu ? <Menu view={menu} setView={setMenu} album={album} page={page} openWardrobe={(tab: Tab) => { setMenu(null); setWardrobe(tab); }} /> : null}
       {wardrobe ? <Wardrobe start={wardrobe} onClose={() => setWardrobe(false)} /> : null}
     </>
@@ -626,6 +735,11 @@ function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "se
             <button type="button" className="mm__tile" onClick={run(() => tellStory(album.matches))}>
               <LuBookOpen aria-hidden="true" /> <span>Une histoire</span>
             </button>
+            {perso.mode === "statue" ? (
+              <button type="button" className="mm__tile" onClick={run(tellLore)}>
+                <LuBookOpen aria-hidden="true" /> <span>L'histoire du monde</span>
+              </button>
+            ) : null}
             <button type="button" className="mm__tile" onClick={() => setView("go")}>
               <LuGlobe aria-hidden="true" /> <span>Aller quelque part</span>
             </button>
@@ -640,6 +754,9 @@ function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "se
             </button>
             <button type="button" className={cx("mm__tile", m.s.narrate && "is-on")} aria-pressed={m.s.narrate} onClick={() => { update({ narrate: !m.s.narrate }); sayLabel(m.s.narrate ? "Je ne parle plus tout seul." : "D'accord, je te dis tout ce qui se passe !"); }}>
               <LuCompass aria-hidden="true" /> <span>{m.s.narrate ? "Dis-moi tout : OUI" : "Dis-moi tout : NON"}</span>
+            </button>
+            <button type="button" className={cx("mm__tile", m.s.bubbles && "is-on")} aria-pressed={m.s.bubbles} onClick={() => update({ bubbles: !m.s.bubbles })}>
+              <LuMessageCircle aria-hidden="true" /> <span>{m.s.bubbles ? "Texte des bulles : OUI" : "Texte des bulles : NON"}</span>
             </button>
           </div>
         ) : view === "voix" ? (
@@ -670,6 +787,8 @@ function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "se
               <button type="button" className={cx("chip", !m.s.narrate && "chip--on")} aria-pressed={!m.s.narrate} onClick={() => update({ narrate: false })}>Non</button>
             </div>
             <p className="mm__note">Avec « Oui », il lit à voix haute chaque bouton que tu touches et explique chaque nouvelle page.</p>
+            <p className="mm__label">Des copains à l'écran (deux au maximum)</p>
+            <BuddyPicker />
             <p className="mm__label">Son caractère</p>
             <p className="mm__note">Chaque caractère a sa tenue, sa voix et sa façon de parler. Les points disent combien il parle.</p>
             <CaracList current={m.s.perso} onPick={(i) => { choosePerso(i); window.setTimeout(sample, 30); }} />

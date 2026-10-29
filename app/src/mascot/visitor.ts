@@ -2,6 +2,17 @@
 // Same jointed body as the Jongleur (hips, knees, feet, shoulders, elbows), moved every frame: walking, kneeling,
 // whistling, showing a card, shrugging, dragging a sack. Each one has his own small speech bubble.
 import { visitorSpeak } from "./state";
+import { figSvg, type Look } from "./look";
+import { sideHeadSvg } from "./runner";
+
+/** The referees: they come one at a time, each with his own face. */
+export const REFEREES: { name: string; look: Look }[] = [
+  { name: "L'Arbitre carré", look: { body: 4, skin: 0, hair: 5, hairColor: 0, outfit: 9, acc: ["whistle", "refcards"] } },
+  { name: "L'Arbitre moustachu", look: { body: 3, skin: 1, hair: 3, hairColor: 4, outfit: 9, acc: ["whistle", "refcards", "stache"] } },
+  { name: "L'Arbitre à lunettes", look: { body: 2, skin: 2, hair: 2, hairColor: 0, outfit: 9, acc: ["whistle", "refcards", "glasses"] } },
+  { name: "L'Arbitre rousse", look: { body: 0, skin: 0, hair: 4, hairColor: 5, outfit: 9, acc: ["whistle", "refcards"] } },
+  { name: "L'Arbitre barbu", look: { body: 5, skin: 4, hair: 0, hairColor: 0, outfit: 9, acc: ["whistle", "refcards", "beard"] } },
+];
 
 const FIG_W = 66;
 const FIG_H = 86;
@@ -83,8 +94,8 @@ const STYLES: Record<Kind, Style> = {
   },
 };
 
-function buildSvg(k: Kind): string {
-  const st = STYLES[k];
+function buildSvg(k: Kind, look?: Look): string {
+  const st = look ? { ...STYLES[k], skin: ["#f0cfae", "#e5b98f", "#d9a67a", "#a8734f", "#7a4a30", "#5a3624", "#86a462"][look.skin] ?? STYLES[k].skin, head: sideHeadSvg(look), legs: ["#f0cfae", "#e5b98f", "#d9a67a", "#a8734f", "#7a4a30", "#5a3624", "#86a462"][look.skin] ?? STYLES[k].legs } : STYLES[k];
   const leg = (id: string, far: boolean) => `<g id="${id}H" class="${far ? "far" : ""}" transform="translate(${HIP.x} ${HIP.y})">
       <rect x="-6" y="-2" width="12" height="${THIGH + 3}" rx="5" fill="${st.legs}"/>
       <rect x="-7.5" y="-4" width="15" height="11" rx="5" fill="${st.shorts}" stroke="#00000025"/>
@@ -111,7 +122,7 @@ type Act =
   | { k: "idle" }
   | { k: "walk"; to: { x: number; y: number }; speed: number; limp: boolean; done: () => void }
   | { k: "pose"; name: PoseName; t: number; until: number; done: () => void };
-export type PoseName = "kneel" | "work" | "wave" | "whistle" | "card" | "shrug" | "drag" | "think" | "point" | "bitten";
+export type PoseName = "kneel" | "work" | "wave" | "whistle" | "card" | "shrug" | "drag" | "think" | "point" | "bitten" | "surprised" | "fiddle";
 
 const CARD_SVG = (c: string) => `<rect x="-6" y="6" width="13" height="18" rx="2" fill="${c}" stroke="#00000055"/>`;
 
@@ -129,6 +140,9 @@ export class Visitor {
   dead = false;
   extra: HTMLElement | null = null; // a sack dragged behind him, for example
 
+  look: Look | null = null;
+  isFront = false;
+
   constructor(kind: Kind, x: number, y: number) {
     this.kind = kind;
     this.x = x;
@@ -136,7 +150,9 @@ export class Visitor {
     this.el = document.createElement("div");
     this.el.className = `vis vis--${kind}`;
     this.el.setAttribute("aria-hidden", "true");
-    this.el.innerHTML = `<div class="vis__fx">${buildSvg(kind)}</div>`;
+    // the referee: one of several, with a side view to walk and a front view to talk to you
+    if (kind === "arbitre") this.look = REFEREES[Math.floor(Math.random() * REFEREES.length)].look;
+    this.el.innerHTML = `<div class="vis__fx">${buildSvg(kind, this.look ?? undefined)}</div>${this.look ? `<div class="vis__front"><div class="mfw">${figSvg(this.look, { size: 74, mouth: "smile", label: "L'arbitre" })}</div></div>` : ""}`;
     this.bubble = document.createElement("div");
     this.bubble.className = "vis__bubble";
     document.body.appendChild(this.el);
@@ -146,10 +162,18 @@ export class Visitor {
     wake();
   }
 
+  /** Turns to face you (the referee), or back to his side view to walk. */
+  front(on: boolean) {
+    if (!this.look) return;
+    this.isFront = on;
+    this.el.classList.toggle("is-front", on);
+    if (!on) delete this.el.dataset.pose;
+  }
   walk(to: { x: number; y: number }, speed = 150, limp = false) {
     return new Promise<void>((done) => {
       if (this.dead) return done();
       this.end();
+      this.front(false);
       this.act = { k: "walk", to, speed, limp, done };
     });
   }
@@ -157,6 +181,7 @@ export class Visitor {
     return new Promise<void>((done) => {
       if (this.dead) return done();
       this.end();
+      if (this.isFront) this.el.dataset.pose = name;
       this.act = { k: "pose", name, t: 0, until: ms / 1000, done };
     });
   }
@@ -166,6 +191,7 @@ export class Visitor {
   hold(svg: string) {
     const h = this.parts.aAP;
     if (h) h.innerHTML = svg;
+    if (!svg) delete this.el.dataset.card;
   }
   /** The Doctor's metal collar, against zombie bites. */
   collar() {
@@ -174,12 +200,13 @@ export class Visitor {
   }
   card(color: "jaune" | "rouge") {
     this.hold(CARD_SVG(color === "jaune" ? "#f6c453" : "#e0284f"));
+    this.el.dataset.card = color;
   }
   /** Says a line in his own bubble, with his own (lower or higher) voice. */
   say(text: string, ms = 2600) {
     this.bubble.textContent = text;
     this.bubble.classList.add("is-on");
-    visitorSpeak(text, STYLES[this.kind].voice);
+    visitorSpeak(text, this.kind);
     window.clearTimeout(this.sayTimer);
     this.sayTimer = window.setTimeout(() => this.bubble.classList.remove("is-on"), Math.max(ms, 1200 + text.length * 55));
   }
@@ -245,6 +272,8 @@ export class Visitor {
         think: { ...STAND, sA: -110, eA: -120, sB: -20, eB: -60 },
         point: { ...STAND, sA: -90, eA: -2, sB: 6 },
         bitten: { ...STAND, lean: -10 + 4 * w, sA: -150, eA: -30, sB: -140, eB: -40 },
+        fiddle: { ...STAND, sA: -50, eA: -80, sB: -40, eB: -80, lean: 4 },
+        surprised: { ...STAND, lean: -12, sA: -150, eA: -125, sB: -150, eB: -125, bob: -4 * Math.abs(w), hA: -8, kA: 8 },
       };
       const target = P[a.name];
       p = t < 0.3 ? mix(p, target, ease(t / 0.3)) : target;
@@ -322,4 +351,9 @@ export function sackFor(v: Visitor) {
   document.body.appendChild(el);
   v.extra = el;
   return el;
+}
+
+/** A small portrait of the Doctor or the Referee (for the voice picker). */
+export function visitorFace(k: Kind): string {
+  return buildSvg(k).replace('viewBox="0 0 100 132" aria-hidden="true" overflow="visible"', 'viewBox="18 2 72 72" aria-hidden="true" width="46" height="46"');
 }

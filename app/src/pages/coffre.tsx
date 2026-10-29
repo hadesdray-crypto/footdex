@@ -6,6 +6,7 @@ import { PERSOS } from "../mascot/lines";
 import { say, update, useMascot } from "../mascot/state";
 import { unlockChest, useStore } from "../store";
 import { PageTitle } from "../ui/bits";
+import { go } from "../router";
 import { click } from "../sound";
 import { cx, fmt } from "../util";
 
@@ -39,7 +40,7 @@ export const SPECIALS: Special[] = [
   { id: "c-coupe", name: "La Coupe Étoilée", icon: LuTrophy, hue: ["#c58bff", "#3d1a6b"], quirk: "On dit qu'elle chante quand on la soulève.", fact: "La FIFA, qui organise la Coupe du monde, a été fondée en 1904 à Paris.", price: 240 },
 ];
 
-function Chest({ open }: { open: boolean }) {
+export function Chest({ open }: { open: boolean }) {
   return (
     <svg className={cx("chest", open && "chest--open")} viewBox="0 0 160 130" aria-hidden="true">
       <ellipse cx="80" cy="120" rx="64" ry="8" fill="#0006" />
@@ -83,6 +84,13 @@ export function Coffre() {
       <PageTitle kicker="Le trésor" title="Le coffre">
         <p>Dépense tes étoiles pour ouvrir le coffre : des personnages secrets pour la mascotte, et des cartes rigolotes qu'on ne trouve que là.</p>
       </PageTitle>
+      <button type="button" className="colx__chest is-free" onClick={() => go({ page: "collection" })}>
+        <span className="colx__chesticon" aria-hidden="true">🧰</span>
+        <span>
+          <strong>Le coffre au trésor des Footballinis</strong>
+          <em>Cartes rigolotes, figurines, pièces d'or… dans « Ma collection »</em>
+        </span>
+      </button>
       <div className="coffre__top">
         <Chest open={opened > 0 && flash !== ""} />
         <div className="coffre__stars">

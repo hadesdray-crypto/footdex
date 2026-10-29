@@ -298,6 +298,13 @@ export function recordBigQuiz(score: number) {
 
 // ------------------------------------------------------------------- chest, games, book
 
+/** Spends stars on something else (the treasure chest of the Footballinis). False when there are not enough. */
+export function spendStars(n: number): boolean {
+  if (n > state.stars) return false;
+  commit({ ...state, stars: state.stars - n });
+  return true;
+}
+
 /** Opens something in the chest, for stars. False when the stars are not enough or it is already open. */
 export function unlockChest(id: string, price: number): boolean {
   if (state.chest.includes(id) || price > state.stars) return false;

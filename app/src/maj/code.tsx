@@ -1,16 +1,17 @@
-// The parents' code: 4 digits chosen the first time. It guards the advanced settings, the screen time and the internet options.
+// The parents' code: 6666 at first (the parent can change it with « Code oublié ? »). It guards the advanced settings, the screen time and the internet options.
 // The child can still change his character, his costume and his voice (higher or lower) without it.
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { storageGet, storageSet } from "../util";
 
-const CLE = "footdex.parents.code";
+const CLE = "footdex.parents.code2"; // a new key: everybody starts again from 6666
+const DEFAUT = "6666";
 const hash = (s: string) => {
   let h = 2166136261;
   for (const c of `footdex:${s}`) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
   return (h >>> 0).toString(36);
 };
-export const codeChoisi = () => !!storageGet(CLE);
-export const bonCode = (c: string) => storageGet(CLE) === hash(c.trim());
+export const codeChoisi = () => true;
+export const bonCode = (c: string) => (storageGet(CLE) || hash(DEFAUT)) === hash(c.trim());
 let ouvertJusqua = 0; // once typed, the code stays open for 10 minutes
 export const dejaOuvert = () => Date.now() < ouvertJusqua;
 const abonnes = new Set<() => void>();
@@ -59,7 +60,7 @@ export function SaisieCode({ titre, onOk }: { titre: string; onOk: () => void })
   return (
     <div className="pcode">
       <p className="pcode__title">🔒 {titre}</p>
-      {oubli && rep.trim() !== String(x * y) ? (
+      {oubli && rep.trim().replace(/\s/g, "") !== String(x * y) ? (
         <>
           <p className="note">Code oublié ? Pour un adulte : combien font {x} × {y} ?</p>
           <input className="pcode__in" inputMode="numeric" value={rep} onChange={(e: { target: { value: string } }) => setRep(e.target.value)} />

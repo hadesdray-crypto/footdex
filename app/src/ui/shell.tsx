@@ -16,7 +16,7 @@ const TABS: { to: Route; label: string; icon: typeof LuHouse; match: string[] }[
   { to: { page: "accueil" }, label: "Accueil", icon: LuHouse, match: ["accueil"] },
   { to: { page: "joueurs" }, label: "Joueurs", icon: LuUsers, match: ["joueurs", "fiche", "jeu"] },
   { to: { page: "paquets" }, label: "Paquets", icon: LuPackageOpen, match: ["paquets"] },
-  { to: { page: "classeur" }, label: "Classeur", icon: LuLibrary, match: ["classeur"] },
+  { to: { page: "collection" }, label: "Collection", icon: LuLibrary, match: ["collection", "classeur"] },
   {
     to: { page: "plus" },
     label: "Plus",

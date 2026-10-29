@@ -1,3 +1,4 @@
+import { hasCast, sideArmCast, sideHead, sideShinCast, wounds } from "./wounds";
 // The footballer and HIS ball: one being, two bodies, drawn and moved together every frame.
 // - The ground is the line under his feet. The ball lives on that ground: it rolls, flies and bounces on it.
 // - His legs have hips, knees and feet: running, dribbling, juggling, shooting and trapping are joint angles,
@@ -24,7 +25,7 @@ type Act =
   | { k: "tired"; t: number; until: number; done: () => void }
   | { k: "push"; t: number; until: number; done: () => void }
   | { k: "cheer"; t: number; until: number; done: () => void }
-  | { k: "fly"; z: number; vz: number; vx: number; vy: number; spin: number; ang: number; ground: number; t: number; done: () => void };
+  | { k: "fly"; z: number; vz: number; vx: number; vy: number; spin: number; ang: number; ground: number; t: number; done: () => void; hit?: (x: number, y: number, vx: number) => boolean };
 
 type Pl = {
   look: Look;
@@ -246,6 +247,7 @@ const SHIN = 17;
 const SHOULDER = { x: 50, y: 62 };
 
 function buildSvg(look: Look): string {
+  const w = wounds();
   const sk = SKINS[look.skin];
   const o = OUTFITS[look.outfit];
   const td = 10 + ((14 + (BODIES[look.body].sw - 84) * 0.17) - 14) * 0.5;
@@ -255,19 +257,19 @@ function buildSvg(look: Look): string {
       <g id="${id}K" transform="translate(0 ${THIGH})">
         <rect x="-5.6" y="-1" width="11.2" height="${SHIN + 1}" rx="4.5" fill="${o.sock}"/>
         <rect x="-5.8" y="3" width="11.6" height="3.6" fill="${o.sock2}"/>
-        <g id="${id}F" transform="translate(0 ${SHIN})"><path d="M-6 -3 H6 Q15 -3 16 2.6 Q16 6 12 6 H-5 Q-8 6 -8 2Z" fill="#10131c"/><path d="M-7 5.4 H15" stroke="#fff" stroke-opacity=".45" stroke-width="1.4"/></g>
+        ${(id === "lA" ? w.legA : w.legB) ? sideShinCast() : ""}<g id="${id}F" transform="translate(0 ${SHIN})"><path d="M-6 -3 H6 Q15 -3 16 2.6 Q16 6 12 6 H-5 Q-8 6 -8 2Z" fill="#10131c"/><path d="M-7 5.4 H15" stroke="#fff" stroke-opacity=".45" stroke-width="1.4"/></g>
       </g></g>`;
   const arm = (id: string, far: boolean) => `<g id="${id}S" class="${far ? "far" : ""}" transform="translate(${SHOULDER.x} ${SHOULDER.y})">
       <rect x="-4" y="0" width="8" height="14" rx="4" fill="${sk}"/>
       <rect x="-6.5" y="-5" width="13" height="12" rx="6" fill="${o.shirt}"/><rect x="-6.5" y="4" width="13" height="3" fill="${o.s2}"/>
-      <g id="${id}E" transform="translate(0 13)"><rect x="-3.6" y="-1" width="7.2" height="13" rx="3.6" fill="${sk}"/><circle cx="0" cy="13" r="4.6" fill="${sk}"/></g></g>`;
+      <g id="${id}E" transform="translate(0 13)"><rect x="-3.6" y="-1" width="7.2" height="13" rx="3.6" fill="${sk}"/><circle cx="0" cy="13" r="4.6" fill="${sk}"/>${id === "aA" && w.arm ? sideArmCast() : ""}${id === "aA" && look.acc.includes("cane") ? `<path d="M-4 11 Q-4 6 1 6 Q5 6 5 11 L7 42" fill="none" stroke="#5a3a1e" stroke-width="3.4" stroke-linecap="round"/>` : ""}</g></g>`;
   const torso = `<rect x="${50 - td}" y="56" width="${2 * td}" height="37" rx="11" fill="${o.shirt}"/>
     <rect x="${50 - td}" y="86" width="${2 * td}" height="6" fill="#00000024"/>
     ${o.num ? `<text x="${50 - td + 6}" y="80" font-family="Impact,sans-serif" font-size="12" fill="${o.s2}" opacity=".9">${o.num}</text>` : ""}
     ${look.acc.includes("armband") ? "" : ""}`;
   return `<svg viewBox="0 0 100 132" aria-hidden="true" overflow="visible">
     ${leg("lB", true)}${arm("aB", true)}
-    <g id="up">${torso}<g id="hd">${sideHeadSvg(look)}</g></g>
+    <g id="up">${torso}<g id="hd">${sideHeadSvg(look)}${sideHead(w)}</g></g>
     ${leg("lA", false)}${arm("aA", false)}
   </svg>`;
 }
@@ -401,12 +403,15 @@ function stepPlayer(dt: number) {
       const step = Math.min(d, sp * dt);
       p0.vx = (dx / d) * sp;
       p0.vy = (dy / d) * sp;
-      p0.x = a.limp ? p0.x + (dx / d) * step : clamp(p0.x + (dx / d) * step, 20, window.innerWidth - 20);
+      // going off the screen (sent off, a little accident…): no wall at the edges
+      p0.x = a.limp || t.x < 0 || t.x > window.innerWidth ? p0.x + (dx / d) * step : clamp(p0.x + (dx / d) * step, 20, window.innerWidth - 20);
       p0.y = clamp(p0.y + (dy / d) * step, top(), bottom());
       if (Math.abs(dx) > 4) p0.dir = dx > 0 ? 1 : -1;
       const run = clamp((a.speed - 90) / 230, 0, 1);
       p0.phase += (step / (lerp(11, 20, run) * s)) * Math.PI * 0.5;
       pose = gait(p0.phase, run);
+      // the old Papi with his cane: bent forward, small steps, the cane arm in front
+      if (p0.look.acc.includes("cane")) pose = { ...pose, lean: pose.lean + 12, bob: pose.bob * 0.4, hA: pose.hA * 0.6, hB: pose.hB * 0.6, sA: -28 + 8 * Math.sin(p0.phase), eA: -20 };
       if (a.limp) {
         // a broken leg: that leg stays stiff (in its cast), he leans on the good one and hobbles
         const w = Math.sin(p0.phase);
@@ -473,6 +478,14 @@ function stepPlayer(dt: number) {
       if (a.z <= 0) {
         a.z = 0;
         ballBounce(0.9);
+        // the very moment of the shock (the Zombie falls to pieces right then)
+        const hit = a.hit;
+        a.hit = undefined;
+        if (hit && hit(p0.x, p0.y, a.vx)) {
+          p0.act = { k: "idle" };
+          a.done();
+          return;
+        }
         if (a.vz < -420) {
           a.vz = -a.vz * 0.28;
           a.vx *= 0.5;
@@ -607,7 +620,7 @@ export type Footballer = {
   pushups: (ms: number) => Promise<void>;
   cheer: (ms: number) => Promise<void>;
   /** Thrown by a finger: he flies (vx, vz in px/s), lands, lies down a moment, gets up. */
-  fling: (vx: number, vz: number, vy?: number) => Promise<void>;
+  fling: (vx: number, vz: number, vy?: number, onHit?: (x: number, y: number, vx: number) => boolean) => Promise<void>;
   wait: (ms: number) => Promise<void>;
   destroy: () => void;
 };
@@ -653,7 +666,7 @@ export function spawnFootballer(look: Look, x: number, y: number, hooks: { onTap
       new Promise<boolean>((done) => {
         if (me.dead || !pl) return done(false);
         cancelAct();
-        pl.act = { k: "run", to: typeof to === "function" ? to : () => to, dribble: typeof o.dribble === "function" ? o.dribble : () => !!o.dribble, limp: !!o.limp, speed: o.speed ?? 300, stop: o.stop ?? 6, done, until: performance.now() + (o.timeout ?? 9000) };
+        pl.act = { k: "run", to: typeof to === "function" ? to : () => to, dribble: typeof o.dribble === "function" ? o.dribble : () => !!o.dribble, limp: !!o.limp || hasCast(), speed: hasCast() ? Math.min(110, o.speed ?? 300) : o.speed ?? 300, stop: o.stop ?? 6, done, until: performance.now() + (o.timeout ?? 9000) };
       }),
     kick: (dir, power = 1) =>
       new Promise<void>((done) => {
@@ -687,12 +700,12 @@ export function spawnFootballer(look: Look, x: number, y: number, hooks: { onTap
         }
         pl.act = { k: "push", t: 0, until: ms / 1000, done };
       }),
-    fling: (vx, vz, vy = 0) =>
+    fling: (vx, vz, vy = 0, onHit) =>
       new Promise<void>((done) => {
         if (!pl) return done();
         cancelAct();
         if (Math.abs(vx) > 20) pl.dir = vx > 0 ? 1 : -1;
-        pl.act = { k: "fly", z: 0, vz: Math.max(250, vz), vx, vy, spin: (vx >= 0 ? 1 : -1) * (300 + Math.abs(vx) * 0.5), ang: 0, ground: 0, t: 0, done };
+        pl.act = { k: "fly", z: 0, vz: Math.max(250, vz), vx, vy, spin: (vx >= 0 ? 1 : -1) * (300 + Math.abs(vx) * 0.5), ang: 0, ground: 0, t: 0, done, hit: onHit };
       }),
     cheer: (ms) => new Promise<void>((done) => (pl ? (cancelAct(), (pl.act = { k: "cheer", t: 0, until: ms / 1000, done })) : done())),
     wait: (ms) => new Promise<void>((r) => window.setTimeout(r, ms)),

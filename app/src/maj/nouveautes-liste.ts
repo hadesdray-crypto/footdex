@@ -4,6 +4,25 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-10-29",
+    titre: "Version 27 : la Collection, les Footballinis, le Papi et les copains",
+    type: "appli",
+    points: [
+      "Nouveau bouton « Collection » : ton classeur, les 20 Footballinis (des personnages rigolos à collectionner), les figurines qui tournent, les personnages stylés.",
+      "Le coffre au trésor : un gratuit chaque jour ! Dedans : des pièces d'or, des paquets de 1, 2 ou 15 cartes, des figurines… Et peut-être Ultime Vide.",
+      "Le Papi Statue a sa canne, sa voix de vieux, ses histoires du foot d'avant 2000… et il raconte l'histoire du monde : pourquoi tout ça existe. Grâce à Raphaël.",
+      "Des copains à l'écran : choisis jusqu'à deux amis (et même le Médecin) qui vivent à côté de ton personnage et réagissent.",
+      "L'Arbitre se tourne vers toi, sort ses cartons de sa poche, les regarde, les range… Il y a maintenant plusieurs arbitres différents.",
+      "Le Zombie perd ses membres au moment du choc. On peut le déplacer sans sa tête, et parfois il va chercher ses morceaux tout seul.",
+      "« Texte des bulles » : tu peux afficher ou cacher ce que disent les personnages.",
+      "Le Médecin va soigner le personnage là où il est, même s'il bouge, et lui met un vrai bandage qui reste.",
+      "Les bandages s'accumulent… Trop de bandages, ou les deux jambes dans le plâtre : l'Arbitre le fait sortir !",
+      "Une jambe dans le plâtre : l'Arbitre arrive, les mains sur la tête, tout étonné.",
+      "« Change ma voix ! » : le Médecin et l'Arbitre ont aussi leur voix, et il y a 10 voix rigolotes (souris, géant, robot, charabia, écho…).",
+      "Pour les parents (code 6666) : l'atelier des personnages, pour régler combien chacun parle, s'il se promène, s'il peut être lancé, et le caractère de l'Arbitre.",
+    ],
+  },
+  {
+    date: "2026-10-29",
     titre: "Version 26 : le Médecin, l'Arbitre carré et le Zombie",
     type: "appli",
     points: [

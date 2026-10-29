@@ -10,9 +10,9 @@ export type Carac = { level: Level; label: string; style: string; tenue: Look; r
 export const CARAC: Record<Mode, Carac> = {
   statue: {
     level: 1,
-    label: "Discret",
-    style: "Bonnet, écharpe et moustache. Il ne bouge presque pas et ne parle que si tu le touches. Pour lire, il met ses lunettes.",
-    tenue: { body: 5, skin: 0, hair: 3, hairColor: 4, outfit: 0, acc: ["stache", "scarf", "beanie"] },
+    label: "Vieux sage",
+    style: "82 ans, bonnet, écharpe, moustache et sa canne. Il marche tout doucement, raconte les vieilles histoires du foot (Pelé, Platini, 1998…) et l'histoire du monde. Après 2000, il ne sait plus rien !",
+    tenue: { body: 5, skin: 0, hair: 3, hairColor: 4, outfit: 0, acc: ["stache", "scarf", "beanie", "cane"] },
     readAcc: ["glasses"],
   },
   poli: {

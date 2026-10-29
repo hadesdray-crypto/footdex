@@ -8,6 +8,7 @@ export type Route =
   | { page: "jeu"; id: number }
   | { page: "paquets" }
   | { page: "classeur" }
+  | { page: "collection" }
   | { page: "matchs" }
   | { page: "match"; id: string }
   | { page: "scores" }
@@ -30,7 +31,7 @@ export type Route =
   | { page: "plus" };
 
 const SIMPLE = new Set([
-  "accueil", "joueurs", "paquets", "classeur", "matchs", "scores", "coupes", "clubs", "saison",
+  "accueil", "joueurs", "paquets", "classeur", "collection", "matchs", "scores", "coupes", "clubs", "saison",
   "lexique", "defi", "grand-defi", "histoires", "videos", "sources", "carte", "coffre", "jeux", "parents", "reglages", "plus",
 ]);
 

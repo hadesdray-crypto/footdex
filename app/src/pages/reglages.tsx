@@ -2,6 +2,8 @@
 import { useState, useSyncExternalStore } from "react";
 import { LuShieldCheck, LuShirt } from "react-icons/lu";
 import { CaracList } from "../mascot/Carac";
+import { Atelier } from "../mascot/Atelier";
+import { BuddyPicker } from "../mascot/Buddies";
 import { VoicePanel } from "../mascot/Mascot";
 import { VoicePicker } from "../mascot/VoicePicker";
 import { CodeParent } from "../maj/code";
@@ -34,6 +36,9 @@ export function Reglages() {
             <button type="button" className="btn btn--soft" onClick={() => { stopTalking(); hideBubble(); update({ rest: true }); }}>💤 {perso.name} se repose</button>
           )}
         </div>
+        <p className="mm__label">Des copains à l'écran (deux au maximum)</p>
+        <p className="note">Ils vivent à côté de ton personnage, parlent avec leur voix, réagissent quand il est lancé… Touche-les pour qu'ils parlent, glisse-les pour les déplacer.</p>
+        <BuddyPicker />
         <p className="note">Sur le personnage : un toucher ouvre son menu, deux touchers le font jouer (ou continuer son histoire), un appui long permet de le déplacer, un coup de doigt rapide le lance.</p>
       </Section>
 
@@ -44,6 +49,11 @@ export function Reglages() {
             <button key={s.label} type="button" className={cx("chip", m.s.speed === i && "chip--on")} aria-pressed={m.s.speed === i} onClick={() => { update({ speed: i }); sample(); }}>{s.label}</button>
           ))}
         </div>
+        <p className="mm__label">Afficher ce qu'il dit (les bulles de texte)</p>
+        <div className="chips">
+          <button type="button" className={cx("chip", m.s.bubbles && "chip--on")} aria-pressed={m.s.bubbles} onClick={() => update({ bubbles: true })}>Oui</button>
+          <button type="button" className={cx("chip", !m.s.bubbles && "chip--on")} aria-pressed={!m.s.bubbles} onClick={() => update({ bubbles: false })}>Non</button>
+        </div>
         <p className="mm__label">Dis-moi tout ce qui se passe</p>
         <div className="chips">
           <button type="button" className={cx("chip", m.s.narrate && "chip--on")} aria-pressed={m.s.narrate} onClick={() => update({ narrate: true })}>Oui</button>
@@ -51,8 +61,15 @@ export function Reglages() {
         </div>
       </Section>
 
-      <Section title="Change ma voix !" kicker="Une voix pour chaque personnage">
+      <Section title="Change ma voix !" kicker="Une voix pour chaque personnage, le Médecin et l'Arbitre">
         <VoicePicker />
+      </Section>
+
+      <Section title="L'atelier des personnages" kicker="Code parent">
+        <CodeParent titre="Caractère et interactions">
+          <p className="note">Combien chaque personnage parle et bouge, s'il peut être lancé, les blessures, le Médecin et l'Arbitre.</p>
+          <Atelier />
+        </CodeParent>
       </Section>
 
       <Section title="Réglages avancés de la voix" kicker="Code parent">

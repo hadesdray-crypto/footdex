@@ -1,9 +1,12 @@
+import { wounds } from "./wounds";
 // The walking character: seen from the front, from behind and from the side. Same look as the bust, drawn for moving around the screen.
 import { BODIES, HAIRS, HAIR_COLORS, OUTFITS, SKINS, type Look } from "./look";
 
 export type View = "front" | "back" | "side";
 
 export function runnerSvg(look: Look, view: View): string {
+  const w = wounds();
+  const castOn = (cls: string) => (cls === "lgA" ? w.legA : cls === "lgB" ? w.legB : false);
   const sk = SKINS[look.skin];
   const o = OUTFITS[look.outfit];
   const hairId = HAIRS[look.hair].id;
@@ -15,11 +18,11 @@ export function runnerSvg(look: Look, view: View): string {
 
   const legFront = (x: number, cls: string) => `<g class="lg ${cls}" style="transform-origin:${x}px 92px">
     <rect x="${x - 6}" y="92" width="12" height="10" fill="${sk}"/>
-    <rect x="${x - 6.5}" y="100" width="13" height="21" rx="4" fill="${o.sock}"/><rect x="${x - 6.5}" y="104" width="13" height="4" fill="${o.sock2}"/>
+    <rect x="${x - 6.5}" y="100" width="13" height="21" rx="4" fill="${o.sock}"/><rect x="${x - 6.5}" y="104" width="13" height="4" fill="${o.sock2}"/>${castOn(cls) ? `<rect x="${x - 8}" y="96" width="16" height="24" rx="5" fill="#fbfbf6" stroke="#b9c2d6" stroke-width="1.3"/>` : ""}
     <ellipse cx="${x + (x < 50 ? -2 : 2)}" cy="124" rx="9" ry="5.5" fill="${shoe}"/></g>`;
   const legSide = (cls: string, far: boolean) => `<g class="lg ${cls}${far ? " far" : ""}" style="transform-origin:50px 92px">
     <rect x="44" y="92" width="12" height="10" fill="${sk}"/>
-    <rect x="43.5" y="100" width="13" height="21" rx="4" fill="${o.sock}"/><rect x="43.5" y="104" width="13" height="4" fill="${o.sock2}"/>
+    <rect x="43.5" y="100" width="13" height="21" rx="4" fill="${o.sock}"/><rect x="43.5" y="104" width="13" height="4" fill="${o.sock2}"/>${castOn(cls) ? `<rect x="42" y="96" width="16" height="24" rx="5" fill="#fbfbf6" stroke="#b9c2d6" stroke-width="1.3"/>` : ""}
     <path d="M42 119 H56 Q66 119 67 125 Q67 129 62 129 H44 Q40 129 40 124Z" fill="${shoe}"/></g>`;
 
   const arm = (x: number, cls: string, far = false) => `<g class="ar ${cls}${far ? " far" : ""}" style="transform-origin:${x}px 62px">

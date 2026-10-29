@@ -209,3 +209,18 @@
 .lvchip.is-on.lvchip--0 { background: #34d399; color: #062016; border-color: #34d399; }
 .lvchip.is-on.lvchip--1 { background: #ffd76a; color: #2a1f00; border-color: #ffd76a; }
 .lvchip.is-on.lvchip--2 { background: #f87171; color: #2a0606; border-color: #f87171; }
+
+/* voice picker: the visitors' faces and the funny voices */
+.vp__vis { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: #ffffff10; overflow: hidden; }
+.vp__fun { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+.vp__funbtn { border: 1px solid var(--line-2); background: #ffffff0d; color: var(--fg); border-radius: 999px; padding: 8px 12px; font: 700 0.95rem var(--f-display, inherit); min-height: 40px; cursor: pointer; }
+.vp__funbtn.is-on { background: #ffd76a; color: #2a1f00; border-color: #ffd76a; }
+
+/* « L'atelier des personnages » */
+.atelier__row { border: 1px solid var(--line-2); border-radius: 14px; padding: 10px 12px; margin: 0 0 10px; background: #ffffff06; }
+.atelier__who { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.atelier__q { margin: 6px 0 4px; font-size: 0.92rem; color: var(--fg-2, #c9d4ea); }
+.atelier .btn { margin: 6px 0 4px; }
+
+/* « Afficher ce qu'il dit » : off */
+.no-bubbles .mascot__bubble, .no-bubbles .mascot__top, .no-bubbles .vis__bubble { display: none !important; }

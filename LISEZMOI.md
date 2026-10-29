@@ -88,6 +88,12 @@ node tools/build-app.mjs
 | `maj/code.tsx`, `maj/temps-ecran.ts` | Code parent à 4 chiffres et limite de 45 minutes par jour. |
 | `maj/nouveautes-liste.ts` | Le journal des nouveautés affiché après une mise à jour : ajouter la nouvelle version EN PREMIER. |
 | `pages/jeux.tsx` | Les 10 jeux, avec la difficulté Facile / Normal / Difficile (retenue dans le téléphone). |
+| `mascot/wounds.ts` | Bandages et plâtres qui restent sur le personnage (6 bandages ou 2 jambes plâtrées : sortie). |
+| `mascot/Buddies.tsx` | Les copains à l'écran (jusqu'à 2, dont le Médecin) : vie propre, voix, réactions, petites conversations. |
+| `mascot/Atelier.tsx` | L'atelier des personnages (code parent 6666) : parole, promenade, lancer, blessures, Arbitre, Médecin. |
+| `mascot/lines.ts` | Les répliques ; à la fin : l'histoire du monde du Papi (LORE), ses vieilles histoires (avant 2000). |
+| `fbx/art.ts` | Les 20 Footballinis (dessins, raretés, pouvoirs). |
+| `fbx/store.ts`, `fbx/ui.tsx`, `pages/collection.tsx` | La collection, le coffre au trésor (pièces, paquets 1/2/15, figurines, personnages stylés). |
 
 ## L'application Android et ses mises à jour
 

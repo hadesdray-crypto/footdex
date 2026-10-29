@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { type Album, loadAlbum } from "./data";
 import { Binder } from "./pages/binder";
 import { Coffre } from "./pages/coffre";
+import { Collection } from "./pages/collection";
 import { Jeux } from "./pages/jeux";
 import { Parents } from "./pages/parents";
 import { Reglages } from "./pages/reglages";
@@ -49,6 +50,7 @@ function Page({ route, album }: { route: Route; album: Album }) {
     case "sources": return <Sources album={album} />;
     case "carte": return <Carte album={album} />;
     case "coffre": return <Coffre />;
+    case "collection": return <Collection />;
     case "jeux": return <Jeux />;
     case "parents": return <Parents />;
     case "reglages": return <Reglages />;
@@ -59,7 +61,7 @@ function Page({ route, album }: { route: Route; album: Album }) {
 const TITLES: Record<string, string> = {
   accueil: "Footdex", joueurs: "Joueurs", paquets: "Paquets", classeur: "Classeur", matchs: "Matchs", scores: "Scores", coupes: "Coupes",
   clubs: "Clubs", saison: "Saison 2026-2027", lexique: "Lexique", defi: "Défi du jour", "grand-defi": "Grand défi", histoires: "Histoires",
-  videos: "Vidéos", sources: "Sources", carte: "La carte", coffre: "Le coffre", jeux: "Les jeux", parents: "Coin des parents", reglages: "Paramètres", plus: "Plus",
+  videos: "Vidéos", sources: "Sources", carte: "La carte", coffre: "Le coffre", collection: "Ma collection", jeux: "Les jeux", parents: "Coin des parents", reglages: "Paramètres", plus: "Plus",
 };
 
 function App() {

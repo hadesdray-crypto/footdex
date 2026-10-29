@@ -33,20 +33,27 @@ export const PERSOS: Perso[] = [
     more: [],
     extra: [],
     name: "Le Papi Statue",
-    tag: "Immobile, il ne dit presque rien",
-    sample: "Hm.",
+    tag: "Le vieux sage du foot, avec sa canne",
+    sample: "Hm. De mon temps, petit, on jouait avec un ballon en cuir. Et il était lourd !",
     pitch: 0.7,
-    rate: 0.8,
-    voice: { gender: "m", slot: 0, formant: 0.88, vib: 6 },
+    rate: 0.78,
+    voice: { gender: "m", slot: 0, formant: 0.82, vib: 6 },
     mouth: "smile",
-    greet: [],
+    greet: ["Hm. Bonjour, petit.", "Ah, te voilà, jeune homme. Approche, approche.", "Hm… Tu es là. Bien. Assieds-toi, je vais te raconter."],
     open: [""],
-    story: ["Hm. Écoute."],
-    card: { base: [], rare: [], eclat: [], legende: [], moment: [], shiny: [] },
-    shake: ["Hm."],
-    thrown: ["…Aïe.", "Hm ! Pas content.", "Grmbl. Mon dos…"],
-    wardrobe: ["Hm. Bien."],
-    done: ["…Voilà."],
+    story: ["Hm. Écoute.", "De mon temps…", "Approche, petit. Celle-là, je l'ai vue."],
+    card: {
+      base: ["Hm. {n}… Je ne le connais pas, celui-là. Moi, j'ai arrêté de savoir à partir de 2000.", "{n} ? Ah… les jeunes d'aujourd'hui. Je ne peux pas être au courant de tout, hein. Je suis un vieux."],
+      rare: ["Hm. {n}. Il a l'air bien. Mais après 2000, moi, je ne sais plus rien."],
+      eclat: ["Ça brille… {n}. De mon temps, les cartes ne brillaient pas."],
+      legende: ["Ah ! {n} ! Ça, c'est du vrai football. Je m'en souviens.", "{n}… Une légende. Ça me rappelle ma jeunesse."],
+      moment: ["Hm. Ce moment-là… Si c'est avant 2000, je l'ai sûrement vu."],
+      shiny: ["Oh… ça brille. Mes vieux yeux…"],
+    },
+    shake: ["Hé ! Doucement ! Mon dos !", "Hm. On ne secoue pas les vieux."],
+    thrown: ["…Aïe.", "Hm ! Pas content.", "Grmbl. Mon dos…", "Ma canne ! Où est ma canne ?"],
+    wardrobe: ["Hm. Bien.", "Pas mal… pour un vieux."],
+    done: ["…Voilà.", "Hm. C'est tout."],
   },
   {
     mode: "excite",
@@ -191,6 +198,7 @@ export const PERSOS: Perso[] = [
 ];
 
 export const PAGES: Record<string, string> = {
+  collection: "Ta collection ! En haut, le coffre au trésor : un coffre gratuit chaque jour, avec des pièces, des paquets de cartes Footballinis, des figurines et des personnages stylés. Dessous, ton classeur de cartes, puis les Footballinis, les figurines et les personnages stylés.",
   accueil: "Ici, c'est la maison de Footdex. Tu vois la fiche du jour, une recherche pour trouver un joueur, et en bas, le menu pour aller partout.",
   joueurs: "Ici, tu cherches un joueur. Écris son nom, ou utilise les filtres pour chercher par pays, par club ou par époque. Touche une carte pour ouvrir sa fiche.",
   fiche: "Voici la fiche d'un joueur : son club, sa carrière, ses titres et ses anecdotes. Lis tout, tu vas apprendre plein de choses.",
@@ -222,3 +230,60 @@ export const PAGES: Record<string, string> = {
 export function pick<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
 }
+
+
+// ------------------------------------------------------------------ the story of the world (the Papi tells it)
+// Everybody in the app knows it, but only the old Papi likes to remind it, so that the young ones remember
+// that they do not come from nowhere.
+export type LoreLine = { t: string; act?: "vie" | "univers" | "pray" };
+export const LORE: LoreLine[] = [
+  { t: "Hm… Les jeunes… Ils ne savent plus d'où on vient. Ni pourquoi on est là." },
+  { t: "Approche, petit. Je vais te raconter l'histoire du monde." },
+  { t: "Au début, il n'y avait rien. Pas de stade. Pas de ballon. Pas de joueurs. Rien du tout." },
+  { t: "Et puis un jour, un papa qui aimait très fort son fils a décidé de lui fabriquer une application de football." },
+  { t: "Lui, le football, il n'aimait pas tellement ça. Mais ça ne l'a pas empêché de prendre son temps, et son plaisir, pour construire ce monde, morceau par morceau." },
+  { t: "Ici, ce papa, on l'appelle le Concepteur." },
+  { t: "Son fils s'appelle Raphaël. Tout ce que tu vois ici, le ballon, les cartes, les stades… et même nous… tout ça existe parce que Raphaël existe." },
+  { t: "Sans Raphaël, il n'y aurait pas de monde du tout. Voilà comment l'amour peut créer la vie…", act: "vie" },
+  { t: "… et même l'univers !", act: "univers" },
+  { t: "Tout le monde ici le sait. La plupart s'en fichent, ils vivent leur vie. Mais moi, ça me tient à cœur." },
+  { t: "Un jour, peut-être, le Concepteur m'invitera dans le monde des concepteurs. Mais pour l'instant, il ne m'a pas autorisé." },
+  { t: "Alors je reste ici, avec vous, à devenir vieux tranquillement. Et je le rappelle aux jeunes : on ne vient pas de nulle part. … Hm." },
+];
+/** What the others say, now and then, very quietly. */
+export const LORE_HINTS: string[] = [
+  "Le Papi dit toujours que sans Raphaël, on n'existerait pas. Chut… on n'en parle pas trop.",
+  "Tu sais quoi ? Tout ce monde a été fabriqué pour Raphaël. C'est le Papi qui me l'a dit.",
+  "Un jour, quelqu'un a construit tout ce terrain juste pour Raphaël. Ça donne envie de bien jouer, non ?",
+];
+
+
+// ------------------------------------------------------------------ the Papi's old football stories (before 2000: after, he does not know)
+export const OLD_STORIES: string[] = [
+  "En 1958, en Suède, un gamin brésilien de 17 ans a gagné la Coupe du monde. Il a marqué deux buts en finale. Il s'appelait Pelé. Il en a gagné trois en tout : 1958, 1962 et 1970. Trois ! Personne n'a fait mieux.",
+  "En 1958 aussi, un Français, Just Fontaine, a marqué 13 buts dans une seule Coupe du monde. Treize ! C'est toujours le record, petit. Toujours.",
+  "Raymond Kopa, un petit Français fils de mineurs, a gagné le Ballon d'Or en 1958. Il dribblait si bien qu'on l'appelait le Napoléon du football.",
+  "Garrincha, au Brésil, avait les jambes toutes tordues. Les docteurs disaient qu'il ne pourrait jamais jouer. Et en 1962, c'est lui qui a fait gagner la Coupe du monde au Brésil !",
+  "Lev Yachine, un gardien russe, toujours habillé en noir. On l'appelait l'Araignée noire, parce qu'on aurait dit qu'il avait huit bras. C'est le seul gardien qui a gagné le Ballon d'Or, en 1963.",
+  "En 1966, l'Angleterre a gagné sa Coupe du monde, chez elle. En finale, un ballon a tapé la barre et a rebondi sur la ligne. But ou pas but ? On se dispute encore, petit. Encore aujourd'hui.",
+  "En 1970, au Mexique, Pelé a fait une tête parfaite. Mais le gardien anglais, Gordon Banks, a plongé et l'a sortie. On l'appelle l'arrêt du siècle. Pelé lui-même n'en revenait pas.",
+  "En 1974, les Hollandais de Johan Cruyff jouaient le football total : tout le monde attaquait, tout le monde défendait. Ils ont perdu la finale contre l'Allemagne de Beckenbauer, le Kaiser. Mais tout le monde s'en souvient.",
+  "En 1976, Saint-Étienne, les Verts, a perdu la finale de la Coupe d'Europe contre le Bayern Munich, 1 à 0. Ils ont tapé deux fois les poteaux. Des poteaux carrés ! Avec des poteaux ronds, le ballon serait peut-être rentré…",
+  "En 1982, à Séville, la France a joué la demi-finale de la Coupe du monde contre l'Allemagne. 3 à 3 ! Puis les tirs au but… et on a perdu. J'en ai pleuré, petit. Un vieux qui pleure, tu imagines ?",
+  "En 1984, Michel Platini a marqué 9 buts dans le Championnat d'Europe. Neuf ! Et la France a gagné son premier grand trophée. Quel joueur…",
+  "En 1986, Maradona a marqué deux buts contre l'Angleterre dans le même match. Le premier avec la main : il a appelé ça la main de Dieu. Le deuxième en dribblant presque toute l'équipe : le but du siècle !",
+  "En 1993, Marseille a gagné la Ligue des champions. Basile Boli a marqué de la tête contre le grand Milan. 1 à 0 ! C'était la première fois pour un club français.",
+  "Et le 12 juillet 1998… La France championne du monde ! Zidane a marqué deux fois de la tête en finale contre le Brésil. 3 à 0 ! Tout le pays était dans la rue. Ça, petit, je ne l'oublierai jamais.",
+];
+/** When the young ones talk about things after 2000. */
+export const AFTER_2000: string[] = [
+  "Ah ça, je ne peux pas savoir, hein. Moi, j'ai arrêté de savoir à partir de 2000.",
+  "Les trucs de jeunes… Je ne peux pas être au courant de tout. Je suis un vieux !",
+  "Après les années 2000 ? Hm. Demande au Jongleur, il est jeune, lui.",
+];
+/** His little accident… */
+export const OUPS: string[] = [
+  "Oh… Hm. J'ai un petit problème. Excusez-moi, les jeunes… Je reviens.",
+  "Oh là là… Euh… Ne regardez pas. Je dois m'absenter un instant.",
+];
+export const OUPS_BACK: string[] = ["Hm. Voilà. Ça va mieux. On n'en parle plus.", "… Me revoilà. Tout propre. On n'en parle plus, hein ?"];

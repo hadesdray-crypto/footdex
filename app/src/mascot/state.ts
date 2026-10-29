@@ -4,7 +4,7 @@ import { babble as babbleSound, robot as robotSound } from "../sound";
 import { piperWav } from "../piper";
 import { appeler, moduleDisponible } from "../natif";
 import { storageGet, storageSet } from "../util";
-import { PAGES, PERSOS, pick, type Kind, type Mode } from "./lines";
+import { AFTER_2000, LORE, LORE_HINTS, OLD_STORIES, OUPS, OUPS_BACK, PAGES, PERSOS, pick, type Kind, type Mode } from "./lines";
 import { DEFAULT_LOOK, sanitizeLook, type Look } from "./look";
 import { CARAC } from "./caractere";
 
@@ -36,25 +36,60 @@ export const VOICE_TYPES: { id: VoiceType; label: string; pitch: number }[] = [
   { id: "perso", label: "Celle du personnage", pitch: 0 },
 ];
 /** The voice of one character: which way of speaking, which exact voice, how high. */
-export type PVoice = { engine: "auto" | Engine; native: number; phone: string; pitch: number };
+/** A funny way of speaking, on top of the voice: higher, slower, a robot, gibberish, stuttering… */
+export type Fun = "" | "souris" | "geant" | "escargot" | "fusee" | "robot" | "charabia" | "begaie" | "echo" | "grrr";
+export const FUNS: { id: Fun; label: string; icon: string }[] = [
+  { id: "", label: "Normale", icon: "🙂" },
+  { id: "souris", label: "Souris", icon: "🐭" },
+  { id: "geant", label: "Géant", icon: "🦣" },
+  { id: "escargot", label: "Escargot", icon: "🐌" },
+  { id: "fusee", label: "Fusée", icon: "🚀" },
+  { id: "robot", label: "Robot", icon: "🤖" },
+  { id: "charabia", label: "Charabia", icon: "🗯️" },
+  { id: "begaie", label: "Il bé-bégaie", icon: "😬" },
+  { id: "echo", label: "Écho", icon: "🏔️" },
+  { id: "grrr", label: "Grrr", icon: "😾" },
+];
+export type PVoice = { engine: "auto" | Engine; native: number; phone: string; pitch: number; fun?: Fun };
+/** Who has a voice: the six characters, and the two visitors of the pitch. */
+export type VoiceKey = Mode | "medecin" | "arbitre";
+
+/** Friends on the screen next to the character: the other characters, and the Doctor. */
+export type Buddy = Mode | "medecin";
+export const BUDDIES: Buddy[] = ["statue", "excite", "poli", "joueur", "pointu", "zombie", "medecin"];
+/** The Doctor as a character of his own (front view). */
+export const DOCTOR_LOOK: Look = { body: 2, skin: 3, hair: 3, hairColor: 4, outfit: 10, acc: ["glasses", "stetho"] };
+
+/** What each character may do (changed by the parents), and how the Doctor and the Referee behave. */
+export type PersoInter = { talk: 0 | 1 | 2 | 3; wander: boolean; throwable: boolean };
+export type Inter = { per: Partial<Record<Mode, PersoInter>>; injuries: boolean; refVisits: boolean; refMood: 0 | 1 | 2; docFast: boolean };
+export const INTER_DEFAULT: Inter = { per: {}, injuries: true, refVisits: true, refMood: 1, docFast: false };
+export const interOf = (mode: Mode): PersoInter => ({ talk: 2, wander: true, throwable: true, ...(snap.s.inter.per[mode] ?? {}) });
+export const inter = () => snap.s.inter;
+export function setInterOf(mode: Mode, patch: Partial<PersoInter>) {
+  update({ inter: { ...snap.s.inter, per: { ...snap.s.inter.per, [mode]: { ...interOf(mode), ...patch } } } });
+}
+export function setInter(patch: Partial<Inter>) {
+  update({ inter: { ...snap.s.inter, ...patch } });
+}
 /** A boy's voice by default, each character a little different (Footdex is Raphaël's). */
-export const DEFAULT_PITCH: Record<Mode, number> = { statue: 0.9, excite: 1.22, poli: 1.05, joueur: 1.3, pointu: 1.12, zombie: 0.72 };
-export function voiceOf(mode: Mode): PVoice {
+export const DEFAULT_PITCH: Record<VoiceKey, number> = { statue: 0.74, excite: 1.22, poli: 1.05, joueur: 1.3, pointu: 1.12, zombie: 0.72, medecin: 0.92, arbitre: 0.78 };
+export function voiceOf(mode: VoiceKey): PVoice {
   const v = snap.s.pvoice[mode];
-  return { engine: v?.engine ?? "auto", native: typeof v?.native === "number" ? v.native : -1, phone: v?.phone ?? "", pitch: typeof v?.pitch === "number" ? Math.max(0.6, Math.min(1.6, v.pitch)) : DEFAULT_PITCH[mode] };
+  return { engine: v?.engine ?? "auto", native: typeof v?.native === "number" ? v.native : -1, phone: v?.phone ?? "", pitch: typeof v?.pitch === "number" ? Math.max(0.6, Math.min(1.6, v.pitch)) : DEFAULT_PITCH[mode], fun: FUNS.some((f) => f.id === v?.fun) ? v?.fun : "" };
 }
 /** Sets the voice of one character (only what changes). */
-export function setVoiceOf(mode: Mode, patch: Partial<PVoice>) {
+export function setVoiceOf(mode: VoiceKey, patch: Partial<PVoice>) {
   update({ pvoice: { ...snap.s.pvoice, [mode]: { ...voiceOf(mode), ...patch } } });
 }
 /** For a moment, a voice to try (in the voice picker): used by the next sentence instead of the chosen one. */
 let trying: PVoice | null = null;
-export type Settings = { look: Look; perso: number; speed: number; auto: boolean; engine: "auto" | Engine; heard: Partial<Record<Engine, boolean>>; piper: boolean; nativeVoice: number; voiceType: VoiceType; pvoice: Partial<Record<Mode, PVoice>>; looks: Record<string, Look>; rest: boolean; narrate: boolean; fx: number; fy: number; day: string };
+export type Settings = { look: Look; perso: number; speed: number; auto: boolean; engine: "auto" | Engine; heard: Partial<Record<Engine, boolean>>; piper: boolean; nativeVoice: number; voiceType: VoiceType; pvoice: Partial<Record<VoiceKey, PVoice>>; inter: Inter; bubbles: boolean; buddies: Buddy[]; buddyPos: Record<string, { fx: number; fy: number }>; looks: Record<string, Look>; rest: boolean; narrate: boolean; fx: number; fy: number; day: string };
 export type Bubble = { id: number; text: string; top: boolean } | null;
 type Snap = { reading: boolean; s: Settings; eng: Partial<Record<Engine, "ok" | "ko">>; using: Engine | null; bubble: Bubble; talking: boolean; busy: boolean; anim: string | null; animId: number; vx: number; vy: number; hurt: number };
 
 function loadSettings(): Settings {
-  const d: Settings = { look: DEFAULT_LOOK, perso: 0, speed: 1, auto: true, engine: "auto", heard: {}, piper: false, nativeVoice: -1, voiceType: "garcon", pvoice: {}, looks: {}, rest: false, narrate: false, fx: 1, fy: 1, day: "" };
+  const d: Settings = { look: DEFAULT_LOOK, perso: 0, speed: 1, auto: true, engine: "auto", heard: {}, piper: false, nativeVoice: -1, voiceType: "garcon", pvoice: {}, inter: INTER_DEFAULT, bubbles: true, buddies: [], buddyPos: {}, looks: {}, rest: false, narrate: false, fx: 1, fy: 1, day: "" };
   try {
     const raw = JSON.parse(storageGet(KEY) ?? "null") as Partial<Settings> | null;
     if (!raw) return d;
@@ -75,10 +110,14 @@ function loadSettings(): Settings {
       engine: raw.engine === "native" || raw.engine === "phone" || raw.engine === "piper" || raw.engine === "robot" || raw.engine === "babble" ? raw.engine : "auto",
       heard: raw.heard && typeof raw.heard === "object" ? raw.heard : {},
       piper: raw.piper === true,
-      pvoice: raw.pvoice && typeof raw.pvoice === "object" ? (raw.pvoice as Partial<Record<Mode, PVoice>>) : {},
+      pvoice: raw.pvoice && typeof raw.pvoice === "object" ? (raw.pvoice as Partial<Record<VoiceKey, PVoice>>) : {},
+      inter: raw.inter && typeof raw.inter === "object" ? { ...INTER_DEFAULT, ...raw.inter, per: raw.inter.per && typeof raw.inter.per === "object" ? raw.inter.per : {} } : INTER_DEFAULT,
       voiceType: raw.voiceType === "perso" || raw.voiceType === "homme" || raw.voiceType === "grave" ? raw.voiceType : "garcon",
       nativeVoice: typeof raw.nativeVoice === "number" && raw.nativeVoice >= 0 ? Math.floor(raw.nativeVoice) : -1,
       narrate: raw.narrate === true,
+      bubbles: raw.bubbles !== false,
+      buddies: Array.isArray(raw.buddies) ? (raw.buddies.filter((b) => BUDDIES.includes(b as Buddy)) as Buddy[]).slice(0, 2) : [],
+      buddyPos: raw.buddyPos && typeof raw.buddyPos === "object" ? raw.buddyPos : {},
       fx: num(raw.fx, 0, 1, 1),
       fy: num(raw.fy, 0, 1, 1),
       day: typeof raw.day === "string" ? raw.day : "",
@@ -118,7 +157,9 @@ export function choosePerso(i: number) {
 }
 /** The outfit he wears right now: while reading, he adds his reading gear (glasses, notebook…). */
 export function wornLook(): Look {
-  const look = snap.s.look;
+  // the Papi never goes anywhere without his cane
+  const base = snap.s.look;
+  const look = PERSOS[snap.s.perso].mode === "statue" && !base.acc.includes("cane") ? { ...base, acc: [...base.acc, "cane"] } : base;
   if (!snap.reading) return look;
   const add = CARAC[PERSOS[snap.s.perso].mode].readAcc.filter((a) => !look.acc.includes(a));
   return add.length ? { ...look, acc: [...look.acc, ...add] } : look;
@@ -255,14 +296,38 @@ function mark(e: Engine, v: "ok" | "ko") {
 }
 
 /** One way of speaking. `done` when the text is finished, `fail` when this way does not work (the next one can take over). */
+const FUN_K: Record<string, { pitch: number; rate: number }> = {
+  "": { pitch: 1, rate: 1 },
+  souris: { pitch: 1.45, rate: 1.15 },
+  geant: { pitch: 0.62, rate: 0.82 },
+  escargot: { pitch: 0.95, rate: 0.6 },
+  fusee: { pitch: 1.1, rate: 1.7 },
+  robot: { pitch: 0.8, rate: 0.9 },
+  charabia: { pitch: 1.1, rate: 1.1 },
+  begaie: { pitch: 1, rate: 1 },
+  echo: { pitch: 1, rate: 0.95 },
+  grrr: { pitch: 0.85, rate: 0.95 },
+};
+/** The funny voices that play with the words themselves. */
+function funText(text: string, fun?: Fun): string {
+  if (fun === "begaie") {
+    let n = 0;
+    return text.replace(/\b([bcdfgjklmnpqrstvz])([a-zàâéèêëîïôûù]+)/gi, (w, c: string, rest: string) => (w.length > 3 && (n += 1) % 3 === 1 ? `${c}-${c}-${c}${rest}` : w));
+  }
+  if (fun === "echo") return text.replace(/([a-zàâéèêëîïôûù]{3,})(\s?[.!?])/gi, "$1… $1… $1$2");
+  if (fun === "grrr") return text.replace(/([.!?])(\s|$)/g, (m, a: string, b: string) => (Math.random() < 0.5 ? `${a} Grrr…${b}` : m));
+  return text;
+}
+
 function runEngine(e: Engine, text: string, my: number, done: () => void, fail: () => void, given?: PVoice) {
   const p = PERSOS[snap.s.perso];
   const rate = Math.max(0.5, Math.min(2, p.rate * SPEEDS[snap.s.speed].factor));
   // A real voice (Android's, the phone's) gets ugly when pushed too high or too fast: only a gentle nudge per character.
   const pv = given ?? voiceOf(p.mode);
   // the pitch chosen for this character (🐭 high … 🐻 low)
-  const softPitch = pv.pitch;
-  const softRate = Math.max(0.6, Math.min(1.5, 1 + (p.rate - 1) * 0.45)) * SPEEDS[snap.s.speed].factor;
+  const fk = FUN_K[pv.fun ?? ""] ?? FUN_K[""];
+  const softPitch = Math.max(0.5, Math.min(2, pv.pitch * fk.pitch));
+  const softRate = Math.max(0.5, Math.min(2, Math.max(0.6, Math.min(1.5, 1 + (p.rate - 1) * 0.45)) * SPEEDS[snap.s.speed].factor * fk.rate));
   const alive = () => my === wake;
   if (e === "robot" || e === "babble") {
     const r = (e === "robot" ? robotSound : babbleSound)(text, pv.pitch * 0.9, softRate, p.voice.formant, p.voice.vib);
@@ -474,7 +539,9 @@ function voice(text: string, onEnd?: () => void) {
   nextIsVisitor = false;
   trying = null;
   const base = snap.s.engine === "auto" ? order() : [snap.s.engine];
-  const list = pv.engine !== "auto" ? [pv.engine, ...base.filter((e) => e !== pv.engine)] : base;
+  const forced: "auto" | Engine = pv.fun === "robot" ? "robot" : pv.fun === "charabia" ? "babble" : pv.engine;
+  const list = forced !== "auto" ? [forced, ...base.filter((e) => e !== forced)] : base;
+  text = funText(text, pv.fun);
   const my = wake;
   let idx = 0;
   const next = () => {
@@ -599,13 +666,51 @@ export function sayLabel(text: string) {
 
 
 export function greet() {
+  // now and then, very quietly, a word about Raphaël (the others know, but do not talk about it much)
+  if (P().mode !== "statue" && Math.random() < 0.12) return say(pick(LORE_HINTS));
   if (P().greet.length) say(pick(P().greet));
 }
+
+/** The Papi's monologue: the story of the world, told piece by piece, each one after the previous one is said. */
+let loreRun = 0;
+export function tellLore() {
+  const my = (loreRun += 1);
+  reading();
+  emit("lore");
+  storageSet("footdex.lore.jour", new Date().toISOString().slice(0, 10));
+  const step = (i: number) => {
+    if (my !== loreRun || i >= LORE.length) return;
+    const text = LORE[i].t;
+    const act = LORE[i].act;
+    if (act) play(act, Math.max(4000, text.length * 110));
+    queue = [];
+    window.clearTimeout(hideTimer);
+    bubbleId += 1;
+    const id = bubbleId;
+    set({ bubble: { id, text, top: false } });
+    let next = false;
+    const go = () => {
+      if (next || my !== loreRun || snap.bubble?.id !== id) return; // touched / something else said: he stops
+      next = true;
+      window.setTimeout(() => step(i + 1), 900);
+    };
+    if (snap.s.auto) voice(text, go);
+    // without a voice (or if it ends without telling us), the text stays long enough to be read
+    hideTimer = window.setTimeout(go, Math.max(4500, text.length * (snap.s.auto ? 100 : 75)));
+    if (i === LORE.length - 1) window.setTimeout(() => { if (my === loreRun && snap.bubble?.id === id) set({ bubble: null }); }, Math.max(6000, text.length * 80));
+  };
+  step(0);
+}
+/** Has the Papi told it today? */
+export const oupsLines = () => ({ go: pick(OUPS), back: pick(OUPS_BACK) });
+export const after2000 = () => pick(AFTER_2000);
+export const loreToldToday = () => storageGet("footdex.lore.jour") === new Date().toISOString().slice(0, 10);
 export function explain(page: string) {
   const text = PAGES[page] ?? PAGES.accueil;
   const p = P();
   reading();
-  if (p.mode === "statue") return say(sentencesOf(text)[0]);
+  // the Papi explains slowly… and the pages about today's football are not for him
+  if (p.mode === "statue") return sayInParts("Hm. ", text, ["saison", "scores", "joueurs", "matchs", "paquets"].includes(page) ? [pick(AFTER_2000)] : []);
   if (p.mode === "joueur") return say(pick(p.open) + sentencesOf(text)[0]);
   if (p.mode === "excite") {
     say(pick(p.ask));
@@ -625,6 +730,12 @@ export function askToTell(matches: MatchLike[]) {
 export function tellStory(matches: MatchLike[]) {
   if (!matches.length) return say("Je n'ai pas d'histoire sous la main pour l'instant.");
   if (P().mode === "excite") return askToTell(matches);
+  // the Papi, sometimes, prefers the story of the world
+  if (P().mode === "statue") {
+    if (!loreToldToday() || Math.random() < 0.25) return tellLore();
+    reading();
+    return sayInParts(`${pick(P().story)} `, pick(OLD_STORIES));
+  }
   const m = pick(matches);
   reading();
   const sentences = m.story.match(/[^.!?]+[.!?]+/g) ?? [m.story];
@@ -674,6 +785,7 @@ export function onShake() {
 }
 export function onThrown(strong = false) {
   say(pick(P().thrown));
+  emit("thrown");
   set({ hurt: strong ? 2 : 1 });
   window.setTimeout(() => set({ hurt: 0 }), 9000);
 }
@@ -752,11 +864,23 @@ export async function voiceCatalog(): Promise<VoiceOption[]> {
 export const optionKey = (v: PVoice) => (v.engine === "native" ? `n${v.native}` : v.engine === "phone" ? `p${v.phone}` : v.engine === "auto" ? "" : v.engine);
 
 /** A visitor's line (doctor, referee): the same speaking chain, with his own pitch; the character's mouth does not move. */
-export function visitorSpeak(text: string, pitch: number) {
+/** A friend on the screen says something, with his own voice (the character's mouth stays still). */
+export function speakAs(text: string, who: VoiceKey) {
   if (!snap.s.auto) return;
-  // the same voice as the character (the one that works on this phone), but his own pitch
+  trying = voiceOf(who);
+  nextIsVisitor = true;
+  voice(text);
+}
+/** Something happened to the character: the friends on the screen react. */
+export function emit(ev: "thrown" | "doctor-in" | "doctor-out" | "card" | "lore") {
+  window.dispatchEvent(new CustomEvent("footdex:terrain", { detail: ev }));
+}
+export function visitorSpeak(text: string, who: "medecin" | "arbitre") {
+  if (!snap.s.auto) return;
+  // his own voice if one was chosen for him; otherwise the character's voice (the one that works on this phone) with his own pitch
+  const his = snap.s.pvoice[who];
   const mine = voiceOf(PERSOS[snap.s.perso].mode);
-  trying = { ...mine, pitch };
+  trying = his ? voiceOf(who) : { ...mine, pitch: DEFAULT_PITCH[who], fun: "" };
   nextIsVisitor = true;
   voice(text);
 }

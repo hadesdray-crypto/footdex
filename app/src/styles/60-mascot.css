@@ -149,8 +149,8 @@
 
 /* Il s'est fait mal */
 .mfw .bandage, .mfw .cast { display: none; }
-.mfw.hurt .bandage { display: block; }
-.mfw.hurt2 .cast { display: block; }
+/* the injuries now stay on him (wounds.ts): only the arm cast is shown from here */
+.mfig.w-arm .cast { display: block; }
 .mfw.hurt .brows { transform: translateY(-3px) rotate(-4deg); transform-box: fill-box; transform-origin: center; }
 .mfw.hurt .m-static { display: none; }
 .mfw.hurt:not(.talk) .m-open { display: block; transform: scaleY(0.4); }
@@ -394,3 +394,57 @@
 .zpiece__hit { position: absolute; width: 56px; height: 56px; border-radius: 50%; pointer-events: auto; touch-action: none; cursor: grab; }
 .zpiece.is-held { z-index: 60; filter: drop-shadow(0 10px 6px #0008); }
 .zpiece.is-snap { transition: transform .15s ease-out; }
+.ztrunk__grip { position: absolute; left: 12px; top: 28%; width: 50px; height: 62%; pointer-events: auto; touch-action: none; cursor: grab; border-radius: 16px; }
+.ztrunk.is-held { z-index: 59; filter: drop-shadow(0 10px 6px #0008); }
+
+/* the Papi telling the story of the world: an arm up for « la vie », high to the sky for « l'univers » */
+.mfw.a-vie .armR { transform: rotate(-108deg); transition: transform 0.5s var(--ease); }
+.mfw.a-univers .armR { transform: rotate(-145deg); transition: transform 0.5s var(--ease); }
+.mfw.a-univers .headg { transform: rotate(-6deg) translateY(-2px); transition: transform 0.5s; }
+.mfw.a-oups .headg { transform: rotate(6deg); }
+.fbp.is-oups::after, .mascot__fab.is-oups::after { content: "💨"; position: absolute; left: 10%; bottom: 18%; font-size: 22px; animation: oupsPuff 1.2s ease-out infinite; pointer-events: none; }
+@keyframes oupsPuff { from { transform: translate(0, 0) scale(0.6); opacity: 0.9; } to { transform: translate(-18px, -16px) scale(1.2); opacity: 0; } }
+
+/* the referee, face to you */
+.vis__front { position: absolute; left: -4px; bottom: 0; width: 74px; display: none; }
+.vis__front .mfw, .vis__front svg { display: block; }
+.vis.is-front .vis__fx { display: none; }
+.vis.is-front .vis__front { display: block; }
+.vis__front .arm { transition: transform 0.35s cubic-bezier(0.3, 1.3, 0.5, 1); }
+.vis__front .hcard, .vis__front .fcards { display: none; }
+.vis[data-card="jaune"] .hcard--y, .vis[data-card="rouge"] .hcard--r { display: block; }
+.vis[data-pose="card"] .armR { transform: rotate(-148deg); }
+.vis[data-pose="card"] .headg { transform: rotate(-4deg); }
+.vis[data-pose="whistle"] .armR { transform: rotate(140deg); }
+.vis[data-pose="whistle"] .armL { transform: rotate(-20deg); }
+.vis[data-pose="point"] .armR { transform: rotate(-95deg); }
+.vis[data-pose="shrug"] .armL { transform: rotate(70deg); }
+.vis[data-pose="shrug"] .armR { transform: rotate(-70deg); }
+.vis[data-pose="shrug"] .headg { transform: rotate(-6deg); }
+.vis[data-pose="surprised"] .armL { transform: rotate(150deg); }
+.vis[data-pose="surprised"] .armR { transform: rotate(-150deg); }
+.vis[data-pose="surprised"] .pup { transform: scale(0.6); transform-origin: center; transform-box: fill-box; }
+.vis[data-pose="think"] .armR { transform: rotate(152deg); }
+.vis[data-pose="think"] .pup { transform: translate(3px, -3px); }
+.vis[data-pose="wave"] .armR { animation: m-wave-r 0.5s ease-in-out infinite alternate; }
+.vis[data-pose="fiddle"] .armL { transform: rotate(-48deg); }
+.vis[data-pose="fiddle"] .armR { transform: rotate(48deg); }
+.vis[data-pose="fiddle"] .fcards { display: block; animation: fiddle 0.7s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+.vis[data-pose="fiddle"] .pup { transform: translate(0, 4px); }
+.vis[data-pose="fiddle"] .headg { transform: rotate(4deg) translateY(3px); }
+@keyframes fiddle { from { transform: rotate(-4deg); } to { transform: rotate(5deg) translateY(-1px); } }
+
+/* friends on the screen */
+.buddies { position: fixed; inset: 0; pointer-events: none; z-index: 54; }
+.buddy { position: fixed; width: 64px; height: 74px; padding: 0; border: 0; background: none; pointer-events: auto; touch-action: none; cursor: grab; transition-property: left, top; transition-timing-function: linear; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.5)); -webkit-tap-highlight-color: transparent; }
+.buddy__flip { display: block; transition: transform 0.25s; }
+.buddy.is-walk .mfw { animation: buddyStep 0.42s ease-in-out infinite alternate; }
+.buddy.is-old.is-walk .mfw { animation: buddyOld 0.8s ease-in-out infinite alternate; }
+@keyframes buddyStep { from { transform: translateY(0) rotate(-2deg); } to { transform: translateY(-3px) rotate(2deg); } }
+@keyframes buddyOld { from { transform: translateY(0) rotate(-1deg); } to { transform: translateY(-1px) rotate(3deg); } }
+.buddy__bubble { position: fixed; z-index: 69; width: 180px; padding: 7px 10px; border-radius: 14px; background: #eef2fb; color: #10131c; font: 700 13px/1.3 var(--f-body); text-align: center; box-shadow: 0 8px 20px -8px #000c; pointer-events: none; animation: m-pop 0.25s var(--ease); }
+.buddy__bubble b { display: block; font-size: 11px; color: #6b4a10; }
+.no-bubbles .buddy__bubble { display: none !important; }
+.mfw.a-surprised .armL { transform: rotate(150deg); }
+.mfw.a-surprised .armR { transform: rotate(-150deg); }
+.mfw.a-listen .headg { transform: rotate(-5deg); transition: transform 0.6s; }
