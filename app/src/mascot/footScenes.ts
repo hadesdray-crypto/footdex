@@ -71,9 +71,9 @@ async function juggling(f: Footballer) {
 }
 
 /** One outing: dribbles, shots, juggling, a sprint, push-ups… then home, with the ball at his feet. */
-export type Outing = "play" | "stolen" | "thrown" | "moved";
+export type Outing = "play" | "stolen" | "thrown" | "moved" | "pass";
 
-export async function footballOuting(f: Footballer, home: Pt, why: Outing = "play", fling?: { vx: number; vz: number; vy: number }, broken = false, onHit?: () => Promise<"out" | void> | void): Promise<"banc" | void> {
+export async function footballOuting(f: Footballer, home: Pt, why: Outing = "play", fling?: { vx: number; vz: number; vy: number }, broken = false, onHit?: () => Promise<"out" | void> | void, to?: Pt): Promise<"banc" | void> {
   try {
     if (why === "thrown" && fling) {
       // Thrown away from his ball: he flies, falls, gets up, and goes back for his ball.
@@ -103,6 +103,14 @@ export async function footballOuting(f: Footballer, home: Pt, why: Outing = "pla
     } else if (why === "moved") {
       // Moved to another place: his ball stayed behind. He goes for it and brings it to his new spot.
       say(pick(["Attends, je vais chercher mon ballon !", "Mon ballon est resté là-bas !", "Je reviens avec mon ballon !"]));
+      await getBall(f);
+    } else if (why === "pass" && to) {
+      // a pass to a friend… who does not always catch it
+      await getBall(f);
+      await dribbleTo(f, { x: Math.max(60, Math.min(window.innerWidth - 60, to.x + (to.x > f.x ? -170 : 170))), y: to.y }, 220);
+      say(pick(["Attrape !", "Tiens, à toi !", "Passe !"]));
+      await f.kick(to.x > f.x ? 1 : -1, 0.35);
+      await f.wait(1800);
       await getBall(f);
     } else if (why === "stolen") {
       say(pick(["Hé ! Mon ballon !", "Rends-moi mon ballon !", "Ah non, pas mon ballon !"]));

@@ -44,6 +44,8 @@ jobs:
           sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/; s/versionName \"[^\"]*\"/versionName \"1.${{ github.run_number }}\"/" android/app/build.gradle
           npx cap sync android
           grep -q ACCESS_NETWORK_STATE android/app/src/main/AndroidManifest.xml || sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />#' android/app/src/main/AndroidManifest.xml
+          # the microphone, to record the characters' own noises (« Mes bruitages »)
+          grep -q RECORD_AUDIO android/app/src/main/AndroidManifest.xml || sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />#' android/app/src/main/AndroidManifest.xml
           echo "Modules du téléphone inclus :"; cat android/app/src/main/assets/capacitor.plugins.json
           # Safety: stop if the voice or the updater is missing.
           grep -q TextToSpeech android/app/src/main/assets/capacitor.plugins.json

@@ -19,6 +19,7 @@ import { footballOuting, type Outing } from "./footScenes";
 import { doctorVisit, faute, refereeSendOff, refereeSurprise, startReferee, substitution } from "./terrain";
 import { Buddies, BuddyPicker } from "./Buddies";
 import { depthZ } from "./depth";
+import { playFx } from "./bruits";
 import { addBandage, addCast, heal, isOut, onWounds, wounds } from "./wounds";
 import { fallApart } from "./zombie";
 import { runScript } from "./scripts";
@@ -113,6 +114,28 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     const dm = (window as unknown as { DeviceMotionEvent?: { requestPermission?: () => Promise<string> } }).DeviceMotionEvent;
     if (dm && typeof dm.requestPermission === "function") dm.requestPermission().catch(() => undefined);
   }
+
+  // A friend thrown into him: he totters (« Aïe ! »). The Jongleur passes the ball to a friend.
+  useEffect(() => {
+    const onKnock = () => {
+      if (getMascot().busy) return;
+      play("shake", 900);
+      if (!playFx(perso.mode, "aie")) say(pick(["Aïe ! Qui m'a lancé ça ?", "Ouille ! Fais attention !", "Hé ! Tu m'as foncé dedans !"]));
+    };
+    const onPass = (e: Event) => {
+      const to = (e as CustomEvent<{ x: number; y: number }>).detail;
+      if (perso.mode !== "joueur" || act.current.busy || m.s.rest) return;
+      act.current.cancel?.();
+      footballer("pass", undefined, undefined, "leger", to);
+    };
+    window.addEventListener("footdex:mainknock", onKnock);
+    window.addEventListener("footdex:pass", onPass);
+    return () => {
+      window.removeEventListener("footdex:mainknock", onKnock);
+      window.removeEventListener("footdex:pass", onPass);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [perso.mode, m.s.rest]);
 
   // The juggler's ball: ONE ball, his own, resting at his feet. Take it from him and he runs to get it back.
   const feet = (p: { x: number; y: number }) => ({ x: p.x + W / 2, y: p.y + H - 3 });
@@ -407,7 +430,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
   }
 
   /** The juggler goes out with his ball, plays, and comes back to his corner. */
-  function footballer(why: Outing, at?: { x: number; y: number }, fling?: { vx: number; vz: number; vy: number }, hurt: Hurt = "leger") {
+  function footballer(why: Outing, at?: { x: number; y: number }, fling?: { vx: number; vz: number; vy: number }, hurt: Hurt = "leger", to?: { x: number; y: number }) {
     const a = act.current;
     const fab = fabRef.current;
     if (!fab) return;
@@ -439,7 +462,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
             return afterFall(hurt, () => (player.dead ? feet(posRef.current) : { x: player.x, y: player.y }), false);
           }
         : undefined;
-    footballOuting(player, home, why, fling, false, ouch)
+    footballOuting(player, home, why, fling, false, ouch, to)
       .catch(() => undefined)
       .then((r) => {
         if (player.dead) return;
@@ -566,6 +589,12 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       }
     } else {
       askMotion();
+      if (getMascot().anim === "sleep") {
+        play("wake", 50);
+        say("Hein ? Quoi ? Pelé ? … Ah, c'est toi, petit.");
+        s.mode = "wait";
+        return;
+      }
       const now = performance.now();
       window.clearTimeout(s.tapTimer);
       if (now - s.lastTap < 340) {

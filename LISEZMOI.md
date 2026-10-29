@@ -89,7 +89,9 @@ node tools/build-app.mjs
 | `maj/nouveautes-liste.ts` | Le journal des nouveautés affiché après une mise à jour : ajouter la nouvelle version EN PREMIER. |
 | `pages/jeux.tsx` | Les 10 jeux, avec la difficulté Facile / Normal / Difficile (retenue dans le téléphone). |
 | `mascot/wounds.ts` | Bandages et plâtres qui restent sur le personnage (6 bandages ou 2 jambes plâtrées : sortie). |
-| `mascot/Buddies.tsx` | Les copains à l'écran (jusqu'à 2, dont le Médecin) : vie propre, voix, réactions, petites conversations. |
+| `mascot/Buddies.tsx` | Les copains à l'écran (jusqu'à 3, dont le Médecin) : moteur physique (solides, chute, lancer, sortie/retour d'écran), peur du Zombie, scènes (éternuement, cache-cache, check-up, sieste, passe, récré, ola, chat du stade). |
+| `mascot/bruits.ts`, `mascot/Bruitages.tsx` | Les bruitages enregistrés au micro pour chaque personnage (peur, aïe, joie, bruit). |
+| `mascot/depth.ts` | Qui passe devant qui (selon la hauteur sur l'écran). |
 | `mascot/Atelier.tsx` | L'atelier des personnages (code parent 6666) : parole, promenade, lancer, blessures, Arbitre, Médecin. |
 | `mascot/lines.ts` | Les répliques ; à la fin : l'histoire du monde du Papi (LORE), ses vieilles histoires (avant 2000). |
 | `fbx/art.ts` | Les 20 Footballinis (dessins, raretés, pouvoirs). |

@@ -323,6 +323,12 @@ export async function refereeVisit(reason?: Faute) {
       if (fear) {
         r.say("Hmm… je reste à distance, moi.", 2400);
         await r.pose("think", 3000);
+      } else if (k < 0.18 && document.querySelector(".buddy")) {
+        // the end of playtime: everybody back to his place
+        await r.pose("whistle", 900);
+        r.say("TUUUT ! Fin de la récré ! Tout le monde à sa place !", 2800);
+        emit("recre");
+        await r.pose("point", 2400);
       } else if (k < 0.3) {
         // he takes his cards out of his pocket, looks at them, fiddles with them… and puts them back
         await r.pose("fiddle", rnd(2600, 3600));

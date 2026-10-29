@@ -173,6 +173,22 @@ function stepBall(dt: number) {
   if (Math.hypot(b.vx, b.vy, b.vz) > 90) bump(b, r);
 }
 
+/** Somebody standing right there (a friend, a visitor), on the same line. */
+function touching(x: number, y: number): HTMLElement | null {
+  const t = performance.now();
+  if (t - bodiesAt > 150) {
+    bodiesAt = t;
+    bodies = [...document.querySelectorAll<HTMLElement>(".buddy, .vis")].map((el) => ({ el, r: el.getBoundingClientRect() }));
+  }
+  for (const { el, r } of bodies) {
+    if (x < r.left + 6 || x > r.right - 6 || Math.abs(y - r.bottom) > 26) continue;
+    if (t - (lastHit.get(el) ?? 0) < 600) continue;
+    lastHit.set(el, t);
+    return el;
+  }
+  return null;
+}
+
 // The ball does not go through the others: it hits the friends on the screen and the visitors, and bounces off them.
 let bodies: { el: HTMLElement; r: DOMRect }[] = [];
 let bodiesAt = 0;
@@ -506,6 +522,16 @@ function stepPlayer(dt: number) {
       p0.y = clamp(p0.y + a.vy * dt, top(), bottom());
       if (p0.x <= 20 || p0.x >= window.innerWidth - 20) a.vx = -a.vx * 0.5;
       a.ang += a.spin * dt;
+      // he flies into a friend (or a visitor): that one is knocked over, and he bounces back
+      if (Math.abs(a.vx) > 150 && a.z < 60) {
+        const hitEl = touching(p0.x, p0.y);
+        if (hitEl) {
+          window.dispatchEvent(new CustomEvent("footdex:knock", { detail: { el: hitEl, vx: a.vx } }));
+          a.vx = -a.vx * 0.35;
+          a.spin = -a.spin * 0.5;
+          ballBounce(0.8);
+        }
+      }
       if (a.z <= 0) {
         a.z = 0;
         ballBounce(0.9);

@@ -1,12 +1,18 @@
-// « Des copains à l'écran » : one or two friends next to the character (the other characters, or the Doctor).
-// Each one lives his own little life: he breathes, looks around, takes a few steps, says something in his own
-// voice now and then, and reacts to what happens (the character thrown, the Doctor, a card, the Papi's story).
-// A tap: he talks. Hold and drag: he moves. They chat with the character from time to time.
+// « Des copains à l'écran » : friends next to the character (the other characters, or the Doctor).
+// They are solid bodies moved by a small physics engine, every frame: they walk, run, bump into each other,
+// fall when somebody is thrown at them, can be thrown with a flick of the finger, pass in front of or behind
+// each other (the lower one is in front), and may run off one side of the screen and come back on the other.
+// The Zombie walks after them; they keep away from him like a cat-and-mouse game: gently when he is far,
+// screaming and running when he is close. And little scenes now and then: the Zombie sneezes his head off,
+// hide-and-seek, the Doctor's check-up, the Papi falls asleep, the stadium cat, the Mexican wave…
 import { useEffect, useRef, useState } from "react";
 import { Fig } from "./Fig";
 import { CARAC } from "./caractere";
 import { LORE_HINTS, OLD_STORIES, PERSOS, pick, type Mode } from "./lines";
 import { DOCTOR_LOOK, getMascot, play, say, speakAs, update, useMascot, type Buddy } from "./state";
+import { figSvg, type Look } from "./look";
+import { playFx, type Slot } from "./bruits";
+import { cough, hiss, meow, sneeze, thud } from "../sound";
 import { cx } from "../util";
 import { depthZ } from "./depth";
 
@@ -15,14 +21,14 @@ export const BUDDY_NAME = (b: Buddy) => (b === "medecin" ? "Le Médecin" : PERSO
 /** What each friend says when you touch him, or by himself. */
 const TALK: Record<Buddy, string[]> = {
   statue: ["Hm. De mon temps, les ballons étaient en cuir. Et lourds !", "Hm… Tu sais qui a gagné la Coupe du monde en 1958 ? Pelé. À 17 ans.", "Ma canne et moi, on a vu Platini jouer. Hm."],
-  excite: ["Oh là là, on est DEUX à l'écran ! C'est la fête !", "Tu veux que je te raconte un truc ? Dis oui !", "ALLEZ ! ALLEZ ! On va gagner !"],
+  excite: ["Oh là là, on est plusieurs à l'écran ! C'est la fête !", "Tu veux que je te raconte un truc ? Dis oui !", "ALLEZ ! ALLEZ ! On va gagner !"],
   poli: ["Bonjour ! Je reste à côté, si tu as besoin.", "Si je peux me permettre : les doublons s'échangent contre des étoiles.", "Belle journée pour le football, n'est-ce pas ?"],
   joueur: ["Tu me fais une passe ?", "Regarde mes jongles… enfin, imagine-les !", "Un petit match après ?"],
-  pointu: ["D'après les chiffres, nous sommes deux. C'est mieux qu'un.", "Statistiquement, je parle moins que le supporter.", "Précisément : il y a 22 joueurs sur un terrain."],
+  pointu: ["D'après les chiffres, nous sommes plusieurs. C'est mieux qu'un.", "Statistiquement, je parle moins que le supporter.", "Précisément : il y a 22 joueurs sur un terrain."],
   zombie: ["Grrr… du foot…", "Mmmh… cerveaux… euh, ballons !", "Grrr… je suis gentil. Presque."],
   medecin: ["Tout le monde va bien ? Personne n'est blessé ?", "Un pansement ? J'en ai plein ma sacoche.", "Je surveille, je surveille. Le docteur est là !"],
 };
-const REACT: Record<"thrown" | "doctor" | "card" | "lore", Partial<Record<Buddy, string[]>> & { all: string[] }> = {
+const REACT: Record<"thrown" | "doctor" | "card", Partial<Record<Buddy, string[]>> & { all: string[] }> = {
   thrown: {
     all: ["Oh non ! Ça va ?", "Aïe ! Ça a dû faire mal !", "Hé ! On ne lance pas les copains !"],
     statue: ["Hm. De mon temps, on ne lançait pas les gens."],
@@ -32,7 +38,6 @@ const REACT: Record<"thrown" | "doctor" | "card" | "lore", Partial<Record<Buddy,
   },
   doctor: { all: ["Le docteur arrive !", "Courage !"], zombie: ["Grrr… le docteur… il a un goût de métal."] },
   card: { all: ["Oh oh… un carton !", "Il est sévère, l'arbitre !"], excite: ["CARTON ! Mais non, arbitre !"], statue: ["Hm. De mon temps, il n'y avait pas de cartons. Ils sont arrivés en 1970."] },
-  lore: { all: [] },
 };
 /** Little chats: the friend says something, the character answers. */
 const CHATS: { a: string; b: string; who?: Buddy; to?: Mode }[] = [
@@ -43,13 +48,51 @@ const CHATS: { a: string; b: string; who?: Buddy; to?: Mode }[] = [
   { a: "N'oublie pas de t'hydrater, c'est important.", b: "Oui docteur !", who: "medecin" },
   { a: "Tu as vu toutes ces cartes dans le classeur ?", b: "Oui ! Et il en manque encore plein à trouver." },
 ];
+const SCARED: string[][] = [
+  [],
+  ["Il… il s'approche…", "Euh… on s'éloigne un peu ?", "Doucement… doucement…"],
+  ["Oh non, le zombie !", "Au secours ! Il vient par ici !", "Reculez ! Reculez !"],
+  ["AAAAAAH !", "AU SECOURS ! IL VA ME MANGER !", "MAMAAAAN !", "NON NON NON NON !"],
+];
+const STATUE_SCARED = ["Hm ! Attendez-moi, ma canne !", "De mon temps… les zombies… AAAH !", "Pas si vite, je suis vieux !"];
+export const mainScared = (level: number) => pick(SCARED[Math.max(1, Math.min(3, level))]);
 
+// ------------------------------------------------------------------ the engine
 type Pos = { x: number; y: number };
-/** One friend talks at a time (their bubbles must not cover each other). */
+const W = 64;
+const H = 74;
+const G = 1500;
+type Goal = { x: number; y: number; speed: number; stop: number; wrap: boolean; until: number; done: (ok: boolean) => void };
+type Body = {
+  key: Buddy;
+  el: HTMLElement;
+  flip: HTMLElement;
+  look: Look;
+  x: number; // feet
+  y: number;
+  z: number;
+  vx: number;
+  vy: number;
+  vz: number;
+  dir: 1 | -1;
+  mode: "free" | "held" | "fly" | "down" | "go";
+  goal: Goal | null;
+  wish: Pos; // the speed he wants (set by his behaviour, a few times a second)
+  wrap: boolean; // allowed to run off the screen and come back on the other side
+  downUntil: number;
+  scared: number;
+  pursuit: { dir: 1 | -1; until: number } | null; // the zombie keeps running in one direction (a chase)
+  pause: number;
+  say: (text: string, force?: boolean, slot?: Slot) => void;
+  act: (name: string, ms: number) => void;
+  hidden: boolean;
+};
+const bodies = new Map<Buddy, Body>();
+let running = 0;
+let lastT = 0;
 let talkingUntil = 0;
+const now = () => performance.now();
 
-// ------------------------------------------------------------------ who is where (their feet), to keep away from the zombie
-const REG = new Map<Buddy, Pos>();
 /** The main character's feet, wherever he is (in his corner, or walking about). */
 function mainSpot(): Pos | null {
   const fab = document.querySelector<HTMLElement>(".mascot__fab");
@@ -58,358 +101,835 @@ function mainSpot(): Pos | null {
   const r = el.getBoundingClientRect();
   return r.width ? { x: r.left + r.width / 2, y: r.bottom } : null;
 }
+const mainMode = () => PERSOS[getMascot().s.perso].mode;
 /** Where the zombie is: a friend on the screen, or the main character himself. */
 function zombieSpot(): Pos | null {
-  const z = REG.get("zombie");
-  if (z) return z;
-  return PERSOS[getMascot().s.perso].mode === "zombie" ? mainSpot() : null;
+  const z = bodies.get("zombie");
+  if (z && !z.hidden) return z;
+  return mainMode() === "zombie" ? mainSpot() : null;
 }
 /** Afraid of the zombie: everybody… except the Doctor (and the zombie himself). */
 const fearful = (b: Buddy) => b !== "zombie" && b !== "medecin";
-const SCARED: string[][] = [
-  [],
-  ["Il… il s'approche…", "Euh… on s'éloigne un peu ?", "Je n'aime pas trop ce zombie…"],
-  ["Oh non, le zombie !", "Au secours ! Il vient par ici !", "Reculez ! Reculez !"],
-  ["AAAAAAH !", "AU SECOURS ! IL VA ME MANGER !", "MAMAAAAN !", "NON NON NON NON !"],
-];
-const STATUE_SCARED = ["Hm ! Attendez-moi, ma canne !", "De mon temps… les zombies… AAAH !", "Pas si vite, je suis vieux !"];
-export const mainScared = (level: number) => pick(SCARED[Math.max(1, Math.min(3, level))]);
-const W = 64;
-const H = 74;
+const others = (b: Body) => [...bodies.values()].filter((o) => o !== b && !o.hidden);
+const sameLine = (a: Pos, b: Pos) => Math.abs(a.y - b.y) < 24;
+const top = () => 120;
+const bottom = () => window.innerHeight - 78;
 
-function lookOf(b: Buddy, looks: Record<string, unknown>) {
+function knock(b: Body, vx: number) {
+  if (b.mode === "fly" || b.mode === "held" || b.hidden) return;
+  b.goal?.done(false);
+  b.goal = null;
+  b.mode = "fly";
+  b.vx = vx * 0.6 + Math.sign(vx || 1) * 60;
+  b.vz = 280;
+  b.vy = 0;
+  b.say(b.key === "zombie" ? pick(["Grrr !", "Grrraaah… pas gentil !"]) : b.key === "statue" ? pick(["Ouille ! Mes vieux os !", "Hm ! Ma canne !"]) : pick(["AÏE !", "Ouille !", "Hé !"]), true, "aie");
+}
+
+function step(t: number) {
+  const dt = Math.min(0.04, (t - lastT) / 1000 || 0.016);
+  lastT = t;
+  const list = [...bodies.values()].filter((b) => !b.hidden);
+  const vw = window.innerWidth;
+  const main = mainSpot();
+  for (const b of list) {
+    if (b.mode === "held") continue;
+    if (b.mode === "fly") {
+      b.vz -= G * dt;
+      b.z += b.vz * dt;
+      b.x += b.vx * dt;
+      b.y = Math.max(top(), Math.min(bottom(), b.y + b.vy * dt));
+      // he flies into somebody: that one falls too
+      for (const o of list) {
+        if (o === b || o.mode === "fly" || o.mode === "held" || !sameLine(b, o)) continue;
+        if (Math.abs(o.x - b.x) < 40 && b.z < H * 0.8) {
+          knock(o, b.vx);
+          b.vx = -b.vx * 0.35;
+        }
+      }
+      if (main && sameLine(b, main) && Math.abs(main.x - b.x) < 36 && b.z < H * 0.8 && Math.abs(b.vx) > 120) {
+        window.dispatchEvent(new CustomEvent("footdex:mainknock", { detail: { vx: b.vx } }));
+        b.vx = -b.vx * 0.35;
+      }
+      if (b.x < W / 2 || b.x > vw - W / 2) {
+        b.vx = -b.vx * 0.5;
+        b.x = Math.max(W / 2, Math.min(vw - W / 2, b.x));
+      }
+      if (b.z <= 0) {
+        b.z = 0;
+        if (b.vz < -380) {
+          b.vz = -b.vz * 0.3;
+          b.vx *= 0.5;
+          thud();
+        } else {
+          b.mode = "down";
+          b.vz = 0;
+          b.vx = 0;
+          b.downUntil = t + 1300;
+          thud();
+          b.el.classList.add("is-down");
+          const who = b;
+          window.setTimeout(() => who.say(who.key === "zombie" ? "Grrr… atterrissage…" : who.key === "statue" ? "Ouille… mon dos…" : pick(["Aïe !", "Ouille…", "Ouf ! Ça va…"]), true, "aie"), 120);
+        }
+      }
+    } else if (b.mode === "down") {
+      if (t > b.downUntil) {
+        b.mode = "free";
+        b.el.classList.remove("is-down");
+      }
+    } else if (b.mode === "go" && b.goal) {
+      const g = b.goal;
+      const dx = g.x - b.x;
+      const dy = g.y - b.y;
+      const d = Math.hypot(dx, dy);
+      if (d <= g.stop || t > g.until) {
+        b.goal = null;
+        b.mode = "free";
+        b.vx = b.vy = 0;
+        g.done(d <= g.stop);
+      } else {
+        b.vx = (dx / d) * g.speed;
+        b.vy = (dy / d) * g.speed;
+      }
+    } else {
+      // free: he follows his wish, smoothly (no jerky stop-and-go)
+      const k = Math.min(1, dt * 3);
+      b.vx += (b.wish.x - b.vx) * k;
+      b.vy += (b.wish.y - b.vy) * k;
+    }
+    if (b.mode === "go" || b.mode === "free") {
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+    }
+  }
+  // solid bodies: two on the same line cannot stand in the same place
+  for (let i = 0; i < list.length; i += 1)
+    for (let j = i + 1; j < list.length; j += 1) {
+      const a = list[i];
+      const c = list[j];
+      if (a.mode === "fly" || c.mode === "fly" || a.mode === "held" || c.mode === "held" || !sameLine(a, c)) continue;
+      const dx = c.x - a.x;
+      const over = 44 - Math.abs(dx);
+      if (over > 0) {
+        const s = Math.sign(dx) || 1;
+        a.x -= (s * over) / 2;
+        c.x += (s * over) / 2;
+      }
+    }
+  if (main)
+    for (const b of list) {
+      if (b.mode === "fly" || b.mode === "held" || !sameLine(b, main)) continue;
+      const dx = b.x - main.x;
+      const over = 46 - Math.abs(dx);
+      if (over > 0) b.x += (Math.sign(dx) || 1) * over;
+    }
+  // the edges: a chase may go off one side and come back on the other; otherwise he stays on the screen
+  for (const b of list) {
+    if (b.mode === "fly" || b.mode === "held") continue;
+    const wrap = b.wrap || b.goal?.wrap;
+    if (wrap) {
+      if (b.x < -W * 0.7) b.x = vw + W * 0.6;
+      else if (b.x > vw + W * 0.7) b.x = -W * 0.6;
+    } else b.x = Math.max(W / 2, Math.min(vw - W / 2, b.x));
+    b.y = Math.max(top(), Math.min(bottom(), b.y));
+    const sp = Math.hypot(b.vx, b.vy);
+    if (Math.abs(b.vx) > 6) b.dir = b.vx > 0 ? 1 : -1;
+    b.el.classList.toggle("is-walk", sp > 8 && b.mode !== "down");
+    b.el.classList.toggle("is-run", sp > 140 && b.mode !== "down");
+  }
+  for (const b of list) {
+    b.el.style.transform = `translate(${b.x - W / 2}px,${b.y - H - b.z}px)`;
+    b.el.style.zIndex = String(depthZ(b.y));
+    b.flip.style.transform = `scaleX(${b.dir})`;
+  }
+  moveHead(dt);
+  running = bodies.size ? requestAnimationFrame(step) : 0;
+}
+function wake() {
+  if (!running && bodies.size) {
+    lastT = now();
+    running = requestAnimationFrame(step);
+  }
+}
+/** Walks (or runs) somewhere; resolves when he is there (or gave up). */
+function goTo(b: Body, x: number, y: number, speed: number, opts: { stop?: number; wrap?: boolean; timeout?: number } = {}) {
+  return new Promise<boolean>((done) => {
+    if (b.mode === "fly" || b.mode === "held" || b.hidden) return done(false);
+    b.goal?.done(false);
+    b.mode = "go";
+    b.goal = { x, y: Math.max(top(), Math.min(bottom(), y)), speed, stop: opts.stop ?? 6, wrap: !!opts.wrap, until: now() + (opts.timeout ?? 15000), done };
+  });
+}
+const wait = (ms: number) => new Promise((r) => window.setTimeout(r, ms));
+
+// ------------------------------------------------------------------ behaviours (a few times a second)
+const lastFearTalk = new Map<Buddy, number>();
+function think() {
+  const t = now();
+  const z = zombieSpot();
+  const main = mainSpot();
+  const vw = window.innerWidth;
+  for (const b of bodies.values()) {
+    if (b.hidden || b.mode !== "free") continue;
+    if (b.key === "zombie") {
+      // he never stays still: he walks after somebody, slowly; sometimes he stops to groan
+      if (t < b.pause) {
+        b.wish = { x: 0, y: 0 };
+        continue;
+      }
+      if (b.pursuit && t < b.pursuit.until) {
+        b.wrap = true;
+        b.wish = { x: b.pursuit.dir * 46, y: 0 };
+        continue;
+      }
+      b.pursuit = null;
+      b.wrap = false;
+      const prey = [main && mainMode() !== "zombie" ? main : null, ...others(b).map((o) => ({ x: o.x, y: o.y }))].filter(Boolean) as Pos[];
+      const target = prey.sort((p, q) => Math.hypot(p.x - b.x, p.y - b.y) - Math.hypot(q.x - b.x, q.y - b.y))[0];
+      if (!target) {
+        b.wish = { x: (Math.random() - 0.5) * 40, y: 0 };
+        continue;
+      }
+      const dx = target.x - b.x;
+      const dy = target.y - b.y;
+      const d = Math.hypot(dx, dy);
+      // the prey ran off the screen and came back on the other side: he follows the same way
+      if (Math.abs(dx) > vw * 0.55 && Math.random() < 0.6) {
+        b.pursuit = { dir: dx > 0 ? -1 : 1, until: t + 5000 };
+        continue;
+      }
+      if (d < 70) {
+        b.wish = { x: 0, y: 0 };
+        if (Math.random() < 0.08) b.pause = t + 1800;
+      } else b.wish = { x: (dx / d) * 30, y: (dy / d) * 14 };
+      continue;
+    }
+    if (fearful(b.key) && z) {
+      const dx = b.x - z.x;
+      const dy = (b.y - z.y) * 1.6;
+      const d = Math.hypot(dx, dy);
+      const level = d < 95 ? 3 : d < 165 ? 2 : d < 260 ? 1 : 0;
+      // the Papi asleep does not move… unless the zombie is right next to him
+      if (b.el.classList.contains("is-asleep")) {
+        if (level < 3) {
+          b.wish = { x: 0, y: 0 };
+          continue;
+        }
+        b.el.classList.remove("is-asleep");
+        b.say("Hein ?! Quoi ?! AAAAH ! LE ZOMBIE !", true, "peur");
+      }
+      b.scared = level;
+      b.el.classList.toggle("is-scared", level > 0);
+      b.el.classList.toggle("s1", level === 1);
+      b.el.classList.toggle("s2", level === 2);
+      b.el.classList.toggle("s3", level === 3);
+      if (level) {
+        // cat and mouse: the closer he is, the faster they go away (gently when he is far)
+        const speed = (b.key === "statue" ? 0.35 : 1) * (22 + ((260 - Math.min(260, d)) / 165) * 260);
+        let ax = Math.sign(dx) || (Math.random() < 0.5 ? -1 : 1);
+        let ay = Math.sign(b.y - z.y) * 0.35;
+        // towards the group (the character and the friends) on the safe side
+        const mates = [main && mainMode() !== "zombie" ? main : null, ...others(b).filter((o) => fearful(o.key)).map((o) => ({ x: o.x, y: o.y }))].filter(
+          (m): m is Pos => !!m && Math.sign(m.x - z.x) === ax,
+        );
+        if (mates.length) {
+          const gx = mates.reduce((a, m) => a + m.x, 0) / mates.length;
+          ay += Math.sign(mates[0].y - b.y) * 0.2;
+          if (Math.abs(gx - b.x) > 70) ax += Math.sign(gx - b.x) * 0.4;
+        }
+        // a real chase: they may run off the screen and come back on the other side
+        b.wrap = level >= 2;
+        if (!b.wrap && ((ax < 0 && b.x < W) || (ax > 0 && b.x > vw - W))) {
+          ax = 0;
+          ay = b.y > window.innerHeight / 2 ? -1 : 1;
+        }
+        const n = Math.hypot(ax, ay) || 1;
+        b.wish = { x: (ax / n) * speed, y: (ay / n) * speed * 0.6 };
+        const last = lastFearTalk.get(b.key) ?? 0;
+        if (t - last > (level === 3 ? 2400 : level === 2 ? 4200 : 7000)) {
+          lastFearTalk.set(b.key, t);
+          b.say(b.key === "statue" && level > 1 ? pick(STATUE_SCARED) : pick(SCARED[level]), level === 3, level >= 2 ? "peur" : undefined);
+          if (level >= 2) b.act("surprised", 1100);
+        }
+        continue;
+      }
+      b.wrap = false;
+    }
+    // calm: now and then a few slow steps
+    if (Math.random() < 0.06) {
+      const sp = b.key === "statue" ? 14 : 30;
+      b.wish = { x: (Math.random() - 0.5) * 2 * sp, y: (Math.random() - 0.5) * sp * 0.4 };
+    } else if (Math.random() < 0.12) b.wish = { x: 0, y: 0 };
+  }
+}
+let thinker = 0;
+
+// ------------------------------------------------------------------ the zombie's head (it comes off: a ball in the head, a sneeze)
+let head: { el: HTMLElement; x: number; y: number; vx: number; vz: number; z: number; rot: number; carrier: Body | null } | null = null;
+const curHead = () => head;
+function moveHead(dt: number) {
+  if (!head) return;
+  const h = head;
+  if (h.carrier) {
+    h.x = h.carrier.x + h.carrier.dir * 14;
+    h.y = h.carrier.y;
+    h.z = 46;
+    h.rot = 0;
+  } else if (h.z > 0 || h.vz > 0) {
+    h.vz -= G * dt;
+    h.z = Math.max(0, h.z + h.vz * dt);
+    h.x += h.vx * dt;
+    h.rot += h.vx * dt * 3;
+    if (h.z === 0) h.vz = h.vz < -200 ? -h.vz * 0.35 : 0;
+  } else if (Math.abs(h.vx) > 4) {
+    // it rolls on the grass
+    h.x += h.vx * dt;
+    h.rot += h.vx * dt * 3;
+    h.vx *= Math.exp(-2.2 * dt);
+  }
+  h.x = Math.max(14, Math.min(window.innerWidth - 14, h.x));
+  h.el.style.transform = `translate(${h.x - W / 2}px,${h.y - H - h.z + H * 0.38}px) rotate(${h.rot}deg)`;
+  h.el.style.zIndex = String(depthZ(h.y) + 1);
+}
+/** His head comes off and flies (vx: where to). Everybody near screams. */
+function dropHead(z: Body, vx: number, high = 0) {
+  if (head) return;
+  const el = document.createElement("div");
+  el.className = "bhead";
+  el.innerHTML = `<div class="mfw">${figSvg(z.look, { size: W, crop: "full", mouth: "open" })}</div>`;
+  document.body.appendChild(el);
+  head = { el, x: z.x, y: z.y, vx, vz: 260 + high, z: H * 0.55, rot: 0, carrier: null };
+  z.el.classList.add("no-head");
+  window.dispatchEvent(new CustomEvent("footdex:zombiehead", { detail: { x: z.x + vx * 0.5, y: z.y } }));
+}
+function headBack(z: Body) {
+  head?.el.remove();
+  head = null;
+  z.el.classList.remove("no-head");
+}
+/** The zombie goes to get his head himself (he has his two arms: no problem). */
+async function fetchHead(z: Body) {
+  await wait(1400);
+  const h = curHead();
+  if (!h) return;
+  await goTo(z, h.x - (h.x > z.x ? 14 : -14), h.y, 50, { stop: 10, timeout: 12000 });
+  z.act("kneel", 900);
+  await wait(700);
+  headBack(z);
+  z.say(pick(["Clic ! Grrr… ma tête est revenue.", "Ah… je revois tout. Grrr.", "Qui a fait ça ? Grrrr !"]), true);
+}
+
+// ------------------------------------------------------------------ the little scenes
+let sceneOn = false;
+async function scene<T>(f: () => Promise<T>) {
+  if (sceneOn) return;
+  sceneOn = true;
+  try {
+    await f();
+  } finally {
+    sceneOn = false;
+  }
+}
+const nearest = (p: Pos, list: Body[]) => [...list].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+
+/** 1. The zombie sneezes… and his head flies off. A brave friend (trembling) brings it back. */
+const sneezeScene = () =>
+  scene(async () => {
+    const z = bodies.get("zombie");
+    if (!z || z.hidden || head || z.mode !== "free") return;
+    z.pause = now() + 6000;
+    z.say("Aaah… AAAAH…", true);
+    await wait(1300);
+    z.say("ATCHOUM !", true);
+    sneeze();
+    dropHead(z, (Math.random() < 0.5 ? -1 : 1) * 200, 160);
+    await wait(1500);
+    const brave = nearest(z, others(z).filter((o) => fearful(o.key) && o.mode === "free"));
+    const h0 = curHead();
+    if (!brave || !h0) return fetchHead(z);
+    brave.say(pick(["Bon… j'y vais… mais je tremble !", "Personne ? D'accord… c'est moi qui y vais…"]), true);
+    brave.el.classList.add("is-scared", "s2");
+    await goTo(brave, h0.x, h0.y, 70, { stop: 12, timeout: 9000 });
+    const h1 = curHead();
+    if (!h1) return;
+    h1.carrier = brave;
+    brave.say(pick(["Beurk… elle est toute molle !", "Je la tiens… je la tiens…"]), true);
+    await goTo(brave, z.x + (brave.x > z.x ? 40 : -40), z.y, 55, { stop: 8, timeout: 9000 });
+    headBack(z);
+    z.say("Grrr… merci… Tu veux un câlin ?", true);
+    await wait(900);
+    brave.say("NON MERCI ! AAAAH !", true, "peur");
+    await goTo(brave, brave.x > z.x ? window.innerWidth + 120 : -120, brave.y, 300, { wrap: true, timeout: 6000 });
+    brave.el.classList.remove("is-scared", "s2");
+  });
+
+/** 6. Hide-and-seek: the friends hide behind the character, the zombie sniffs around… and finds them. */
+const hideScene = () =>
+  scene(async () => {
+    const z = bodies.get("zombie");
+    const main = mainSpot();
+    const hiders = [...bodies.values()].filter((b) => fearful(b.key) && !b.hidden && b.mode === "free");
+    if (!z || !main || !hiders.length || mainMode() === "zombie") return;
+    hiders[0].say("Vite ! On se cache derrière lui !", true);
+    await Promise.all(hiders.map((h, i) => goTo(h, main.x + (i % 2 ? 16 : -16), main.y - 10, 200, { stop: 6, timeout: 6000 })));
+    hiders.forEach((h) => (h.wish = { x: 0, y: 0 }));
+    z.pause = now() + 9000;
+    z.act("sniff", 4000);
+    z.say("Snif… snif… Où êtes-vous ? Grrr…", true);
+    await wait(2600);
+    say(pick(["Chut… je ne vois personne, moi.", "Hein ? Personne ici !"]));
+    await wait(2600);
+    z.pause = 0;
+    z.say("JE VOUS AI TROUVÉS ! Grrraaah !", true, "bruit");
+    await goTo(z, main.x, main.y, 45, { stop: 60, timeout: 5000 });
+  });
+
+/** 5. The Doctor's check-up: « Dites 33 ! » */
+const checkupScene = () =>
+  scene(async () => {
+    const d = bodies.get("medecin");
+    if (!d || d.hidden || d.mode !== "free") return;
+    const patients = others(d).filter((o) => o.mode === "free");
+    const main = mainSpot();
+    const p = patients.length && Math.random() < 0.6 ? nearest(d, patients) : null;
+    const to = p ? { x: p.x, y: p.y } : main;
+    if (!to) return;
+    d.say("Check-up surprise ! Ne bougez pas !", true);
+    await goTo(d, to.x + (d.x < to.x ? -46 : 46), to.y, 90, { stop: 6, timeout: 8000 });
+    d.act("work", 2000);
+    d.say("Dites… trente-trois !", true);
+    await wait(1600);
+    if (p) p.say(p.key === "zombie" ? "Grrrente-trois… kof kof !" : "Trente-trois… kof kof !", true);
+    else say("Trente-trois… kof kof !");
+    cough();
+    await wait(1600);
+    d.say(pick(["Rien de grave ! Un peu de sport, et ça ira.", "Excellent ! Bon pour le match !"]), true);
+  });
+
+/** 3. The Papi falls asleep on his cane. A tap wakes him up: « Hein ? Quoi ? Pelé ? » */
+const sleepScene = () =>
+  scene(async () => {
+    const p = bodies.get("statue");
+    if (p && !p.hidden && p.mode === "free") {
+      p.wish = { x: 0, y: 0 };
+      p.el.classList.add("is-asleep");
+      p.say("Zzzz… Pelé… zzz…", true);
+      await wait(16000);
+      if (p.el.classList.contains("is-asleep")) {
+        p.el.classList.remove("is-asleep");
+        p.say("Hein ? Quoi ? J'ai dormi ? Non !", true);
+      }
+      return;
+    }
+    if (mainMode() === "statue" && !getMascot().busy) {
+      play("sleep", 16000);
+      say("Zzzz… Pelé… zzz…");
+    }
+  });
+
+/** 4. The Jongleur passes the ball to a friend… who gets it right in the face. */
+const passScene = () =>
+  scene(async () => {
+    const target = [...bodies.values()].filter((b) => !b.hidden && b.mode === "free" && b.key !== "zombie")[0] ?? bodies.get("zombie");
+    if (!target || target.hidden || mainMode() !== "joueur") return;
+    target.say("Passe ! Passe-la moi !", true);
+    await wait(900);
+    window.dispatchEvent(new CustomEvent("footdex:pass", { detail: { x: target.x, y: target.y } }));
+  });
+
+/** 7. The Referee whistles the end of playtime: everybody back to his place. */
+async function recre() {
+  const list = [...bodies.values()].filter((b) => !b.hidden);
+  await Promise.all(
+    list.map(async (b, i) => {
+      await wait(i * 250);
+      b.say(pick(["On y va !", "Oui, monsieur l'arbitre !", "J'arrive !"]), i === 0);
+      const s = getMascot().s.buddyPos[b.key];
+      const x = s ? s.fx * (window.innerWidth - W) + W / 2 : 40 + i * 70;
+      const y = s ? s.fy * (window.innerHeight - H - 80) + 60 + H : bottom() - 20;
+      await goTo(b, x, y, 220, { stop: 6, timeout: 6000 });
+    }),
+  );
+}
+
+/** 2. The Mexican wave: everybody lifts his arms, one after the other. */
+async function ola() {
+  const list = [...bodies.values()].filter((b) => !b.hidden).sort((a, b) => a.x - b.x);
+  const main = mainSpot();
+  const all: (Body | "main")[] = [...list];
+  if (main) all.splice(list.filter((b) => b.x < main.x).length, 0, "main");
+  all.forEach((b, i) =>
+    window.setTimeout(() => {
+      if (b === "main") {
+        play("cheer", 1600);
+        if (!playFx(mainMode(), "joie")) say("OLAAAA !");
+        else say("OLAAAA !", { quiet: true });
+      } else {
+        b.act("cheer", 1500);
+        b.say(i === 0 ? "OLAAAA !" : "Ola !", true, "joie");
+      }
+    }, i * 380),
+  );
+}
+
+// ------------------------------------------------------------------ 8. the stadium cat
+let cat: { el: HTMLElement; x: number; y: number; dir: 1 | -1; state: "walk" | "hiss" } | null = null;
+const CAT_SVG = `<svg viewBox="0 0 60 44" width="46" height="34" aria-hidden="true"><path d="M8 30 Q2 20 6 10" fill="none" stroke="#3b3b4a" stroke-width="4" stroke-linecap="round" class="cat__tail"/><ellipse cx="26" cy="28" rx="16" ry="10" fill="#4a4a5c"/><path d="M14 36 v6 M20 37 v6 M32 37 v6 M38 36 v6" stroke="#4a4a5c" stroke-width="4" stroke-linecap="round"/><circle cx="44" cy="18" r="10" fill="#4a4a5c"/><path d="M36 12 L38 2 L44 9Z M46 9 L52 2 L53 13Z" fill="#4a4a5c"/><circle cx="41" cy="17" r="2.4" fill="#ffd76a"/><circle cx="48" cy="17" r="2.4" fill="#ffd76a"/><circle cx="41" cy="17" r="1" fill="#111"/><circle cx="48" cy="17" r="1" fill="#111"/><path d="M44 21 l1.5 1.5 l1.5 -1.5" stroke="#ff9db4" stroke-width="1.4" fill="none"/><path d="M50 21 h8 M50 23 l7 2 M38 21 h-7" stroke="#cfd4dc" stroke-width="0.8"/></svg>`;
+async function catScene() {
+  if (cat || sceneOn) return;
+  sceneOn = true;
+  try {
+    const el = document.createElement("div");
+    el.className = "stadcat";
+    el.innerHTML = CAT_SVG;
+    document.body.appendChild(el);
+    const dir: 1 | -1 = Math.random() < 0.5 ? 1 : -1;
+    const y = bottom() - 10 - Math.random() * 120;
+    cat = { el, x: dir > 0 ? -40 : window.innerWidth + 40, y, dir, state: "walk" };
+    const c = cat;
+    const draw = () => {
+      el.style.transform = `translate(${c.x - 23}px,${c.y - 34}px) scaleX(${c.dir})`;
+      el.style.zIndex = String(depthZ(c.y));
+    };
+    meow();
+    const others0 = [...bodies.values()].filter((b) => !b.hidden && b.key !== "zombie");
+    if (others0[0]) others0[0].say(pick(["Oh ! Un chat !", "Un chat sur le terrain !"]), true);
+    else say(pick(["Oh ! Un chat !", "Tiens, un chat !"]));
+    const z = bodies.get("zombie");
+    let met = false;
+    let last = now();
+    await new Promise<void>((done) => {
+      const tick = (t: number) => {
+        const dt = Math.min(0.04, (t - last) / 1000);
+        last = t;
+        if (c.state === "walk") c.x += c.dir * 60 * dt;
+        // the zombie wants to stroke it…
+        if (z && !z.hidden && !met && Math.abs(c.x - z.x) < 260 && z.mode === "free") {
+          met = true;
+          void (async () => {
+            z.pause = now() + 8000;
+            z.say("Grrr… gentil minou… viens…", true);
+            await goTo(z, c.x - c.dir * 10, c.y, 40, { stop: 56, timeout: 6000 });
+            c.state = "hiss";
+            el.classList.add("is-hiss");
+            hiss();
+            await wait(600);
+            z.pause = 0;
+            z.act("surprised", 1200);
+            z.say("AAAAAH ! UN CHAT ! AU SECOURS !", true, "peur");
+            await goTo(z, z.x < c.x ? -120 : window.innerWidth + 120, z.y, 260, { wrap: true, timeout: 5000 });
+            const brave = [...bodies.values()].find((b) => !b.hidden && fearful(b.key));
+            if (brave) brave.say(pick(["Le zombie a peur d'un chat ! Ha ha !", "Ha ha ! Un chat a fait peur au zombie !"]), true, "joie");
+            else say("Ha ha ! Le zombie a peur des chats !");
+            await wait(800);
+            el.classList.remove("is-hiss");
+            c.state = "walk";
+          })();
+        }
+        draw();
+        if (c.x < -60 || c.x > window.innerWidth + 60) return done();
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    el.remove();
+  } finally {
+    cat = null;
+    sceneOn = false;
+  }
+}
+
+// ------------------------------------------------------------------ one friend
+function lookOf(b: Buddy, looks: Record<string, unknown>): Look {
   if (b === "medecin") return DOCTOR_LOOK;
-  const base = (looks[b] as typeof DOCTOR_LOOK | undefined) ?? CARAC[b].tenue;
+  const base = (looks[b] as Look | undefined) ?? CARAC[b].tenue;
   return b === "statue" && !base.acc.includes("cane") ? { ...base, acc: [...base.acc, "cane"] } : base;
 }
 
 function One({ b, index }: { b: Buddy; index: number }) {
   const m = useMascot();
-  const saved = m.s.buddyPos[b];
-  const start = (): Pos => {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    if (saved) return { x: saved.fx * (vw - W), y: saved.fy * (vh - H - 80) + 60 };
-    return { x: 12 + index * (W + 8), y: vh - H - 96 };
-  };
-  const [pos, setPosState] = useState<Pos>(start);
-  const posRef = useRef<Pos>(pos);
-  const setPos = (p: Pos | ((q: Pos) => Pos)) => {
-    const np = typeof p === "function" ? p(posRef.current) : p;
-    posRef.current = np;
-    REG.set(b, { x: np.x + W / 2, y: np.y + H });
-    setPosState(np);
-  };
-  const [walkMs, setWalkMs] = useState(0);
-  const walk = walkMs > 0;
-  const [run, setRun] = useState(false);
-  const [scared, setScared] = useState(0);
-  const [headOff, setHeadOff] = useState<null | { x: number; y: number; rot: number; ms: number }>(null);
-  const headRef = useRef(false);
-  const btnRef = useRef<HTMLButtonElement | null>(null);
-  const [dir, setDir] = useState(1);
   const [talk, setTalk] = useState(false);
   const [bubble, setBubble] = useState("");
-  const [hidden, setHiddenState] = useState(false);
-  const hiddenRef = useRef(false);
-  const setHidden = (v: boolean) => {
-    hiddenRef.current = v;
-    setHiddenState(v);
-    if (v) setBubble("");
-  };
+  const [bpos, setBpos] = useState<Pos>({ x: 0, y: 0 });
+  const [hidden, setHidden] = useState(false);
   const [act, setAct] = useState("");
-  const drag = useRef<{ dx: number; dy: number; moved: boolean; t: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+  const flipRef = useRef<HTMLSpanElement | null>(null);
+  const bodyRef = useRef<Body | null>(null);
   const timers = useRef<number[]>([]);
   const later = (ms: number, f: () => void) => timers.current.push(window.setTimeout(f, ms));
+  const look = lookOf(b, m.s.looks);
 
-  /** He says something: his bubble, his voice, his mouth. */
-  const speak = (text: string, force = false) => {
+  /** He says something: his bubble, his voice (or the noise recorded for him), his mouth. */
+  const speak = (text: string, force = false, slot?: Slot) => {
     if (!text) return;
     if (!force && Date.now() < talkingUntil) return;
-    talkingUntil = Date.now() + Math.max(2600, text.length * 70) + 400;
+    const ms = Math.max(2400, text.length * 68);
+    talkingUntil = Date.now() + ms + 300;
+    const bd = bodyRef.current;
+    if (bd) setBpos({ x: bd.x, y: bd.y - bd.z });
     setBubble(text);
     setTalk(true);
-    if (!getMascot().talking) speakAs(text, b);
-    const ms = Math.max(2600, text.length * 70);
+    const recorded = slot ? playFx(b, slot) : false;
+    if (!recorded && !getMascot().talking) speakAs(text, b);
     later(ms * 0.8, () => setTalk(false));
     later(ms, () => setBubble(""));
   };
-
-  /** He walks (or runs) to a place, at his own speed. */
-  const walkRef = useRef(0);
-  const moveTo = (nx: number, ny: number, speed: number) => {
-    const p = posRef.current;
-    const x = Math.max(4, Math.min(window.innerWidth - W - 4, nx));
-    const y = Math.max(70, Math.min(window.innerHeight - H - 76, ny));
-    const d = Math.hypot(x - p.x, y - p.y);
-    if (d < 4) return 0;
-    const ms = Math.round((d / speed) * 1000);
-    setDir(x >= p.x ? 1 : -1);
-    setRun(speed > 160);
-    setWalkMs(ms);
-    walkRef.current = Date.now() + ms;
-    setPos({ x, y });
-    later(ms, () => setWalkMs(0));
-    return ms;
+  const doAct = (name: string, ms: number) => {
+    setAct(name);
+    later(ms, () => setAct((a) => (a === name ? "" : a)));
   };
 
   useEffect(() => {
-    REG.set(b, { x: posRef.current.x + W / 2, y: posRef.current.y + H });
-    const keep = (p: Pos) => {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      update({ buddyPos: { ...getMascot().s.buddyPos, [b]: { fx: Math.max(0, Math.min(1, p.x / Math.max(1, vw - W))), fy: Math.max(0, Math.min(1, (p.y - 60) / Math.max(1, vh - H - 80))) } } });
+    const el = btnRef.current;
+    const flip = flipRef.current;
+    if (!el || !flip) return;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const saved = getMascot().s.buddyPos[b];
+    const x = saved ? saved.fx * (vw - W) + W / 2 : 50 + index * (W + 14);
+    const y = saved ? saved.fy * (vh - H - 80) + 60 + H : vh - 120;
+    const body: Body = {
+      key: b,
+      el,
+      flip,
+      look,
+      x,
+      y,
+      z: 0,
+      vx: 0,
+      vy: 0,
+      vz: 0,
+      dir: 1,
+      mode: "free",
+      goal: null,
+      wish: { x: 0, y: 0 },
+      wrap: false,
+      downUntil: 0,
+      scared: 0,
+      pursuit: null,
+      pause: 0,
+      say: speak,
+      act: doAct,
+      hidden: false,
     };
-    // his own little life
+    bodyRef.current = body;
+    bodies.set(b, body);
+    wake();
+    if (!thinker) thinker = window.setInterval(think, 250);
+    later(2500 + index * 2200, () => speak(pick(TALK[b])));
+
+    // his own little life (talks, chats, waves; the zombie groans and lifts his arms)
     const life = () => {
       const k = Math.random();
       const st = getMascot();
-      if (drag.current || hiddenRef.current || st.s.rest) return;
+      if (body.mode !== "free" || body.hidden || st.s.rest || body.el.classList.contains("is-asleep")) return;
       if (b === "zombie") {
-        // the zombie never stays still: he wanders, follows somebody, or lifts his arms like in the films
-        const p = posRef.current;
-        if (k < 0.22) {
-          setAct("zarms");
-          speak(pick(["Braaaains… euh… ballons !", "Grrraaaaah…", "Mmmmh… du fooot…", "Grrr… un câlin ?"]));
-          later(2600, () => setAct(""));
-        } else if (k < 0.62) {
-          const targets = [mainSpot(), ...[...REG.entries()].filter(([k2]) => k2 !== "zombie").map(([, v]) => v)].filter(Boolean) as Pos[];
-          const t = targets.sort((a, c) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(c.x - p.x, c.y - p.y))[0];
-          if (t) {
-            const ms = moveTo(t.x - W / 2 + (t.x > p.x + W / 2 ? -70 : 70), t.y - H, 34);
-            later(ms + 100, () => keep(posRef.current));
-          }
-        } else {
-          const ms = moveTo(p.x + (Math.random() - 0.5) * 220, p.y + (Math.random() - 0.5) * 60, 30);
-          later(ms + 100, () => keep(posRef.current));
-        }
+        if (k < 0.3) {
+          doAct("zarms", 2600);
+          speak(pick(["Braaaains… euh… ballons !", "Grrraaaaah…", "Mmmmh… du fooot…", "Grrr… un câlin ?"]), false, "bruit");
+        } else if (k < 0.4) speak(pick(TALK.zombie), false, "bruit");
         return;
       }
       if (b === "medecin" && zombieSpot() && k < 0.25) {
-        // the Doctor is not afraid: he goes to see the zombie
         const z = zombieSpot() as Pos;
-        moveTo(z.x - W / 2 + (z.x > posRef.current.x ? -60 : 60), z.y - H, 70);
-        later(1500, () => speak(pick(["Viens là, toi, je vais te recoudre un point.", "Pas de panique, je n'ai pas peur des zombies.", "Ouvre la bouche… non, ferme-la !"])));
+        void goTo(body, z.x + (z.x > body.x ? -56 : 56), z.y, 70, { stop: 6, timeout: 8000 }).then(() =>
+          speak(pick(["Viens là, toi, je vais te recoudre un point.", "Pas de panique, je n'ai pas peur des zombies.", "Ouvre la bouche… non, ferme-la !"])),
+        );
         return;
       }
-      if (k < 0.45) {
-        // a few steps
-        const p = posRef.current;
-        const span = b === "statue" ? 40 : 90;
-        const ms = moveTo(p.x + (Math.random() - 0.5) * 2 * span, p.y, b === "statue" ? 22 : 45);
-        later(ms + 100, () => keep(posRef.current));
-      } else if (k < 0.62 && !st.talking && !st.bubble) {
-        speak(b === "statue" && Math.random() < 0.4 ? OLD_STORIES[Math.floor(Math.random() * OLD_STORIES.length)].split(/(?<=[.!?])\s/)[0] : pick(TALK[b]));
-      } else if (k < 0.72 && !st.talking && !st.bubble) {
-        // a little chat with the character
+      if (k < 0.3 && !st.talking && !st.bubble) speak(b === "statue" && Math.random() < 0.4 ? OLD_STORIES[Math.floor(Math.random() * OLD_STORIES.length)].split(/(?<=[.!?])\s/)[0] : pick(TALK[b]));
+      else if (k < 0.42 && !st.talking && !st.bubble) {
         const mode = PERSOS[st.s.perso].mode;
         const fits = CHATS.filter((c) => (!c.who || c.who === b) && (!c.to || c.to === mode));
         const c = pick(fits);
         speak(c.a);
         later(Math.max(2800, c.a.length * 70), () => say(c.b));
-      } else if (k < 0.8) {
-        setAct("wave");
-        later(2000, () => setAct(""));
-      } else if (k < 0.84 && b !== "statue" && b !== "medecin") {
-        speak(pick(LORE_HINTS));
-      }
+      } else if (k < 0.5) doAct("wave", 2000);
+      else if (k < 0.54 && b !== "statue" && b !== "medecin") speak(pick(LORE_HINTS));
+      else if (k < 0.58) speak(pick(TALK[b]), false, "bruit");
     };
-    const loop = () => {
-      later((b === "zombie" ? 4500 : b === "excite" ? 14000 : b === "statue" ? 32000 : 22000) * (0.7 + Math.random() * 0.8), () => {
+    const loop = () =>
+      later((b === "zombie" ? 9000 : b === "excite" ? 16000 : b === "statue" ? 32000 : 24000) * (0.7 + Math.random() * 0.8), () => {
         if (!document.hidden) life();
         loop();
       });
-    };
-    later(2500 + index * 1800, () => speak(pick(TALK[b])));
     loop();
+
     // reactions to what happens on the pitch
     const onEv = (e: Event) => {
       const ev = (e as CustomEvent<string>).detail;
       if (ev === "doctor-in") {
-        // there is only one Doctor: our friend goes to work… (he hides while the Doctor of the pitch is there)
+        // there is only one Doctor: our friend goes to work (he hides while the Doctor of the pitch is there)
         if (b === "medecin") {
           speak("J'y vais !", true);
-          later(700, () => setHidden(true));
+          later(700, () => {
+            body.hidden = true;
+            setHidden(true);
+          });
           return;
         }
         if (Math.random() < 0.4) later(400, () => speak(pick(REACT.doctor[b] ?? REACT.doctor.all)));
         return;
       }
       if (ev === "doctor-out") {
-        if (b === "medecin") later(600, () => setHidden(false));
+        if (b === "medecin")
+          later(600, () => {
+            body.hidden = false;
+            setHidden(false);
+          });
         return;
       }
       if (ev === "thrown") {
-        setAct("surprised");
-        later(1800, () => setAct(""));
+        doAct("surprised", 1600);
         if (Math.random() < 0.8) later(150 + index * 250, () => speak(pick(REACT.thrown[b] ?? REACT.thrown.all), index === 0));
         return;
       }
       if (ev === "card" && Math.random() < 0.6) later(1400 + index * 300, () => speak(pick(REACT.card[b] ?? REACT.card.all)));
-      if (ev === "lore" && b !== "statue") {
-        // the others know the story… and listen quietly
-        setAct("listen");
-        later(30000, () => setAct(""));
-      }
+      if (ev === "lore" && b !== "statue") doAct("listen", 30000);
     };
     window.addEventListener("footdex:terrain", onEv);
-
-    // ---- the fear of the zombie: the closer he is, the bigger the fright; they run away, towards the others
-    let fearAt = 0;
-    const flee = (z: Pos, d: number, level: number) => {
-      const p = posRef.current;
-      const me = { x: p.x + W / 2, y: p.y + H };
-      const away = Math.sign(me.x - z.x) || (Math.random() < 0.5 ? -1 : 1);
-      // cornered against the edge: he cannot go further that way, so he runs up or down, away from the zombie
-      if ((away < 0 && me.x < 70) || (away > 0 && me.x > window.innerWidth - 70)) {
-        const vy = me.y > z.y ? 1 : -1;
-        moveTo(p.x, p.y + vy * (level === 3 ? 140 : 90) * (p.y + vy * 140 > window.innerHeight - H - 80 || p.y + vy * 140 < 80 ? -1 : 1), b === "statue" ? 60 : [0, 120, 220, 330][level]);
-        return;
-      }
-      // towards the group (the character and the other friends), if they are on the safe side
-      const friends = [mainSpot(), ...[...REG.entries()].filter(([k2]) => k2 !== b && fearful(k2)).map(([, v]) => v)].filter((f): f is Pos => !!f && Math.sign(f.x - z.x) === away);
-      let tx = me.x + away * (300 - d);
-      if (friends.length) tx = tx * 0.5 + (friends.reduce((a, f) => a + f.x, 0) / friends.length + away * 50) * 0.5;
-      const speed = b === "statue" ? 60 : [0, 120, 220, 330][level];
-      moveTo(tx - W / 2, p.y + (Math.random() - 0.5) * 40, speed);
-    };
-    const fear = window.setInterval(() => {
-      if (!fearful(b) || drag.current || hiddenRef.current || getMascot().s.rest) return;
-      const z = zombieSpot();
-      if (!z) return setScared(0);
-      const p = posRef.current;
-      const d = Math.hypot(p.x + W / 2 - z.x, (p.y + H - z.y) * 1.6);
-      const level = d < 95 ? 3 : d < 165 ? 2 : d < 240 ? 1 : 0;
-      setScared(level);
-      if (!level) return;
-      const now = Date.now();
-      if (now > fearAt) {
-        fearAt = now + (level === 3 ? 2200 : 4200);
-        speak(b === "statue" && level > 1 ? pick(STATUE_SCARED) : pick(SCARED[level]), level === 3);
-        if (level >= 2) {
-          setAct("surprised");
-          later(1200, () => setAct(""));
-        }
-      }
-      if (walkRef.current <= Date.now()) {
-        flee(z, d, level);
-      }
-    }, 450);
-
-    // ---- the ball hits him
+    // the ball hits him
     const onBall = (e: Event) => {
-      const { el, h, vx, speed } = (e as CustomEvent<{ el: HTMLElement; h: number; vx: number; speed: number }>).detail;
-      if (el !== btnRef.current) return;
-      if (b === "zombie" && h > 0.5 && speed > 160 && !headRef.current) {
-        // in the head: it comes off… and rolls on the ground. He goes to get it back (he has both his arms).
-        headRef.current = true;
-        const p = posRef.current;
-        const dist = (90 + Math.random() * 70) * (vx >= 0 ? 1 : -1);
-        const hx = Math.max(10, Math.min(window.innerWidth - 40, p.x + W / 2 + dist));
-        setHeadOff({ x: p.x, y: p.y, rot: 0, ms: 0 });
-        requestAnimationFrame(() => requestAnimationFrame(() => setHeadOff({ x: hx - W / 2, y: p.y + H * 0.38, rot: dist * 3, ms: 900 })));
-        window.dispatchEvent(new CustomEvent("footdex:zombiehead", { detail: { x: hx, y: p.y + H } }));
-        speak("Mmmf ! MA TÊTE !", true);
-        later(1600, () => {
-          const ms = moveTo(hx - W / 2 - (dist > 0 ? 12 : -12), posRef.current.y, 55);
-          later(ms + 200, () => {
-            setAct("kneel");
-            later(700, () => {
-              setHeadOff(null);
-              headRef.current = false;
-              setAct("");
-              speak(pick(["Clic ! Grrr… ma tête est revenue.", "Ah… je revois tout. Grrr.", "Qui a tiré ? Grrrr !"]), true);
-              later(400, () => keep(posRef.current));
-            });
-          });
-        });
+      const { el: hit, h, vx, speed } = (e as CustomEvent<{ el: HTMLElement; h: number; vx: number; speed: number }>).detail;
+      if (hit !== el) return;
+      if (b === "zombie" && h > 0.5 && speed > 160 && !head) {
+        speak("Mmmf ! MA TÊTE !", true, "aie");
+        dropHead(body, (vx >= 0 ? 1 : -1) * (160 + Math.random() * 90));
+        void fetchHead(body);
         return;
       }
-      setAct("surprised");
-      later(900, () => setAct(""));
-      speak(b === "zombie" ? pick(["Grrr ?", "Grrr… pas dans le ventre !"]) : b === "statue" ? pick(["Aïe ! Mes vieux os !", "Hm ! De mon temps, on visait le but !"]) : b === "medecin" ? "Aïe ! Qui soigne le docteur ?" : pick(["Aïe !", "Hé ! Fais attention !", "Ouille, mon nez !"]), true);
+      if (speed > 520) return knock(body, vx);
+      doAct("surprised", 900);
+      speak(
+        b === "zombie" ? pick(["Grrr ?", "Grrr… pas dans le ventre !"]) : b === "statue" ? pick(["Aïe ! Mes vieux os !", "Hm ! De mon temps, on visait le but !"]) : b === "medecin" ? "Aïe ! Qui soigne le docteur ?" : pick(["Aïe !", "Hé ! Fais attention !", "Ouille, mon nez !"]),
+        true,
+        "aie",
+      );
     };
     window.addEventListener("footdex:ballhit", onBall);
-    // ---- the zombie lost his head: everybody near screams
+    // somebody thrown flies into him
+    const onKnock = (e: Event) => {
+      const { el: hit, vx } = (e as CustomEvent<{ el: HTMLElement; vx: number }>).detail;
+      if (hit === el) knock(body, vx);
+    };
+    window.addEventListener("footdex:knock", onKnock);
+    // the zombie lost his head: everybody near screams
     const onHead = (e: Event) => {
       if (!fearful(b)) return;
       const z = (e as CustomEvent<Pos>).detail;
-      const p = posRef.current;
-      const d = Math.hypot(p.x + W / 2 - z.x, p.y + H - z.y);
+      const d = Math.hypot(body.x - z.x, body.y - z.y);
       const level = d < 140 ? 3 : d < 260 ? 2 : 1;
       later(150 + Math.random() * 300, () => {
-        speak(level === 3 ? pick(["AAAAAH ! SA TÊTE !", "IIIIIH ! ELLE ROULE !", "BEUUUURK !"]) : level === 2 ? pick(["Oh non, sa tête !", "Beurk… elle roule par ici !"]) : "Euh… il a perdu quelque chose…", true);
-        setAct("surprised");
-        later(1400, () => setAct(""));
-        if (level >= 2) flee(z, d, level);
+        speak(level === 3 ? pick(["AAAAAH ! SA TÊTE !", "IIIIIH ! ELLE ROULE !", "BEUUUURK !"]) : level === 2 ? pick(["Oh non, sa tête !", "Beurk… elle roule par ici !"]) : "Euh… il a perdu quelque chose…", level === 3, "peur");
+        doAct("surprised", 1400);
       });
     };
     window.addEventListener("footdex:zombiehead", onHead);
-
     return () => {
-      window.clearInterval(fear);
-      window.removeEventListener("footdex:ballhit", onBall);
-      window.removeEventListener("footdex:zombiehead", onHead);
-      REG.delete(b);
       window.removeEventListener("footdex:terrain", onEv);
+      window.removeEventListener("footdex:ballhit", onBall);
+      window.removeEventListener("footdex:knock", onKnock);
+      window.removeEventListener("footdex:zombiehead", onHead);
       timers.current.forEach((t) => window.clearTimeout(t));
       timers.current = [];
+      body.goal?.done(false);
+      bodies.delete(b);
+      if (b === "zombie" && head) headBack(body);
+      if (!bodies.size && thinker) {
+        window.clearInterval(thinker);
+        thinker = 0;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [b]);
+  useEffect(() => {
+    if (bodyRef.current) bodyRef.current.look = look;
+  }, [look]);
 
+  // the finger: a tap (he talks, or wakes up), a drag (he is moved), a flick (he flies!)
+  const drag = useRef<{ ox: number; oy: number; moved: boolean; pts: { t: number; x: number; y: number }[] } | null>(null);
   const down = (e: { preventDefault: () => void; currentTarget: EventTarget; pointerId: number; clientX: number; clientY: number }) => {
+    const body = bodyRef.current;
+    if (!body || body.mode === "fly") return;
     e.preventDefault();
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
-    drag.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y, moved: false, t: Date.now() };
+    drag.current = { ox: e.clientX - body.x, oy: e.clientY - body.y, moved: false, pts: [{ t: now(), x: e.clientX, y: e.clientY }] };
   };
-  const move = (e: { preventDefault: () => void; currentTarget: EventTarget; pointerId: number; clientX: number; clientY: number }) => {
+  const move = (e: { clientX: number; clientY: number }) => {
     const d = drag.current;
-    if (!d) return;
-    const nx = e.clientX - d.dx;
-    const ny = e.clientY - d.dy;
-    if (!d.moved && Math.hypot(nx - pos.x, ny - pos.y) < 6) return;
-    d.moved = true;
-    setPos({ x: Math.max(0, Math.min(window.innerWidth - W, nx)), y: Math.max(60, Math.min(window.innerHeight - H - 70, ny)) });
+    const body = bodyRef.current;
+    if (!d || !body) return;
+    const nx = e.clientX - d.ox;
+    const ny = e.clientY - d.oy;
+    if (!d.moved && Math.hypot(nx - body.x, ny - body.y) < 7) return;
+    if (!d.moved) {
+      d.moved = true;
+      body.goal?.done(false);
+      body.goal = null;
+      body.mode = "held";
+      body.el.classList.add("is-drag");
+    }
+    body.x = Math.max(W / 2, Math.min(window.innerWidth - W / 2, nx));
+    body.y = Math.max(top(), Math.min(bottom(), ny));
+    body.z = 0;
+    const t = now();
+    d.pts.push({ t, x: e.clientX, y: e.clientY });
+    d.pts = d.pts.filter((p) => t - p.t < 120);
   };
   const up = () => {
     const d = drag.current;
+    const body = bodyRef.current;
     drag.current = null;
-    if (!d) return;
-    if (!d.moved) speak(pick(TALK[b]), true);
-    else update({ buddyPos: { ...getMascot().s.buddyPos, [b]: { fx: Math.max(0, Math.min(1, pos.x / Math.max(1, window.innerWidth - W))), fy: Math.max(0, Math.min(1, (pos.y - 60) / Math.max(1, window.innerHeight - H - 80))) } } });
+    if (!d || !body) return;
+    body.el.classList.remove("is-drag");
+    if (!d.moved) {
+      if (body.el.classList.contains("is-asleep")) {
+        body.el.classList.remove("is-asleep");
+        return speak("Hein ? Quoi ? Pelé ? … Ah, c'est toi.", true);
+      }
+      return speak(pick(TALK[b]), true, b === "zombie" ? "bruit" : undefined);
+    }
+    const a = d.pts[0];
+    const z = d.pts[d.pts.length - 1];
+    const span = a && z && z.t > a.t ? (z.t - a.t) / 1000 : 0;
+    const vx = span ? (z.x - a.x) / span : 0;
+    const vy = span ? (z.y - a.y) / span : 0;
+    if (Math.hypot(vx, vy) > 650) {
+      // thrown!
+      body.mode = "fly";
+      body.vx = Math.max(-1400, Math.min(1400, vx * 0.8));
+      body.vz = Math.max(260, Math.min(1000, -vy * 0.8));
+      body.vy = 0;
+      speak(b === "zombie" ? "Grrraaaah ! Je vole !" : b === "statue" ? "Hé ! Pas les vieux ! AAAAH !" : pick(["Waaaah !", "Hiiiii !", "Pose-moi !"]), true, "peur");
+      return;
+    }
+    body.mode = "free";
+    body.wish = { x: 0, y: 0 };
+    update({ buddyPos: { ...getMascot().s.buddyPos, [b]: { fx: Math.max(0, Math.min(1, (body.x - W / 2) / Math.max(1, window.innerWidth - W))), fy: Math.max(0, Math.min(1, (body.y - H - 60) / Math.max(1, window.innerHeight - H - 80))) } } });
   };
 
-  if (hidden || m.s.rest) {
-    REG.delete(b);
-    return null;
-  }
-  const look = lookOf(b, m.s.looks);
+  if (m.s.rest) return null;
   const mode = b === "medecin" ? "poli" : b;
   return (
     <>
       <button
         ref={btnRef}
         type="button"
-        className={cx("buddy", walk && "is-walk", run && walk && "is-run", b === "statue" && "is-old", b === "zombie" && "is-zombie", drag.current?.moved && "is-drag", scared > 0 && `is-scared s${scared}`)}
-        style={{ left: `${pos.x}px`, top: `${pos.y}px`, transitionDuration: `${walkMs}ms`, zIndex: depthZ(pos.y + H) }}
+        className={cx("buddy", b === "statue" && "is-old", b === "zombie" && "is-zombie")}
+        style={{ display: hidden ? "none" : undefined }}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
         onPointerCancel={up}
-        aria-label={`${BUDDY_NAME(b)} : touche-le pour qu'il parle`}
+        aria-label={`${BUDDY_NAME(b)} : touche-le pour qu'il parle, lance-le d'un coup de doigt`}
       >
-        <span className="buddy__flip" style={{ transform: `scaleX(${dir})` }}>
-          <Fig look={look} size={W} crop="full" mouth={scared > 1 ? "open" : b === "medecin" ? "smile" : PERSOS.find((p) => p.mode === b)?.mouth ?? "smile"} talk={talk} mode={mode} act={act} className={headOff ? "no-head" : ""} />
+        <span ref={flipRef} className="buddy__flip">
+          <Fig look={look} size={W} crop="full" mouth={talk ? "open" : b === "medecin" ? "smile" : PERSOS.find((p) => p.mode === b)?.mouth ?? "smile"} talk={talk} mode={mode} act={act} />
         </span>
       </button>
-      {headOff ? (
-        <span className="bhead" style={{ left: `${headOff.x}px`, top: `${headOff.y}px`, transitionDuration: `${headOff.ms}ms`, transform: `rotate(${headOff.rot}deg)`, zIndex: depthZ(pos.y + H) + 1 }} aria-hidden="true">
-          <Fig look={look} size={W} crop="full" mouth="open" mode={mode} />
-        </span>
-      ) : null}
-      {bubble ? (
-        <div className="buddy__bubble" style={{ left: `${Math.max(8, Math.min(window.innerWidth - 188, pos.x + W / 2 - 90))}px`, top: `${Math.max(64, pos.y - 58)}px` }} role="status">
+      {bubble && !hidden ? (
+        <div className="buddy__bubble" style={{ left: `${Math.max(8, Math.min(window.innerWidth - 188, bpos.x - 90))}px`, top: `${Math.max(64, bpos.y - H - 56)}px` }} role="status">
           <b>{BUDDY_NAME(b)}</b> {bubble}
         </div>
       ) : null}
@@ -431,13 +951,15 @@ export function Buddies() {
       const st = getMascot();
       if (st.busy || st.s.rest || st.talking) return;
       const me = mainSpot();
-      const z = REG.get("zombie");
-      if (!me || !z) return;
+      const z = bodies.get("zombie");
+      if (!me || !z || z.hidden) return;
       const d = Math.hypot(me.x - z.x, (me.y - z.y) * 1.6);
       const level = d < 95 ? 3 : d < 165 ? 2 : 0;
       if (!level || Date.now() < at) return;
       at = Date.now() + (level === 3 ? 3000 : 6000);
-      say(mode === "statue" ? pick(STATUE_SCARED) : mainScared(level));
+      const text = mode === "statue" ? pick(STATUE_SCARED) : mainScared(level);
+      if (playFx(mode, "peur")) say(text, { quiet: true });
+      else say(text);
       play(level === 3 ? "surprised" : "shake", 1400);
     }, 500);
     const onHead = (e: Event) => {
@@ -456,6 +978,51 @@ export function Buddies() {
       window.removeEventListener("footdex:zombiehead", onHead);
     };
   }, [zombieHere, mode]);
+
+  // the director: a little scene now and then; the stadium cat; the wave; the end of playtime
+  useEffect(() => {
+    const timers: number[] = [];
+    const nextScene = () =>
+      timers.push(
+        window.setTimeout(() => {
+          const st = getMascot();
+          if (!document.hidden && !st.busy && !st.s.rest && !document.querySelector(".mm, .wd, .reveal, .chm, .subst")) {
+            const has = (k: Buddy) => !!bodies.get(k) && !bodies.get(k)?.hidden;
+            const options: (() => Promise<unknown> | void)[] = [];
+            if (has("zombie")) options.push(sneezeScene);
+            if (has("zombie") && [...bodies.values()].some((b) => fearful(b.key))) options.push(hideScene);
+            if (has("medecin")) options.push(checkupScene);
+            if (has("statue") || mode === "statue") options.push(sleepScene);
+            if (mode === "joueur" && bodies.size) options.push(passScene);
+            if (options.length) void pick(options)();
+          }
+          nextScene();
+        }, (bodies.size ? 45000 : 120000) * (0.7 + Math.random() * 0.8)),
+      );
+    nextScene();
+    const catLoop = () =>
+      timers.push(
+        window.setTimeout(() => {
+          const st = getMascot();
+          if (!document.hidden && !st.s.rest && !document.querySelector(".mm, .wd, .reveal, .chm, .subst")) void catScene();
+          catLoop();
+        }, (360000 + Math.random() * 360000) * (bodies.has("zombie") ? 0.5 : 1)),
+      );
+    catLoop();
+    const onEv = (e: Event) => {
+      const ev = (e as CustomEvent<string>).detail;
+      if (ev === "goal") void ola();
+      if (ev === "recre") void recre();
+    };
+    window.addEventListener("footdex:terrain", onEv);
+    // for checking the scenes in a browser (« ?essai-terrain »)
+    if (location.search.includes("essai-terrain")) (window as unknown as { __scenes?: unknown }).__scenes = { sneezeScene, hideScene, checkupScene, sleepScene, passScene, catScene, ola, recre };
+    return () => {
+      timers.forEach((t) => window.clearTimeout(t));
+      window.removeEventListener("footdex:terrain", onEv);
+    };
+  }, [mode]);
+
   return (
     <div className="buddies">
       {list.map((b, i) => (
@@ -465,14 +1032,14 @@ export function Buddies() {
   );
 }
 
-/** The chips to choose the friends (two at most). */
+/** The chips to choose the friends (three at most). */
 export function BuddyPicker() {
   const m = useMascot();
   const mode = PERSOS[m.s.perso].mode;
   const all: Buddy[] = ["statue", "excite", "poli", "joueur", "pointu", "zombie", "medecin"];
   const on = m.s.buddies;
   const toggle = (b: Buddy) => {
-    const next = on.includes(b) ? on.filter((x) => x !== b) : [...on, b].slice(-2);
+    const next = on.includes(b) ? on.filter((x) => x !== b) : [...on, b].slice(-3);
     update({ buddies: next });
   };
   return (

@@ -224,3 +224,17 @@
 
 /* « Afficher ce qu'il dit » : off */
 .no-bubbles .mascot__bubble, .no-bubbles .mascot__top, .no-bubbles .vis__bubble { display: none !important; }
+
+/* « Mes bruitages » */
+.bruit__list { display: grid; gap: 8px; margin: 6px 0 10px; }
+.bruit__row { display: grid; grid-template-columns: 34px 1fr 56px 44px 44px; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 14px; border: 1px solid var(--line-2); background: #ffffff06; }
+.bruit__row.has { border-color: #34d39988; }
+.bruit__icon { font-size: 1.6rem; }
+.bruit__txt strong { display: block; font-weight: 800; }
+.bruit__txt em { display: block; font-style: normal; font-size: 0.8rem; color: #9fb0d0; }
+.bruit__rec { width: 56px; height: 56px; border-radius: 50%; border: 3px solid #fff; background: #e0284f; color: #fff; font-size: 1.4rem; touch-action: none; -webkit-user-select: none; user-select: none; cursor: pointer; }
+.bruit__rec.is-on { animation: recPulse 0.6s ease-in-out infinite alternate; background: #ff0033; }
+@keyframes recPulse { to { transform: scale(1.12); box-shadow: 0 0 18px #ff0033; } }
+.bruit__btn { height: 44px; border-radius: 12px; border: 1px solid var(--line-2); background: #ffffff0d; font-size: 1.1rem; cursor: pointer; }
+.bruit__btn:disabled { opacity: 0.3; }
+.bruit__live { font-weight: 800; color: #ff6680; }

@@ -436,8 +436,8 @@
 
 /* friends on the screen */
 .buddies { display: contents; }
-.buddy { position: fixed; width: 64px; height: 74px; padding: 0; border: 0; background: none; pointer-events: auto; touch-action: none; cursor: grab; transition-property: left, top; transition-timing-function: linear; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.5)); -webkit-tap-highlight-color: transparent; }
-.buddy__flip { display: block; transition: transform 0.25s; }
+.buddy { position: fixed; left: 0; top: 0; width: 64px; height: 74px; padding: 0; border: 0; background: none; pointer-events: auto; touch-action: none; cursor: grab; will-change: transform; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.5)); -webkit-tap-highlight-color: transparent; }
+.buddy__flip { display: block; }
 .buddy.is-walk .mfw { animation: buddyStep 0.42s ease-in-out infinite alternate; }
 .buddy.is-old.is-walk .mfw { animation: buddyOld 0.8s ease-in-out infinite alternate; }
 @keyframes buddyStep { from { transform: translateY(0) rotate(-2deg); } to { transform: translateY(-3px) rotate(2deg); } }
@@ -475,6 +475,29 @@
 .mfw.a-zarms .headg { transform: rotate(-8deg); }
 .mfw.a-kneel .mfig { transform: translateY(8px) scaleY(0.9); transform-origin: 50% 100%; transition: transform 0.3s; }
 .mfw.no-head .headg { visibility: hidden; }
-.bhead { position: fixed; width: 64px; pointer-events: none; transition-property: left, top, transform; transition-timing-function: cubic-bezier(0.25, 0.8, 0.4, 1.15); transform-origin: 50% 34%; }
+.bhead { position: fixed; left: 0; top: 0; width: 64px; pointer-events: none; transform-origin: 50% 34%; will-change: transform; }
 .bhead .mfig > * { visibility: hidden; }
 .bhead .mfig .headg { visibility: visible; }
+
+/* the engine's friends: on the ground, asleep, dragged; the zombie without his head; the stadium cat */
+.buddy .mfw { transform-origin: 50% 100%; }
+.buddy.is-down .mfw { transform: rotate(84deg) translate(-6px, 10px) !important; animation: none !important; transition: transform 0.2s; }
+.buddy.is-drag { cursor: grabbing; filter: drop-shadow(0 16px 14px rgba(0, 0, 0, 0.6)); }
+.buddy.is-asleep .mfw { animation: papiNod 2.4s ease-in-out infinite !important; }
+.buddy.is-asleep::after, .mfw.a-sleep::after { content: "z Z z"; position: absolute; left: 60%; top: -8px; font: 800 14px var(--f-display, sans-serif); color: #cfe2ff; animation: zzz 2s ease-in-out infinite; pointer-events: none; }
+.mfw.a-sleep { position: relative; }
+.mfw.a-sleep .headg { transform: rotate(8deg) translateY(6px); transition: transform 0.8s; }
+@keyframes papiNod { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(4deg) translateY(2px); } }
+@keyframes zzz { 0% { transform: translateY(6px); opacity: 0; } 40% { opacity: 1; } 100% { transform: translate(8px, -14px); opacity: 0; } }
+.buddy.no-head .headg { visibility: hidden; }
+.mfw.a-cheer .armL { transform: rotate(155deg); }
+.mfw.a-cheer .armR { transform: rotate(-155deg); }
+.mfw.a-work .armL { transform: rotate(-60deg); }
+.mfw.a-work .armR { transform: rotate(60deg); }
+.mfw.a-sniff .headg { animation: sniff 0.35s ease-in-out infinite alternate; }
+@keyframes sniff { from { transform: rotate(-6deg) translateY(2px); } to { transform: rotate(6deg); } }
+.stadcat { position: fixed; left: 0; top: 0; width: 46px; height: 34px; pointer-events: none; will-change: transform; filter: drop-shadow(0 3px 2px #0007); }
+.stadcat .cat__tail { animation: catTail 0.6s ease-in-out infinite alternate; transform-origin: 8px 30px; }
+@keyframes catTail { to { transform: rotate(14deg); } }
+.stadcat.is-hiss svg { animation: catHiss 0.12s linear infinite; transform-origin: 50% 100%; }
+@keyframes catHiss { 0%, 100% { transform: scale(1.08, 1.15) translateY(-2px); } 50% { transform: scale(1.12, 1.2) translateY(-3px); } }

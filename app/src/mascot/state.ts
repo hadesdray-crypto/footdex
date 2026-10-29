@@ -7,6 +7,7 @@ import { storageGet, storageSet } from "../util";
 import { AFTER_2000, IDOLS, IDOL_LINES, LORE, LORE_HINTS, OLD_STORIES, OUPS, OUPS_BACK, PAGES, PERSOS, pick, type Kind, type Mode } from "./lines";
 import { DEFAULT_LOOK, sanitizeLook, type Look } from "./look";
 import { CARAC } from "./caractere";
+import { playFx } from "./bruits";
 
 const KEY = "footdex.mascotte.v1";
 export const SPEEDS = [
@@ -116,7 +117,7 @@ function loadSettings(): Settings {
       nativeVoice: typeof raw.nativeVoice === "number" && raw.nativeVoice >= 0 ? Math.floor(raw.nativeVoice) : -1,
       narrate: raw.narrate === true,
       bubbles: raw.bubbles !== false,
-      buddies: Array.isArray(raw.buddies) ? (raw.buddies.filter((b) => BUDDIES.includes(b as Buddy)) as Buddy[]).slice(0, 2) : [],
+      buddies: Array.isArray(raw.buddies) ? (raw.buddies.filter((b) => BUDDIES.includes(b as Buddy)) as Buddy[]).slice(0, 3) : [],
       buddyPos: raw.buddyPos && typeof raw.buddyPos === "object" ? raw.buddyPos : {},
       fx: num(raw.fx, 0, 1, 1),
       fy: num(raw.fy, 0, 1, 1),
@@ -812,7 +813,9 @@ export function shout(lines: string[]) {
   say(pick(lines));
 }
 export function onThrown(strong = false) {
-  say(pick(P().thrown));
+  // his own recorded « aïe ! », if there is one
+  if (playFx(P().mode, "aie")) say(pick(P().thrown), { quiet: true });
+  else say(pick(P().thrown));
   emit("thrown");
   set({ hurt: strong ? 2 : 1 });
   window.setTimeout(() => set({ hurt: 0 }), 9000);
@@ -900,7 +903,7 @@ export function speakAs(text: string, who: VoiceKey) {
   voice(text);
 }
 /** Something happened to the character: the friends on the screen react. */
-export function emit(ev: "thrown" | "doctor-in" | "doctor-out" | "card" | "lore") {
+export function emit(ev: "thrown" | "doctor-in" | "doctor-out" | "card" | "lore" | "goal" | "recre") {
   window.dispatchEvent(new CustomEvent("footdex:terrain", { detail: ev }));
 }
 export function visitorSpeak(text: string, who: "medecin" | "arbitre") {

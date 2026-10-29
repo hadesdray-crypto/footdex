@@ -3,7 +3,7 @@ import { faute } from "../mascot/terrain";
 import { LuArrowLeft, LuCircleCheck, LuGem, LuLayers, LuPlay, LuRotateCcw, LuStar, LuTrophy, LuVolume2, LuX } from "react-icons/lu";
 import { Fig } from "../mascot/Fig";
 import { PERSOS } from "../mascot/lines";
-import { sayLabel, stopTalking, useMascot } from "../mascot/state";
+import { emit, sayLabel, stopTalking, useMascot } from "../mascot/state";
 import { gameReward, useStore } from "../store";
 import { PageTitle } from "../ui/bits";
 import { click } from "../sound";
@@ -838,6 +838,8 @@ function GameFrame({ game, onExit, lv, setLv }: { game: Game; onExit: () => void
   const end = (win: boolean, text: string) => {
     // the Square Referee, if he happens to be around, does not like a lost game
     if (!win) faute("perdu");
+    // a win: everybody on the screen does the Mexican wave
+    else emit("goal");
     if (!alive()) return;
     const stars = gameReward(game.id, win);
     setOver({ win, text, stars });

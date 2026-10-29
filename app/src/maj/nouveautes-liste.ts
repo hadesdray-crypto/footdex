@@ -4,6 +4,19 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-10-29",
+    titre: "Version 30 : de la vraie physique, des scènes et tes bruitages",
+    type: "appli",
+    points: [
+      "Les copains sont solides : ils se cognent, tombent quand on leur lance quelqu'un dessus, et on peut les lancer d'un coup de doigt !",
+      "Le Zombie et les autres jouent au chat et à la souris : il s'approche doucement, ils s'éloignent doucement… et quand il est trop près, c'est la course ! Ils sortent de l'écran et reviennent de l'autre côté.",
+      "Des scènes rigolotes : le Zombie éternue et perd sa tête, cache-cache, le check-up du Médecin (« Dites 33 ! »), le Papi qui s'endort, la passe du Jongleur, la fin de la récré, et le chat du stade !",
+      "Quand tu gagnes un jeu, tout le monde fait la ola !",
+      "Mes bruitages : enregistre avec le micro le cri de peur, le « aïe », le rire et le bruit de chaque personnage.",
+      "Jusqu'à trois copains à l'écran.",
+    ],
+  },
+  {
+    date: "2026-10-29",
     titre: "Version 29 : tout le monde a peur du Zombie !",
     type: "appli",
     points: [

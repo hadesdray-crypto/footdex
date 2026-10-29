@@ -10,7 +10,7 @@ import { visitorFace } from "./visitor";
 
 /** Everybody who speaks: the six characters, then the Doctor and the Referee. */
 type Who = { key: VoiceKey; name: string; sample: string; face: (m: ReturnType<typeof useMascot>) => JSX.Element };
-const WHO: Who[] = [
+export const WHO: Who[] = [
   ...PERSOS.map((p) => ({
     key: p.mode as VoiceKey,
     name: p.name,

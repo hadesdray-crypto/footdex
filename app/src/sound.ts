@@ -529,3 +529,101 @@ export function ballTrap(power = 0.4) {
   burst(a, t, 1400, 0.5, 0.06 + 0.12 * power, 0.04, "bandpass");
   body(a, t + 0.005, 110, 60, 0.1 + 0.2 * power, 0.05);
 }
+
+// ------------------------------------------------------------------ creature noises (made here, no file)
+
+/** A noise burst through a filter: the base of a hiss, a sneeze, a cough. */
+function nburst(a: AudioContext, at: number, length: number, type: BiquadFilterType, freq: number, volume: number, q = 1) {
+  const src = a.createBufferSource();
+  src.buffer = noiseOf(a);
+  const f = a.createBiquadFilter();
+  f.type = type;
+  f.frequency.value = freq;
+  f.Q.value = q;
+  const g = a.createGain();
+  const t = a.currentTime + at;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(volume, t + Math.min(0.05, length / 3));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + length);
+  src.connect(f);
+  f.connect(g);
+  g.connect(out(a));
+  src.start(t, Math.random() * 0.5);
+  src.stop(t + length + 0.05);
+}
+/** The zombie's growl: a low, rough, wobbling voice. */
+export function growl(length = 0.9) {
+  const a = ctx(true);
+  if (!a) return;
+  const t = a.currentTime;
+  const o = a.createOscillator();
+  o.type = "sawtooth";
+  o.frequency.setValueAtTime(70 + Math.random() * 20, t);
+  o.frequency.linearRampToValueAtTime(55, t + length);
+  const lfo = a.createOscillator();
+  lfo.frequency.value = 11;
+  const lg = a.createGain();
+  lg.gain.value = 14;
+  lfo.connect(lg);
+  lg.connect(o.frequency);
+  const f = a.createBiquadFilter();
+  f.type = "lowpass";
+  f.frequency.value = 520;
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.09, t + 0.12);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + length);
+  o.connect(f);
+  f.connect(g);
+  g.connect(out(a));
+  o.start(t);
+  lfo.start(t);
+  o.stop(t + length + 0.05);
+  lfo.stop(t + length + 0.05);
+  nburst(a, 0, length * 0.9, "bandpass", 380, 0.05, 2);
+}
+/** A cat that hisses. */
+export function hiss() {
+  const a = ctx(true);
+  if (!a) return;
+  nburst(a, 0, 0.75, "highpass", 3800, 0.16, 0.7);
+}
+/** Atchoum ! */
+export function sneeze() {
+  const a = ctx(true);
+  if (!a) return;
+  nburst(a, 0, 0.18, "bandpass", 900, 0.05, 1);
+  nburst(a, 0.28, 0.32, "highpass", 2400, 0.2, 0.8);
+}
+/** Kof kof. */
+export function cough() {
+  const a = ctx(true);
+  if (!a) return;
+  nburst(a, 0, 0.16, "bandpass", 600, 0.16, 1.2);
+  nburst(a, 0.25, 0.16, "bandpass", 560, 0.13, 1.2);
+}
+/** A soft thud: somebody falls on the grass. */
+export function thud() {
+  const a = ctx();
+  if (!a) return;
+  nburst(a, 0, 0.22, "lowpass", 260, 0.25, 0.8);
+}
+/** Meow. */
+export function meow() {
+  const a = ctx(true);
+  if (!a) return;
+  const t = a.currentTime;
+  const o = a.createOscillator();
+  o.type = "triangle";
+  o.frequency.setValueAtTime(620, t);
+  o.frequency.linearRampToValueAtTime(900, t + 0.18);
+  o.frequency.linearRampToValueAtTime(520, t + 0.5);
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.08, t + 0.06);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
+  o.connect(g);
+  g.connect(out(a));
+  o.start(t);
+  o.stop(t + 0.6);
+}
