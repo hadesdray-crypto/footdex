@@ -10,7 +10,7 @@ export const BODIES = [
   { name: "Trapu", sw: 110, sc: 0.94 },
   { name: "Robuste", sw: 100, sc: 1 },
 ];
-export const SKINS = ["#f0cfae", "#e5b98f", "#d9a67a", "#a8734f", "#7a4a30", "#5a3624"];
+export const SKINS = ["#f0cfae", "#e5b98f", "#d9a67a", "#a8734f", "#7a4a30", "#5a3624", "#86a462"];
 export const HAIRS = [
   { id: "short", name: "Court" },
   { id: "curly", name: "Bouclé" },
@@ -29,6 +29,7 @@ export const OUTFITS = [
   { name: "Orange soleil", shirt: "#ff8a3d", s2: "#ffffff", pat: "h", shorts: "#ffffff", sock: "#ff8a3d", sock2: "#ffffff", num: "5" },
   { name: "Blanc d'honneur", shirt: "#f4efe6", s2: "#c9a24a", pat: "v", shorts: "#f4efe6", sock: "#f4efe6", sock2: "#c9a24a", num: "1" },
   { name: "Violet fusée", shirt: "#7a4dff", s2: "#ffffff", pat: "sash", shorts: "#2a1f6b", sock: "#7a4dff", sock2: "#ffffff", num: "11" },
+  { name: "Maillot de zombie", shirt: "#7a8a4a", s2: "#4b5a2a", pat: "v", shorts: "#5b4a3a", sock: "#3a3f2c", sock2: "#3a3f2c", num: "13" },
 ];
 export const ACCESSORIES = [
   { id: "scarf", name: "Écharpe" },
@@ -44,6 +45,10 @@ export const ACCESSORIES = [
   { id: "armband", name: "Brassard de capitaine" },
   { id: "headset", name: "Casque de commentateur" },
   { id: "paint", name: "Maquillage de supporter" },
+  { id: "slime", name: "Gelée verte (zombie)" },
+  { id: "stitches", name: "Points de suture" },
+  { id: "eyedrop", name: "Œil qui pend" },
+  { id: "flies", name: "Mouches" },
 ];
 
 /** Ready-made characters: a look and the character that goes with it. */
@@ -54,6 +59,7 @@ export const PRESETS: { name: string; perso: number; look: Look }[] = [
   { name: "Le Jongleur", perso: 3, look: { body: 0, skin: 0, hair: 0, hairColor: 1, outfit: 5, acc: ["armband", "band"] } },
   { name: "Le Pointu", perso: 4, look: { body: 1, skin: 2, hair: 2, hairColor: 0, outfit: 3, acc: ["glasses", "headset"] } },
   { name: "Le Jeune", perso: 1, look: { body: 0, skin: 3, hair: 1, hairColor: 0, outfit: 1, acc: ["ball"] } },
+  { name: "Le Zombie", perso: 5, look: { body: 1, skin: 6, hair: 2, hairColor: 1, outfit: 8, acc: ["slime", "stitches", "eyedrop", "flies"] } },
 ];
 
 export const DEFAULT_LOOK: Look = PRESETS[0].look;
@@ -135,6 +141,9 @@ function build(o: FigOpts, n: number): string {
  <g class="m-open"><path d="M61 82 Q61 108 80 108 Q99 108 99 82Z" fill="#5a2019"/><ellipse cx="80" cy="102" rx="11" ry="5" fill="#e7806f"/><rect x="66" y="82" width="28" height="5" rx="2" fill="#fff"/></g>
  <g class="bandage"><rect x="52" y="30" width="30" height="11" rx="3" fill="#f4d9b6" stroke="#b98d5c" stroke-width="1.4" transform="rotate(-14 67 35)"/><path d="M60 31 l4 9 M68 29 l4 9 M76 28 l3 9" stroke="#b98d5c" stroke-width="1" transform="rotate(-14 67 35)"/><circle cx="108" cy="82" r="6" fill="#f4d9b6" stroke="#b98d5c" stroke-width="1.4"/><path d="M105 82 h6 M108 79 v6" stroke="#b98d5c" stroke-width="1.2"/><ellipse cx="94" cy="34" rx="8" ry="6" fill="#e0284f" opacity=".55"/></g>
  ${o.extra.includes("stache")?`<path d="M60 80 Q70 70 80 76 Q90 70 100 80 Q90 87 80 82 Q70 87 60 80Z" fill="${o.hc}"/>`:""}
+ ${o.extra.includes("stitches")?`<path d="M96 24 l16 15 M99 27 l-4 4 M103 31 l-4 4 M107 35 l-4 4" stroke="#22180e" stroke-width="2.4" stroke-linecap="round"/><path d="M50 72 q4 6 1 13" stroke="#5c7a3c" stroke-width="3" fill="none"/>`:""}
+ ${o.extra.includes("eyedrop")?`<ellipse cx="93" cy="58" rx="13.5" ry="13.8" fill="#2f3a22"/><path d="M95 66 q1 14 6 22" stroke="#b7955a" stroke-width="2.4" fill="none"/><circle cx="101" cy="91" r="7.5" fill="#eef0c0" stroke="#00000055"/><circle cx="102.5" cy="92" r="2.8" fill="#111"/>`:""}
+ ${o.extra.includes("slime")?`<path d="M84 92 q2 10 1 16 a3.4 3.4 0 1 0 6.6 0 q-1 -8 1 -14z" fill="#9be33a"/><path d="M70 90 q1 6 0 9 a2.6 2.6 0 1 0 5 0 q0 -5 1 -8z" fill="#9be33a"/><circle cx="88" cy="108" r="1.4" fill="#e6ff9e"/><circle cx="56" cy="40" r="5" fill="#5c7a3c"/><circle cx="104" cy="74" r="4" fill="#6b4a2a" opacity=".8"/>`:""}
  ${o.extra.includes("glasses")?`<circle cx="67" cy="58" r="15.5" fill="none" stroke="#10131c" stroke-width="3.2"/><circle cx="93" cy="58" r="15.5" fill="none" stroke="#10131c" stroke-width="3.2"/>`:""}
  ${o.extra.includes("band")?`<path d="M41 44 Q80 28 119 44 L119 54 Q80 38 41 54Z" fill="#e0284f"/>`:""}
  ${o.extra.includes("paint")?`<g opacity=".85"><path d="M48 70 h14 M48 76 h14" stroke="${o.shirt}" stroke-width="4" stroke-linecap="round"/><path d="M98 70 h14 M98 76 h14" stroke="${o.s2}" stroke-width="4" stroke-linecap="round"/></g>`:""}
@@ -174,10 +183,13 @@ function build(o: FigOpts, n: number): string {
   <text x="${cx+sw2/4}" y="${top+22}" text-anchor="middle" font-family="Impact,Haettenschweiler,sans-serif" font-size="11" fill="${o.pat=="sash"?"#fff":o.s2}" opacity="${o.num?1:0}">${o.num}</text>
   ${o.extra.includes("scarf")?`<rect x="${TL+3}" y="${top-5}" width="${sw2-6}" height="10" rx="5" fill="#34d399"/><rect x="${TR-20}" y="${top+2}" width="10" height="24" rx="3.5" fill="#34d399"/><path d="M${TR-20} ${top+23} h10" stroke="#fff" stroke-width="2.4" opacity=".6"/>`:""}
   ${o.extra.includes("armband")?`<rect x="${TL-13}" y="${top+12}" width="25" height="7" rx="2" fill="#f6c453" stroke="#10131c" stroke-width="1"/><text x="${TL-0.5}" y="${top+18}" text-anchor="middle" font-family="Impact,sans-serif" font-size="6.5" fill="#10131c">C</text>`:""}
+  ${o.extra.includes("stitches")?`<path d="M${cx-11} ${top+3} h22" stroke="#22180e" stroke-width="2"/><path d="M${cx-8} ${top} v6 M${cx-3} ${top} v6 M${cx+2} ${top} v6 M${cx+7} ${top} v6" stroke="#22180e" stroke-width="1.6"/>`:""}
+  ${o.extra.includes("slime")?`<path d="M${cx-2} ${top+16} q6 -4 12 0 q-1 8 -6 9 q-6 -1 -6 -9z" fill="#070b16"/><path d="M${cx+1} ${top+17} v6 M${cx+5} ${top+16} v7" stroke="#cfc6a2" stroke-width="1.6"/><path d="M${TL+8} ${top+22} q2 10 1 15 a3 3 0 1 0 6 0 q-1 -8 1 -14z" fill="#9be33a"/><path d="M${TR-12} ${top+30} q1 7 0 11 a2.6 2.6 0 1 0 5 0 q0 -6 1 -10z" fill="#9be33a"/><ellipse cx="${cx}" cy="${bot+52}" rx="30" ry="5" fill="#5fae1e" opacity=".75"/>`:""}
   ${o.extra.includes("whistle")?`<path d="M${cx} ${top+11} L${cx+6} ${top+27}" stroke="#10131c" stroke-width="1.6"/><circle cx="${cx+6}" cy="${top+29}" r="4.6" fill="#c9d4ea"/>`:""}
   ${o.extra.includes("clip")?`<g transform="rotate(10 ${TR+16} ${top+44})"><rect x="${TR+6}" y="${top+30}" width="22" height="28" rx="3" fill="#f4efe6"/><path d="M${TR+10} ${top+38} h14 M${TR+10} ${top+44} h14 M${TR+10} ${top+50} h9" stroke="#8f9bb6" stroke-width="1.8"/></g>`:""}
   ${o.extra.includes("ball")?`<g transform="translate(${TR+22} ${bot+36})"><circle r="12.5" fill="#fff" stroke="#10131c" stroke-width="2.2"/><path d="M0 -7 l6 4.6 -2.3 7 h-7.4 l-2.3 -7Z" fill="#10131c"/></g>`:""}
   </g>`;
  const vh=o.crop==="bust"?150:214; const W=196*o.sc, H=vh*o.sc;
- return `<svg class="mfig${o.crop === "bust" ? " mfig--bust" : ""}" viewBox="-8 0 196 ${vh}" width="${W}" height="${H}" style="--d:${o.d}s" role="img" aria-label="${o.label}">${body}<g class="headg"><g transform="translate(90 72) scale(1.5) translate(-80 -58)">${head}</g></g></svg>`;
+ const flies = o.extra.includes("flies") ? `<g class="flies"><circle cx="34" cy="20" r="2.6" fill="#111"/><circle cx="150" cy="10" r="2.6" fill="#111"/><circle cx="160" cy="44" r="2.2" fill="#111"/><path d="M30 26 q24 -30 52 -14 q28 14 70 -10" stroke="#8f9bb6" stroke-width="1.2" fill="none" stroke-dasharray="2 4"/></g>` : "";
+ return `<svg class="mfig${o.crop === "bust" ? " mfig--bust" : ""}" viewBox="-8 0 196 ${vh}" width="${W}" height="${H}" style="--d:${o.d}s" role="img" aria-label="${o.label}">${body}<g class="headg"><g transform="translate(90 72) scale(1.5) translate(-80 -58)">${head}</g></g>${flies}</svg>`;
 }

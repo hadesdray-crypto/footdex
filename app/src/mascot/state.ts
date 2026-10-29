@@ -38,7 +38,7 @@ export const VOICE_TYPES: { id: VoiceType; label: string; pitch: number }[] = [
 /** The voice of one character: which way of speaking, which exact voice, how high. */
 export type PVoice = { engine: "auto" | Engine; native: number; phone: string; pitch: number };
 /** A boy's voice by default, each character a little different (Footdex is Raphaël's). */
-export const DEFAULT_PITCH: Record<Mode, number> = { statue: 0.9, excite: 1.22, poli: 1.05, joueur: 1.3, pointu: 1.12 };
+export const DEFAULT_PITCH: Record<Mode, number> = { statue: 0.9, excite: 1.22, poli: 1.05, joueur: 1.3, pointu: 1.12, zombie: 0.72 };
 export function voiceOf(mode: Mode): PVoice {
   const v = snap.s.pvoice[mode];
   return { engine: v?.engine ?? "auto", native: typeof v?.native === "number" ? v.native : -1, phone: v?.phone ?? "", pitch: typeof v?.pitch === "number" ? Math.max(0.6, Math.min(1.6, v.pitch)) : DEFAULT_PITCH[mode] };
@@ -90,7 +90,11 @@ function loadSettings(): Settings {
 
 let snap: Snap = { reading: false, s: loadSettings(), eng: {}, using: null, bubble: null, talking: false, busy: false, anim: null, animId: 0, vx: 0, vy: 0, hurt: 0 };
 const listeners = new Set<() => void>();
+/** While a visitor (doctor, referee) speaks, the character's mouth stays still: it is not him talking. */
+let visitorTalking = false;
+let nextIsVisitor = false;
 function set(patch: Partial<Snap>) {
+  if (visitorTalking && patch.talking) patch = { ...patch, talking: false };
   snap = { ...snap, ...patch };
   for (const fn of listeners) fn();
 }
@@ -466,6 +470,8 @@ function voice(text: string, onEnd?: () => void) {
   }
   // the character's own way of speaking first (if one was chosen), then the usual order as a back-up
   const pv = trying ?? voiceOf(PERSOS[snap.s.perso].mode);
+  visitorTalking = nextIsVisitor;
+  nextIsVisitor = false;
   trying = null;
   const base = snap.s.engine === "auto" ? order() : [snap.s.engine];
   const list = pv.engine !== "auto" ? [pv.engine, ...base.filter((e) => e !== pv.engine)] : base;
@@ -744,3 +750,13 @@ export async function voiceCatalog(): Promise<VoiceOption[]> {
   return named;
 }
 export const optionKey = (v: PVoice) => (v.engine === "native" ? `n${v.native}` : v.engine === "phone" ? `p${v.phone}` : v.engine === "auto" ? "" : v.engine);
+
+/** A visitor's line (doctor, referee): the same speaking chain, with his own pitch; the character's mouth does not move. */
+export function visitorSpeak(text: string, pitch: number) {
+  if (!snap.s.auto) return;
+  // the same voice as the character (the one that works on this phone), but his own pitch
+  const mine = voiceOf(PERSOS[snap.s.perso].mode);
+  trying = { ...mine, pitch };
+  nextIsVisitor = true;
+  voice(text);
+}

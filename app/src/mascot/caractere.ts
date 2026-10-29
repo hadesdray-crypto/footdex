@@ -36,6 +36,13 @@ export const CARAC: Record<Mode, Carac> = {
     tenue: { body: 0, skin: 0, hair: 0, hairColor: 1, outfit: 5, acc: ["armband", "band"] },
     readAcc: ["ball"],
   },
+  zombie: {
+    level: 2,
+    label: "Affamé",
+    style: "Peau verte, points de suture, œil qui pend, gelée verte qui coule, mouches. Il grogne lentement… et si on le lance trop fort, il perd ses morceaux !",
+    tenue: { body: 1, skin: 6, hair: 2, hairColor: 1, outfit: 8, acc: ["slime", "stitches", "eyedrop", "flies"] },
+    readAcc: ["glasses"],
+  },
   excite: {
     level: 4,
     label: "À fond",

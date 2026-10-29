@@ -5,17 +5,19 @@ import type { Album } from "../data";
 import { useOverlay } from "../ui/cards";
 import { cx, dayKey } from "../util";
 import { Fig } from "./Fig";
-import { PERSOS } from "./lines";
+import { PERSOS, pick } from "./lines";
 import { CaracList } from "./Carac";
 import { VoicePicker } from "./VoicePicker";
 import { ballOpen } from "../sound";
 import { piperDownload, piperRemove } from "../piper";
-import { SPEEDS, choosePerso, wornLook, hasMore, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, androidVoices, installAndroidVoices, isApp, type Engine } from "./state";
+import { SPEEDS, choosePerso, wornLook, hasMore, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, say, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, androidVoices, installAndroidVoices, isApp, type Engine } from "./state";
 import { Wardrobe, type Tab } from "./Wardrobe";
 import { go, type Route } from "../router";
 import { createActor } from "./actor";
 import { ensureBall, parkBall, removeBall, spawnFootballer, whenStolen } from "./player";
 import { footballOuting, type Outing } from "./footScenes";
+import { doctorVisit, faute, startReferee, substitution } from "./terrain";
+import { fallApart } from "./zombie";
 import { runScript } from "./scripts";
 
 const W = 74;
@@ -53,6 +55,8 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
 
   useEffect(() => {
     warmVoice();
+    // the Square Referee walks by every few minutes (and shows a card if you misbehave while he is there)
+    startReferee();
   }, []);
 
   // Welcome, once a day.
@@ -106,7 +110,10 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     if (perso.mode !== "joueur" || m.s.rest) return;
     const f = feet(posRef.current);
     ensureBall(f.x + 20, f.y);
-    whenStolen(() => wander(true));
+    whenStolen(() => {
+      faute("ballon");
+      wander(true);
+    });
     return () => {
       whenStolen(null);
       removeBall();
@@ -143,6 +150,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     }
     if (perso.mode === "joueur") every(7000, 15000, () => wander());
     else if (perso.mode === "excite") every(22000, 42000, () => wander());
+    else if (perso.mode === "zombie") every(35000, 60000, () => wander());
     else every(40000, 75000, () => wander());
     return () => timers.forEach((t) => window.clearTimeout(t));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -195,20 +203,26 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       });
   }
 
-  /** Thrown across the room (any character): real flight with gravity, a fall, a bump, a grumble.
-   *  The juggler then goes back for his ball; the others stay where they landed. */
+  /** How bad the fall is, from the speed of the throw: a bump, a cast (the Doctor comes), or a broken leg (he leaves the pitch). */
+  type Hurt = "leger" | "moyen" | "casse";
+  const severity = (sp: number): Hurt => (sp < 1800 ? "leger" : sp < 3000 || Math.random() < 0.5 ? "moyen" : "casse");
+
+  /** Thrown across the room (any character): real flight with gravity, a fall, an injury that depends on the force,
+   *  the Doctor for a bad fall, and for a broken leg he hobbles off the pitch and the Referee asks for a substitute. */
   function throwHim(vx: number, vy: number, from?: { x: number; y: number }) {
     setMenu(null);
     hideBubble();
+    faute("lancer");
     const fling = { vx: Math.max(-1500, Math.min(1500, vx * 0.9)), vz: Math.max(320, Math.min(1300, -vy * 0.9)), vy: vy > 0 ? Math.min(500, vy * 0.25) : 0 };
-    const strong = Math.hypot(vx, vy) > 1600;
-    if (perso.mode === "joueur") return footballer("thrown", from, fling, strong);
+    const hurt = severity(Math.hypot(vx, vy));
+    if (perso.mode === "joueur") return footballer("thrown", from, fling, hurt);
     const a = act.current;
     const fab = fabRef.current;
     if (!fab) return;
     act.current.cancel?.();
     a.busy = true;
-    const home = feet(from ?? posRef.current);
+    const origin = from ?? posRef.current;
+    const home = feet(origin);
     fab.style.visibility = "hidden";
     const body = spawnFootballer(getMascot().s.look, home.x, home.y, { onTap: () => undefined, onMove: () => undefined });
     const land = () => {
@@ -220,18 +234,62 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       a.busy = false;
       a.cancel = null;
       if (fabRef.current) fabRef.current.style.visibility = "";
-      onThrown(strong);
+      onThrown(hurt !== "leger");
+      if (hurt === "moyen") window.setTimeout(() => void doctorVisit({ x, y }), 900);
     };
     a.cancel = () => {
       if (!body.dead) land();
     };
-    void body.fling(fling.vx, fling.vz, fling.vy).then(() => {
-      if (!body.dead) land();
+    void body.fling(fling.vx, fling.vz, fling.vy).then(async () => {
+      if (body.dead) return;
+      // the Zombie does not break: he falls to pieces (head, arms) that you put back on
+      if (perso.mode === "zombie" && hurt !== "leger") {
+        const at = { x: body.x, y: body.y };
+        body.destroy();
+        a.cancel = null;
+        fallApart(getMascot().s.look, at, hurt === "casse" ? 3 : Math.random() < 0.5 ? 2 : 1, (p) => {
+          update({ fx: Math.min(1, Math.max(0, (p.x - W / 2 - area.l) / Math.max(1, area.r - area.l))), fy: Math.min(1, Math.max(0, (p.y - H + 3 - area.t) / Math.max(1, area.b - area.t))) });
+          a.busy = false;
+          if (fabRef.current) fabRef.current.style.visibility = "";
+        });
+        return;
+      }
+      if (hurt !== "casse") return land();
+      // broken leg: he hobbles off the pitch
+      say(pick(["Aïe ! Ma jambe !", "Ouille ouille… je sors !", "Je crois que c'est cassé…"]));
+      a.cancel = null;
+      await body.run({ x: body.x < window.innerWidth / 2 ? -80 : window.innerWidth + 80, y: body.y }, { speed: 70, limp: true, timeout: 20000 });
+      body.destroy();
+      bench(origin);
+    });
+  }
+
+  /** Nobody on the pitch: the Referee asks for a substitute; the chosen character runs in to his place. */
+  function bench(origin: { x: number; y: number }) {
+    const a = act.current;
+    a.busy = true;
+    const home = feet(origin);
+    const was = getMascot().s.perso;
+    substitution(home, (i) => {
+      if (i !== was) choosePerso(i);
+      const fromLeft = home.x > window.innerWidth / 2;
+      const p = spawnFootballer(getMascot().s.look, fromLeft ? -60 : window.innerWidth + 60, home.y, { onTap: () => undefined, onMove: () => undefined });
+      void p.run(home, { speed: i === was ? 90 : 300, limp: i === was, timeout: 15000 }).then(() => {
+        p.destroy();
+        update({ fx: Math.min(1, Math.max(0, (origin.x - area.l) / Math.max(1, area.r - area.l))), fy: Math.min(1, Math.max(0, (origin.y - area.t) / Math.max(1, area.b - area.t))) });
+        a.busy = false;
+        a.cancel = null;
+        if (fabRef.current) fabRef.current.style.visibility = "";
+        if (i === was) onThrown(true);
+        else greet();
+        // the juggler goes back for his ball, wherever it rolled
+        if (PERSOS[i].mode === "joueur") window.setTimeout(() => footballer("moved"), 1500);
+      });
     });
   }
 
   /** The juggler goes out with his ball, plays, and comes back to his corner. */
-  function footballer(why: Outing, at?: { x: number; y: number }, fling?: { vx: number; vz: number; vy: number }, strong = false) {
+  function footballer(why: Outing, at?: { x: number; y: number }, fling?: { vx: number; vz: number; vy: number }, hurt: Hurt = "leger") {
     const a = act.current;
     const fab = fabRef.current;
     if (!fab) return;
@@ -256,14 +314,18 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       player.destroy();
       finish();
     };
-    footballOuting(player, home, why, fling)
+    footballOuting(player, home, why, fling, hurt === "casse")
       .catch(() => undefined)
-      .finally(() => {
+      .then((r) => {
         if (player.dead) return;
         player.destroy();
+        if (r === "banc") return bench(here);
         finish();
-        // back home after being thrown: a bump on the head, and he lets you know
-        if (why === "thrown") onThrown(strong);
+        // back home after being thrown: a bump or a cast, and he lets you know (the Doctor comes for a bad fall)
+        if (why === "thrown") {
+          onThrown(hurt !== "leger");
+          if (hurt === "moyen") window.setTimeout(() => void doctorVisit(home), 900);
+        }
       });
   }
 

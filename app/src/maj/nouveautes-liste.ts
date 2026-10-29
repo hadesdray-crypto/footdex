@@ -4,6 +4,19 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-10-29",
+    titre: "Version 26 : le Médecin, l'Arbitre carré et le Zombie",
+    type: "appli",
+    points: [
+      "Lance un personnage trop fort : il a un bobo… et le Médecin arrive en courant avec sa sacoche !",
+      "Lancé encore plus fort : jambe cassée ! Il sort en boitant, et l'Arbitre te propose un remplaçant.",
+      "L'Arbitre carré passe parfois sur le terrain… Attention : il sort des cartons jaunes et rouges si tu fais des bêtises !",
+      "Nouveau personnage : le Zombie, tout vert, avec ses mouches. Lancé trop fort, il perd sa tête et ses bras : remets-les en place avec le doigt !",
+      "Si personne ne l'aide, le Médecin met son collier en métal pour le recoudre… ou ramasse tout dans son sac.",
+      "Les jeux ont maintenant trois niveaux : Facile, Normal et Difficile.",
+    ],
+  },
+  {
+    date: "2026-10-29",
     titre: "Version 25 : une voix pour chaque personnage",
     type: "appli",
     points: [

@@ -74,3 +74,29 @@ node tools/build-app.mjs
 ```
 
 `build-app.mjs` produit `dist/site/` (ce dossier `site`) et `dist/artifact/` (la page publiée sur claude.ai).
+
+## Le personnage et le terrain (versions 20 à 26)
+
+| Fichier (`app/src/`) | Rôle |
+|---|---|
+| `mascot/Mascot.tsx` | Le personnage dans son coin : menu (double toucher), lancer au doigt, gravité du lancer (bobo / Médecin / jambe cassée). |
+| `mascot/player.ts`, `mascot/footScenes.ts` | Le footballeur articulé et le ballon (un seul ballon, collé au pied, jongles sur la pointe de la chaussure, marche en boitant). |
+| `mascot/visitor.ts` | Les visiteurs dessinés : le Médecin (sacoche, collier en métal) et l'Arbitre carré (sifflet, cartons). |
+| `mascot/terrain.ts` | Les scènes : soins, sac du Médecin, remplaçant, visites de l'Arbitre, cartons (`faute()`), essai avec `?essai-terrain`. |
+| `mascot/zombie.ts` | Le Zombie qui perd sa tête et ses bras : morceaux à remettre au doigt, sinon le Médecin vient. |
+| `mascot/state.ts`, `mascot/VoicePicker.tsx` | Une voix et une hauteur par personnage, sélecteur simple pour enfant. |
+| `maj/code.tsx`, `maj/temps-ecran.ts` | Code parent à 4 chiffres et limite de 45 minutes par jour. |
+| `maj/nouveautes-liste.ts` | Le journal des nouveautés affiché après une mise à jour : ajouter la nouvelle version EN PREMIER. |
+| `pages/jeux.tsx` | Les 10 jeux, avec la difficulté Facile / Normal / Difficile (retenue dans le téléphone). |
+
+## L'application Android et ses mises à jour
+
+Le dépôt GitHub `hadesdray-crypto/footdex` contient tout le code. À chaque envoi (push) sur `main`,
+le robot « Application Android » (`.github/workflows/android.yml`) construit l'APK signé et le publie
+dans les « Releases » (`android-N`, avec `footdex.apk` et `web.zip`). L'application installée voit la
+nouvelle version et propose de la télécharger.
+
+La signature utilise la clé `footdex.jks` (secrets `KEYSTORE_BASE64` et `KEYSTORE_PASSWORD` du dépôt).
+Garder cette clé précieusement : sans elle, une nouvelle version ne peut pas remplacer l'ancienne sur le téléphone.
+
+Le site GitHub Pages ne s'affichera qu'une fois réglé : dépôt > Settings > Pages > Source : « GitHub Actions ».

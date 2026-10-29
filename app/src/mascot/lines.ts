@@ -2,7 +2,7 @@
 
 export type Kind = "base" | "rare" | "eclat" | "legende" | "moment" | "shiny";
 
-export type Mode = "statue" | "excite" | "poli" | "joueur" | "pointu";
+export type Mode = "statue" | "excite" | "poli" | "joueur" | "pointu" | "zombie";
 
 export type Perso = {
   mode: Mode;
@@ -160,6 +160,34 @@ export const PERSOS: Perso[] = [
     wardrobe: ["Voilà une tenue digne d'un héros.", "Chaque tenue raconte quelque chose. Celle-ci me plaît."],
     done: ["Voilà, tout est dit. Le reste, c'est à toi de le vivre.", "Je n'ai plus rien à ajouter pour l'instant."],
   },
+  {
+    mode: "zombie",
+    ask: [],
+    more: [" Grrr… encore ?", " Tu en veux encore ? Grrr…"],
+    extra: [],
+    name: "Le Zombie",
+    tag: "Il perd ses morceaux… mais pas son appétit de foot",
+    sample: "Grrrr… du fooot… cerveaux de foot…",
+    pitch: 0.75,
+    rate: 0.82,
+    voice: { gender: "m", slot: 2, formant: 0.82, vib: 9 },
+    mouth: "open",
+    greet: ["Grrr… bonjour… je suis… pas mort… juste fatigué.", "Grrrr… du foot… J'adore le foot… et les cerveaux.", "Bouh ! … Grrr, je rigole. Salut !"],
+    open: ["Grrr… écoute… ", "Mmmh… alors… ", "Cerveaux… euh, pardon : "],
+    story: ["Grrr… une histoire… qui donne la chair de poule.", "Mmmh… celle-là… elle m'a fait perdre la tête.", "Écoute… grrr… c'est une histoire à mourir de rire."],
+    card: {
+      base: ["Grrr… {n}… appétissant.", "{n}… Mmmh… je le garde."],
+      rare: ["Grrr ! {n} en rare ! Ça me redonne des couleurs !", "Ooooh… {n}… joli."],
+      eclat: ["GRRRR ! {n} en Éclat ! Ça brille… mes yeux !", "{n} ! Mon œil en tombe… encore."],
+      legende: ["{n}… Une Légende… même les zombies le connaissent.", "Grrr… {n}… immortel… comme moi."],
+      moment: ["Un Moment… grrr… gravé dans mon cerveau… enfin, ce qu'il en reste.", "Mmmh… ce moment-là… je m'en souviens… grrr."],
+      shiny: ["ARC-EN-CIEL ! Grrrr ! J'en perds la tête !", "{n} en arc-en-ciel… je fonds… comme ma gelée."],
+    },
+    shake: ["Grrr ! Doucement ! Mes morceaux !", "Arrête ! Ça va se décoller !"],
+    thrown: ["GRRR ! Ma tête !", "Aïe… pas trop fort… je me décolle !", "Grrr… ramasse mes morceaux, s'il te plaît."],
+    wardrobe: ["Grrr… très chic… pour un zombie.", "Mmmh… ça cache mes coutures."],
+    done: ["Grrr… fini… je retourne… dormir… sous le terrain.", "C'est tout… grrr."],
+  },
 ];
 
 export const PAGES: Record<string, string> = {
@@ -186,6 +214,8 @@ export const PAGES: Record<string, string> = {
   histoires: "Des histoires du football, à lire tranquillement.",
   videos: "Des vidéos pour revivre de grands moments du football.",
   sources: "Ici, on dit d'où viennent les informations. Chez Footdex, on dit toujours d'où vient ce qu'on écrit.",
+  parents: "Le coin des parents : les nouveautés, la sauvegarde de ta progression, et les réglages des grands avec le code parent.",
+  reglages: "Les paramètres : choisis ton personnage, change sa voix, ses habits, et les bruitages.",
   plus: "Le menu Plus : matchs, scores, coupes, clubs, saison, lexique, défis, histoires, vidéos et sources.",
 };
 

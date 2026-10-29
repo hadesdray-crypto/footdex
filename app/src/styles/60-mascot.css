@@ -360,3 +360,37 @@
 .vp__pitch { display: flex; align-items: center; gap: 10px; font-size: 28px; }
 .vp__pitch input { flex: 1; accent-color: var(--gold); height: 34px; }
 .vp__keep { width: 100%; margin-top: 4px; }
+
+/* ---- visitors: the Doctor and the Square Referee (visitor.ts) */
+.vis { position: fixed; left: 0; top: 0; width: 66px; height: 86px; transform-origin: 33px 86px; pointer-events: none; will-change: transform; }
+.vis__fx { width: 100%; height: 100%; }
+.vis svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 4px 2px #0006); }
+.vis .far { filter: brightness(.74); }
+.vis__bubble { position: fixed; left: 0; top: 0; z-index: 70; width: 200px; padding: 8px 12px; border-radius: 16px; background: #eef2fb; color: #10131c; font: 800 14px/1.3 var(--f-body); text-align: center; box-shadow: 0 8px 20px -8px #000c; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.vis__bubble.is-on { opacity: 1; }
+.vis__sack { position: fixed; left: 0; top: 0; width: 60px; height: 44px; transform-origin: 30px 44px; pointer-events: none; animation: sackWiggle .5s ease-in-out infinite alternate; }
+@keyframes sackWiggle { from { rotate: -3deg; } to { rotate: 3deg; } }
+.subst { position: fixed; z-index: 72; left: 0; right: 0; margin: 0 auto; top: max(76px, calc(env(safe-area-inset-top, 0px) + 70px)); width: min(92vw, 420px); max-height: calc(100vh - 220px); overflow-y: auto; display: grid; gap: 10px; padding: 14px; border-radius: 22px; background: var(--night-2); border: 2px solid var(--gold); box-shadow: 0 0 30px -8px rgba(246, 196, 83, .6); animation: rise .4s var(--ease) both; }
+.subst__title { font: 900 24px/1.05 var(--f-display); text-transform: uppercase; text-align: center; color: var(--gold-hi); }
+.subst__list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.subst__btn { display: grid; gap: 2px; min-height: 56px; padding: 8px; border-radius: 14px; border: 1px solid var(--line-2); background: var(--glass); color: var(--fg); font: 800 15px/1.1 var(--f-body); }
+.subst__btn small { font-weight: 600; font-size: 11.5px; color: var(--muted); }
+.subst__btn.is-same { border-color: var(--pitch); }
+.mfig .flies { animation: fliesBuzz 1.4s linear infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes fliesBuzz { 0% { transform: translate(0, 0) rotate(0); } 25% { transform: translate(3px, -2px) rotate(4deg); } 50% { transform: translate(-2px, 2px) rotate(-3deg); } 75% { transform: translate(2px, 3px) rotate(2deg); } 100% { transform: translate(0, 0) rotate(0); } }
+
+/* ---- the Zombie in pieces (zombie.ts) */
+.ztrunk { position: fixed; left: 0; top: 0; width: 74px; z-index: 54; pointer-events: none; }
+.ztrunk svg { display: block; overflow: visible; }
+.ztrunk.no-head .headg, .ztrunk.no-armA .armL, .ztrunk.no-armB .armR { visibility: hidden; }
+.ztrunk.is-wobble svg { animation: zWobble 1.8s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes zWobble { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg) translateX(2px); } }
+.ztrunk__slot { position: absolute; border: 2px dashed #f6c453; border-radius: 50%; box-shadow: 0 0 10px rgba(246, 196, 83, .6); animation: zSlot 1s ease-in-out infinite alternate; }
+@keyframes zSlot { from { opacity: .5; } to { opacity: 1; } }
+.zpiece { position: fixed; left: 0; top: 0; width: 74px; z-index: 58; pointer-events: none; will-change: transform; }
+.zpiece svg { display: block; overflow: visible; }
+.zpiece svg > * { visibility: hidden; }
+.zpiece--head .headg, .zpiece--armA .armL, .zpiece--armB .armR { visibility: visible; }
+.zpiece__hit { position: absolute; width: 56px; height: 56px; border-radius: 50%; pointer-events: auto; touch-action: none; cursor: grab; }
+.zpiece.is-held { z-index: 60; filter: drop-shadow(0 10px 6px #0008); }
+.zpiece.is-snap { transition: transform .15s ease-out; }

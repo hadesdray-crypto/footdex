@@ -198,3 +198,14 @@
 .pcode__in { width: 170px; text-align: center; font: 800 24px/1.2 var(--f-body); letter-spacing: .3em; border-radius: 14px; border: 1px solid var(--line-2); background: rgba(0, 0, 0, .35); color: var(--fg); padding: 8px 10px; }
 .pcode__msg { color: var(--bad); font-weight: 700; }
 .pcode__in::placeholder { font-size: 14px; letter-spacing: 0; font-weight: 600; }
+
+/* difficulty chips (games) */
+.gm__grid--6 { grid-template-columns: repeat(6, 1fr); }
+.gm__grid--6 .gm__num { font-size: 1.1rem; }
+.lvbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 14px; color: var(--fg-2, #c9d4ea); font-weight: 700; }
+.lvchips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin: 0 0 10px; }
+.lvbar .lvchips { margin: 0; justify-content: flex-start; }
+.lvchip { border: 1px solid var(--line-2); background: #ffffff0d; color: var(--fg); border-radius: 999px; padding: 7px 14px; font: 700 0.95rem var(--f-display, inherit); cursor: pointer; min-height: 38px; }
+.lvchip.is-on.lvchip--0 { background: #34d399; color: #062016; border-color: #34d399; }
+.lvchip.is-on.lvchip--1 { background: #ffd76a; color: #2a1f00; border-color: #ffd76a; }
+.lvchip.is-on.lvchip--2 { background: #f87171; color: #2a0606; border-color: #f87171; }

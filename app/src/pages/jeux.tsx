@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { faute } from "../mascot/terrain";
 import { LuArrowLeft, LuCircleCheck, LuGem, LuLayers, LuPlay, LuRotateCcw, LuStar, LuTrophy, LuVolume2, LuX } from "react-icons/lu";
 import { Fig } from "../mascot/Fig";
 import { PERSOS } from "../mascot/lines";
@@ -22,7 +23,46 @@ const shuffle = <T,>(a: T[]): T[] => {
 const NUM = ["zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf", "vingt"];
 const words = (n: number) => NUM[n] ?? String(n);
 
-type P = { speak: (t: string, hold?: boolean) => void; end: (win: boolean, text: string) => void; alive: () => boolean; sleep: (ms: number) => Promise<void> };
+type P = { speak: (t: string, hold?: boolean) => void; end: (win: boolean, text: string) => void; alive: () => boolean; sleep: (ms: number) => Promise<void>; lv: Lv };
+
+// ------------------------------------------------------------ difficulty (the same for every game, remembered)
+
+type Lv = 0 | 1 | 2;
+const LV_KEY = "footdex.jeux.niveau";
+const LV_NAMES = ["Facile", "Normal", "Difficile"] as const;
+function readLv(): Lv {
+  try {
+    const v = Number(localStorage.getItem(LV_KEY));
+    return v === 0 || v === 2 ? v : 1;
+  } catch {
+    return 1;
+  }
+}
+function useLv(): [Lv, (v: Lv) => void] {
+  const [lv, set] = useState<Lv>(readLv);
+  return [
+    lv,
+    (v: Lv) => {
+      try {
+        localStorage.setItem(LV_KEY, String(v));
+      } catch {
+        /* fine */
+      }
+      set(v);
+    },
+  ];
+}
+function LvChips({ lv, onPick }: { lv: Lv; onPick: (v: Lv) => void }) {
+  return (
+    <div className="lvchips" role="radiogroup" aria-label="Difficulté des jeux">
+      {LV_NAMES.map((n, i) => (
+        <button key={n} type="button" role="radio" aria-checked={lv === i} className={cx("lvchip", `lvchip--${i}`, lv === i && "is-on")} onClick={() => { click("soft"); onPick(i as Lv); }}>
+          {n}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function Shirt({ color, stripe, pat = "plain", size = 54 }: { color: string; stripe?: string; pat?: "plain" | "v" | "h" | "dots"; size?: number }) {
   const s = stripe ?? "#fff";
@@ -58,7 +98,8 @@ const KITS: { c: string; s: string; p: "plain" | "v" | "h" | "dots" }[] = [
 
 // ------------------------------------------------------------ 1. Mémo
 
-function Memo({ speak, end, alive, sleep }: P) {
+const MEMO = [0.35, 0.75, 0.97];
+function Memo({ speak, end, alive, sleep, lv }: P) {
   const [deck] = useState(() => shuffle([0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5]));
   const G = useRef({ open: [] as number[], done: [] as boolean[], you: 0, him: 0, turn: "you" as "you" | "him", lock: false, known: new Map<number, number>() });
   const [, bump] = useState(0);
@@ -118,7 +159,7 @@ function Memo({ speak, end, alive, sleep }: P) {
     let second = -1;
     for (const [i, v] of g.known) {
       if (g.done[i]) continue;
-      for (const [j, w] of g.known) if (j !== i && !g.done[j] && w === v && Math.random() < 0.8) { first = i; second = j; }
+      for (const [j, w] of g.known) if (j !== i && !g.done[j] && w === v && Math.random() < MEMO[lv]) { first = i; second = j; }
       if (first >= 0) break;
     }
     if (first < 0) {
@@ -130,7 +171,7 @@ function Memo({ speak, end, alive, sleep }: P) {
     if (!alive()) return;
     if (second < 0) {
       const match = [...g.known].find(([j, w]) => j !== first && !g.done[j] && w === deck[first]);
-      if (match && Math.random() < 0.8) second = match[0];
+      if (match && Math.random() < MEMO[lv]) second = match[0];
       else {
         const rest = free.filter((i) => i !== first && !g.known.has(i));
         const pool = rest.length ? rest : free.filter((i) => i !== first);
@@ -171,7 +212,7 @@ function Memo({ speak, end, alive, sleep }: P) {
 // ------------------------------------------------------------ 2. Penalty
 
 const SIDES = ["à gauche", "au milieu", "à droite"];
-function Penalty({ speak, end, alive, sleep }: P) {
+function Penalty({ speak, end, alive, sleep, lv }: P) {
   const [round, setRound] = useState(0);
   const [you, setYou] = useState(0);
   const [him, setHim] = useState(0);
@@ -190,7 +231,10 @@ function Penalty({ speak, end, alive, sleep }: P) {
     setLock(true);
     click("soft");
     const mine = shooting;
-    const other = rnd(3);
+    // easy: the keeper often dives the wrong way, and my shots often go where you dive; hard: the opposite
+    const sameP = [0.12, 1 / 3, 0.5][lv];
+    const awayFrom = (k: number) => [0, 1, 2].filter((x) => x !== k)[rnd(2)];
+    const other = mine ? (Math.random() < sameP ? i : awayFrom(i)) : Math.random() < [0.5, 1 / 3, 0.15][lv] ? i : awayFrom(i);
     const s = mine ? { ball: i, keeper: other } : { ball: other, keeper: i };
     setShot(s);
     await sleep(900);
@@ -236,7 +280,7 @@ function Penalty({ speak, end, alive, sleep }: P) {
 
 // ------------------------------------------------------------ 3. Plus ou moins
 
-function HighLow({ speak, end, alive, sleep }: P) {
+function HighLow({ speak, end, alive, sleep, lv }: P) {
   const [cur, setCur] = useState(() => 1 + rnd(13));
   const [step, setStep] = useState(0);
   const [score, setScore] = useState(0);
@@ -252,7 +296,7 @@ function HighLow({ speak, end, alive, sleep }: P) {
     setLock(true);
     let n = 1 + rnd(13);
     while (n === cur) n = 1 + rnd(13);
-    const myUp = cur < 7 ? true : cur > 7 ? false : Math.random() < 0.5;
+    const myUp = lv === 0 ? Math.random() < 0.5 : cur < 7 ? true : cur > 7 ? false : Math.random() < 0.5;
     setNext(n);
     const ok = (n > cur) === up;
     const myOk = (n > cur) === myUp;
@@ -264,7 +308,7 @@ function HighLow({ speak, end, alive, sleep }: P) {
     await sleep(2800);
     if (!alive()) return;
     if (step + 1 >= total) {
-      end(s >= h && s >= 4, `Tu as ${s} bonnes réponses sur ${total}, et moi ${h}.`);
+      end(lv === 0 ? s >= 3 : lv === 1 ? s >= h && s >= 4 : s > h && s >= 4, `Tu as ${s} bonnes réponses sur ${total}, et moi ${h}.`);
       return;
     }
     setStep(step + 1);
@@ -290,7 +334,7 @@ function HighLow({ speak, end, alive, sleep }: P) {
 
 // ------------------------------------------------------------ 4. Bataille
 
-function War({ speak, end, alive, sleep }: P) {
+function War({ speak, end, alive, sleep, lv }: P) {
   const [round, setRound] = useState(0);
   const [mine, setMine] = useState<number | null>(null);
   const [his, setHis] = useState<number | null>(null);
@@ -304,8 +348,9 @@ function War({ speak, end, alive, sleep }: P) {
   async function flip() {
     if (lock) return;
     setLock(true);
-    const a = 1 + rnd(13);
-    let b = 1 + rnd(13);
+    // it is a game of chance… but in easy mode, luck is a bit on your side
+    const a = lv === 0 ? Math.max(1 + rnd(13), 1 + rnd(13)) : 1 + rnd(13);
+    let b = lv === 2 ? Math.max(1 + rnd(13), 1 + rnd(13)) : 1 + rnd(13);
     if (b === a) b = a === 13 ? 12 : a + 1;
     setMine(a);
     await sleep(500);
@@ -347,7 +392,35 @@ const winner = (b: string[]) => {
   for (const [x, y, z] of LINES) if (b[x] && b[x] === b[y] && b[y] === b[z]) return b[x];
   return b.every(Boolean) ? "=" : "";
 };
-function Morpion({ speak, end, alive, sleep }: P) {
+/** The perfect move for the cups (T), by trying every game to the end. */
+function best(c: string[]): number {
+  const score = (b: string[], turn: "T" | "B", depth: number): number => {
+    const w = winner(b);
+    if (w === "T") return 10 - depth;
+    if (w === "B") return depth - 10;
+    if (w === "=") return 0;
+    let r = turn === "T" ? -99 : 99;
+    for (let i = 0; i < 9; i += 1) {
+      if (b[i]) continue;
+      b[i] = turn;
+      const v = score(b, turn === "T" ? "B" : "T", depth + 1);
+      b[i] = "";
+      r = turn === "T" ? Math.max(r, v) : Math.min(r, v);
+    }
+    return r;
+  };
+  let top = -99;
+  let moves: number[] = [];
+  for (let i = 0; i < 9; i += 1) {
+    if (c[i]) continue;
+    const b = [...c];
+    b[i] = "T";
+    const v = score(b, "B", 1);
+    if (v > top) { top = v; moves = [i]; } else if (v === top) moves.push(i);
+  }
+  return moves[rnd(moves.length)];
+}
+function Morpion({ speak, end, alive, sleep, lv }: P) {
   const [b, setB] = useState<string[]>(Array(9).fill(""));
   const [lock, setLock] = useState(false);
   useEffect(() => {
@@ -355,6 +428,12 @@ function Morpion({ speak, end, alive, sleep }: P) {
   }, []);
   function pickMove(c: string[]): number {
     const free = c.map((v, i) => (v ? -1 : i)).filter((i) => i >= 0);
+    if (lv === 2) return best(c);
+    if (lv === 0) {
+      // easy: he wins when he can, but often forgets to block you
+      for (const i of free) { const t = [...c]; t[i] = "T"; if (winner(t) === "T") return i; }
+      if (Math.random() < 0.65) return free[rnd(free.length)];
+    }
     for (const who of ["T", "B"]) for (const i of free) { const t = [...c]; t[i] = who; if (winner(t) === who) return i; }
     if (!c[4]) return 4;
     const corners = free.filter((i) => [0, 2, 6, 8].includes(i));
@@ -395,7 +474,7 @@ function Morpion({ speak, end, alive, sleep }: P) {
 
 // ------------------------------------------------------------ 6. Où est le ballon
 
-function Cups({ speak, end, alive, sleep }: P) {
+function Cups({ speak, end, alive, sleep, lv }: P) {
   const [round, setRound] = useState(0);
   const [order, setOrder] = useState([0, 1, 2]);
   const [ballAt, setBallAt] = useState(rnd(3));
@@ -417,14 +496,14 @@ function Cups({ speak, end, alive, sleep }: P) {
     if (!alive()) return;
     setPhase("shuffle");
     let o = [0, 1, 2];
-    for (let i = 0; i < 4 + r * 2; i += 1) {
+    for (let i = 0; i < [2 + r, 4 + r * 2, 6 + r * 3][lv]; i += 1) {
       const a = rnd(3);
       let c = rnd(3);
       while (c === a) c = rnd(3);
       o = [...o];
       [o[a], o[c]] = [o[c], o[a]];
       setOrder(o);
-      await sleep(520 - r * 90);
+      await sleep(Math.max(240, [720 - r * 60, 520 - r * 90, 420 - r * 70][lv]));
       if (!alive()) return;
     }
     setPhase("pick");
@@ -469,15 +548,16 @@ function Cups({ speak, end, alive, sleep }: P) {
 
 // ------------------------------------------------------------ 7. Nombre mystère
 
-function Mystery({ speak, end, alive, sleep }: P) {
-  const [secret] = useState(() => 1 + rnd(20));
+function Mystery({ speak, end, alive, sleep, lv }: P) {
+  const top = [10, 20, 30][lv];
+  const [secret] = useState(() => 1 + rnd(top));
   const [lo, setLo] = useState(1);
-  const [hi, setHi] = useState(20);
+  const [hi, setHi] = useState(top);
   const [tries, setTries] = useState(0);
   const [lock, setLock] = useState(false);
-  const max = 6;
+  const max = [5, 6, 6][lv];
   useEffect(() => {
-    speak("J'ai pensé à un nombre entre un et vingt. Essaie de le trouver ! Je te dirai plus grand ou plus petit.");
+    speak(`J'ai pensé à un nombre entre un et ${words(top)}. Essaie de le trouver ! Je te dirai plus grand ou plus petit.`);
   }, []);
   async function tryNum(n: number) {
     if (lock || n < lo || n > hi) return;
@@ -499,8 +579,8 @@ function Mystery({ speak, end, alive, sleep }: P) {
   return (
     <div>
       <p className="gm__score">Essais : <b>{tries}</b> sur {max} · Le nombre est entre <b>{lo}</b> et <b>{hi}</b></p>
-      <div className="gm__grid gm__grid--5">
-        {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
+      <div className={cx("gm__grid", top > 20 ? "gm__grid--6" : "gm__grid--5")}>
+        {Array.from({ length: top }, (_, i) => i + 1).map((n) => (
           <button key={n} type="button" className={cx("gm__num", (n < lo || n > hi) && "is-out")} disabled={lock || n < lo || n > hi} onClick={() => void tryNum(n)}>{n}</button>
         ))}
       </div>
@@ -515,18 +595,24 @@ const RPS = [
   { name: "le ballon", beats: 2, node: <Ball size={54} /> },
   { name: "le sifflet", beats: 0, node: <svg viewBox="0 0 64 64" width="54" height="54" aria-hidden="true"><path d="M8 26 H40 Q58 26 58 40 Q58 54 42 54 Q30 54 28 44 H8Z" fill="#c9d4ea" stroke="#10131c" strokeWidth="3" strokeLinejoin="round" /><circle cx="42" cy="40" r="6" fill="#10131c" /></svg> },
 ];
-function Rps({ speak, end, alive, sleep }: P) {
+function Rps({ speak, end, alive, sleep, lv }: P) {
   const [you, setYou] = useState(0);
   const [him, setHim] = useState(0);
   const [last, setLast] = useState<[number, number] | null>(null);
   const [lock, setLock] = useState(false);
+  const seen = useRef([0, 0, 0]);
   useEffect(() => {
     speak("Gant, ballon, sifflet ! Le gant arrête le ballon, le ballon couvre le sifflet, le sifflet arrête le gant. Le premier à trois points gagne.");
   }, []);
   async function play(a: number) {
     if (lock) return;
     setLock(true);
-    const b = rnd(3);
+    // easy: he often plays what you beat; hard: he plays against what you play most often
+    const loser = RPS[a].beats;
+    const fav = seen.current.indexOf(Math.max(...seen.current));
+    const counter = RPS.findIndex((x) => x.beats === fav);
+    const b = lv === 0 && Math.random() < 0.35 ? loser : lv === 2 && Math.random() < 0.4 ? counter : rnd(3);
+    seen.current[a] += 1;
     setLast([a, b]);
     const w = a === b ? 0 : RPS[a].beats === b ? 1 : 2;
     const y = you + (w === 1 ? 1 : 0);
@@ -561,16 +647,19 @@ function Rps({ speak, end, alive, sleep }: P) {
 
 // ------------------------------------------------------------ 9. Compte les ballons
 
-function Count({ speak, end, alive, sleep }: P) {
+function Count({ speak, end, alive, sleep, lv }: P) {
   const [round, setRound] = useState(0);
-  const [n, setN] = useState(() => 2 + rnd(7));
+  const span = ([[1, 6], [2, 9], [5, 12]] as const)[lv];
+  const draw = () => span[0] + rnd(span[1] - span[0] + 1);
+  const [n, setN] = useState(draw);
   const [opts, setOpts] = useState<number[]>([]);
   const [good, setGood] = useState(0);
   const [lock, setLock] = useState(false);
   const total = 5;
   const mk = (k: number) => {
     const s = new Set<number>([k]);
-    while (s.size < 3) s.add(Math.max(1, Math.min(10, k + rnd(5) - 2)));
+    const d = lv === 2 ? 1 : 2;
+    while (s.size < 3) s.add(Math.max(1, Math.min(14, k + rnd(2 * d + 1) - d)));
     return shuffle([...s]);
   };
   useEffect(() => {
@@ -597,7 +686,7 @@ function Count({ speak, end, alive, sleep }: P) {
       end(g >= 4, `Tu as compté juste ${g} fois sur ${total} !`);
       return;
     }
-    const k = 2 + rnd(8);
+    const k = draw();
     setRound(round + 1);
     setN(k);
     setOpts(mk(k));
@@ -620,12 +709,13 @@ function Count({ speak, end, alive, sleep }: P) {
 
 // ------------------------------------------------------------ 10. L'intrus
 
-function Odd({ speak, end, alive, sleep }: P) {
+function Odd({ speak, end, alive, sleep, lv }: P) {
+  const cells = [6, 9, 16][lv];
   const mkRound = () => {
     const base = KITS[rnd(KITS.length)];
     let other = KITS[rnd(KITS.length)];
     while (other === base) other = KITS[rnd(KITS.length)];
-    return { base, other, at: rnd(9) };
+    return { base, other, at: rnd(cells) };
   };
   const [round, setRound] = useState(0);
   const [r, setR] = useState(mkRound);
@@ -656,12 +746,12 @@ function Odd({ speak, end, alive, sleep }: P) {
   return (
     <div>
       <p className="gm__score">Trouvés : <b>{good}</b> · Question {round + 1} sur {total}</p>
-      <div className="gm__grid gm__grid--3">
-        {Array.from({ length: 9 }, (_, i) => {
+      <div className={cx("gm__grid", cells > 9 ? "gm__grid--4" : "gm__grid--3")}>
+        {Array.from({ length: cells }, (_, i) => {
           const k = i === r.at ? r.other : r.base;
           return (
             <button key={i} type="button" className={cx("gm__cell", lock && i === r.at && "gm__cell--glow")} onClick={() => void pick(i)} aria-label="Maillot">
-              <Shirt color={k.c} stripe={k.s} pat={k.p} size={64} />
+              <Shirt color={k.c} stripe={k.s} pat={k.p} size={cells > 9 ? 50 : 64} />
             </button>
           );
         })}
@@ -680,7 +770,7 @@ const GAMES: Game[] = [
   { id: "bataille", name: "La bataille", text: "Le plus grand nombre gagne", rule: "On retourne une carte chacun. Le plus grand gagne.", icon: LuGem, Comp: War },
   { id: "morpion", name: "Morpion du foot", text: "Trois ballons alignés", rule: "Aligne trois ballons avant mes coupes.", icon: LuX, Comp: Morpion },
   { id: "gobelets", name: "Où est le ballon ?", text: "Suis le ballon des yeux", rule: "Suis le gobelet qui cache le ballon.", icon: LuCircleCheck, Comp: Cups },
-  { id: "mystere", name: "Le nombre mystère", text: "Trouve mon nombre secret", rule: "Trouve mon nombre secret entre un et vingt.", icon: LuRotateCcw, Comp: Mystery },
+  { id: "mystere", name: "Le nombre mystère", text: "Trouve mon nombre secret", rule: "Trouve mon nombre secret. Je te dis plus grand ou plus petit.", icon: LuRotateCcw, Comp: Mystery },
   { id: "pfc", name: "Gant, ballon, sifflet", text: "Pierre-feuille-ciseaux du foot", rule: "Le gant bat le ballon, le ballon bat le sifflet, le sifflet bat le gant.", icon: LuTrophy, Comp: Rps },
   { id: "compte", name: "Compte les ballons", text: "Un, deux, trois…", rule: "Compte les ballons et touche le bon nombre.", icon: LuVolume2, Comp: Count },
   { id: "intrus", name: "L'intrus", text: "Un maillot est différent", rule: "Un seul maillot est différent. Trouve-le !", icon: LuLayers, Comp: Odd },
@@ -689,14 +779,17 @@ const GAMES: Game[] = [
 export function Jeux() {
   const s = useStore();
   const [game, setGame] = useState<Game | null>(null);
+  const [lv, setLv] = useLv();
   return (
     <div className="jeux">
       <PageTitle kicker="On joue ensemble" title="Les jeux">
         <p>Dix petits jeux où le personnage joue avec toi et parle à voix haute. Gagne-en un chaque jour : 3 étoiles par jeu !</p>
       </PageTitle>
       {game ? (
-        <GameFrame key={game.id} game={game} onExit={() => setGame(null)} />
+        <GameFrame key={game.id} game={game} onExit={() => setGame(null)} lv={lv} setLv={setLv} />
       ) : (
+        <>
+        <div className="lvbar"><span>Difficulté :</span><LvChips lv={lv} onPick={setLv} /></div>
         <ul className="gamelist">
           {GAMES.map((g) => {
             const Icon = g.icon;
@@ -712,12 +805,13 @@ export function Jeux() {
             );
           })}
         </ul>
+        </>
       )}
     </div>
   );
 }
 
-function GameFrame({ game, onExit }: { game: Game; onExit: () => void }) {
+function GameFrame({ game, onExit, lv, setLv }: { game: Game; onExit: () => void; lv: Lv; setLv: (v: Lv) => void }) {
   const m = useMascot();
   const perso = PERSOS[m.s.perso];
   const [msg, setMsg] = useState("");
@@ -742,6 +836,8 @@ function GameFrame({ game, onExit }: { game: Game; onExit: () => void }) {
   };
   const sleep = (ms: number) => new Promise<void>((res) => window.setTimeout(res, ms));
   const end = (win: boolean, text: string) => {
+    // the Square Referee, if he happens to be around, does not like a lost game
+    if (!win) faute("perdu");
     if (!alive()) return;
     const stars = gameReward(game.id, win);
     setOver({ win, text, stars });
@@ -761,8 +857,9 @@ function GameFrame({ game, onExit }: { game: Game; onExit: () => void }) {
         <p className="gm__say" role="status">{msg || game.rule}</p>
       </div>
       <h2 className="gm__title">{game.name}</h2>
+      <LvChips lv={lv} onPick={(v) => { if (v === lv) return; stopTalking(); setLv(v); setOver(null); setMsg(""); setRun(run + 1); }} />
       <div className="gm__board">
-        <Comp key={run} speak={speak} end={end} alive={alive} sleep={sleep} />
+        <Comp key={run} speak={speak} end={end} alive={alive} sleep={sleep} lv={lv} />
       </div>
       {over ? (
         <div className={cx("gm__over", over.win && "gm__over--win")} role="status">

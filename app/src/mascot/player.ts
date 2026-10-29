@@ -18,7 +18,7 @@ const U = FIG_H / 132; // svg units → px
 type Ball = { x: number; y: number; z: number; vx: number; vy: number; vz: number; rot: number; held: boolean };
 type Act =
   | { k: "idle" }
-  | { k: "run"; to: () => { x: number; y: number }; dribble: () => boolean; speed: number; stop: number; done: (ok: boolean) => void; until: number }
+  | { k: "run"; to: () => { x: number; y: number }; dribble: () => boolean; limp: boolean; speed: number; stop: number; done: (ok: boolean) => void; until: number }
   | { k: "kick"; t: number; dir: number; power: number; hit: boolean; done: () => void }
   | { k: "juggle"; left: number; t: number; age: number; leg: 0 | 1; swinging: boolean; done: () => void }
   | { k: "tired"; t: number; until: number; done: () => void }
@@ -401,12 +401,17 @@ function stepPlayer(dt: number) {
       const step = Math.min(d, sp * dt);
       p0.vx = (dx / d) * sp;
       p0.vy = (dy / d) * sp;
-      p0.x = clamp(p0.x + (dx / d) * step, 20, window.innerWidth - 20);
+      p0.x = a.limp ? p0.x + (dx / d) * step : clamp(p0.x + (dx / d) * step, 20, window.innerWidth - 20);
       p0.y = clamp(p0.y + (dy / d) * step, top(), bottom());
       if (Math.abs(dx) > 4) p0.dir = dx > 0 ? 1 : -1;
       const run = clamp((a.speed - 90) / 230, 0, 1);
       p0.phase += (step / (lerp(11, 20, run) * s)) * Math.PI * 0.5;
       pose = gait(p0.phase, run);
+      if (a.limp) {
+        // a broken leg: that leg stays stiff (in its cast), he leans on the good one and hobbles
+        const w = Math.sin(p0.phase);
+        pose = { ...pose, hB: pose.hB * 0.4, kB: 2, fB: 0, lean: 8 + 6 * Math.max(0, w), bob: pose.bob + 3 * Math.max(0, -w), sB: -20, eB: -70 };
+      }
       if (a.dribble() && ball && !ball.held) dribbleTouch(pose, sp, dx / d, dy / d);
       p0.onMove(p0.x, p0.y);
     }
@@ -595,7 +600,7 @@ export type Footballer = {
   readonly x: number;
   readonly y: number;
   dead: boolean;
-  run: (to: { x: number; y: number } | (() => { x: number; y: number }), opts?: { speed?: number; dribble?: boolean | (() => boolean); stop?: number; timeout?: number }) => Promise<boolean>;
+  run: (to: { x: number; y: number } | (() => { x: number; y: number }), opts?: { speed?: number; dribble?: boolean | (() => boolean); stop?: number; timeout?: number; limp?: boolean }) => Promise<boolean>;
   kick: (dir: 1 | -1, power?: number) => Promise<void>;
   juggle: (touches: number) => Promise<void>;
   tired: (ms: number) => Promise<void>;
@@ -648,7 +653,7 @@ export function spawnFootballer(look: Look, x: number, y: number, hooks: { onTap
       new Promise<boolean>((done) => {
         if (me.dead || !pl) return done(false);
         cancelAct();
-        pl.act = { k: "run", to: typeof to === "function" ? to : () => to, dribble: typeof o.dribble === "function" ? o.dribble : () => !!o.dribble, speed: o.speed ?? 300, stop: o.stop ?? 6, done, until: performance.now() + (o.timeout ?? 9000) };
+        pl.act = { k: "run", to: typeof to === "function" ? to : () => to, dribble: typeof o.dribble === "function" ? o.dribble : () => !!o.dribble, limp: !!o.limp, speed: o.speed ?? 300, stop: o.stop ?? 6, done, until: performance.now() + (o.timeout ?? 9000) };
       }),
     kick: (dir, power = 1) =>
       new Promise<void>((done) => {

@@ -100,6 +100,14 @@ export async function runScript(mode: Mode, a: Actor, c: Ctx) {
         await a.wait(3600);
       }
     } else await a.walkTo(spot(), "walk", 8, 12000);
+  } else if (mode === "zombie") {
+    // The zombie: slow, heavy steps, arms in front, and a groan.
+    say(pick(["Grrrr… cerveaux…", "Mmmmh… du fooot…", "Grrr… j'ai faim… de foot."]));
+    await a.walkTo({ x: Math.max(50, Math.min(window.innerWidth - 50, a.x + rnd(-160, 160))), y: Math.max(150, Math.min(window.innerHeight - 110, a.y + rnd(-50, 50))) }, "walk", 6, 16000);
+    if (!a.dead) {
+      a.pose("idle");
+      await a.wait(1800);
+    }
   } else {
     // The statue: a few slow steps, then he freezes again.
     await a.walkTo({ x: Math.max(50, Math.min(window.innerWidth - 50, a.x + rnd(-130, 130))), y: Math.max(150, Math.min(window.innerHeight - 110, a.y + rnd(-60, 60))) }, "walk", 6, 14000);

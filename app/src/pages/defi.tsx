@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { bonneReponse, faute } from "../mascot/terrain";
 import { LuGift, LuRotateCcw } from "react-icons/lu";
 import type { Album, QuizQuestion } from "../data";
 import { DAILY_PASS, DAILY_TOTAL, dailyQuiz, type Question } from "../quiz";
@@ -42,7 +43,10 @@ function Runner({ questions, onDone, finalText }: { questions: Question[]; onDon
                 disabled={picked !== null}
                 onClick={() => {
                   setPicked(i);
-                  if (i === q.answer) setScore((s) => s + 1);
+                  if (i === q.answer) {
+                    setScore((s) => s + 1);
+                    bonneReponse();
+                  } else faute("reponse");
                 }}
               >
                 {choice}
