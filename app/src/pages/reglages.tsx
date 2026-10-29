@@ -3,6 +3,8 @@ import { useState, useSyncExternalStore } from "react";
 import { LuShieldCheck, LuShirt } from "react-icons/lu";
 import { CaracList } from "../mascot/Carac";
 import { VoicePanel } from "../mascot/Mascot";
+import { VoicePicker } from "../mascot/VoicePicker";
+import { CodeParent } from "../maj/code";
 import { PERSOS } from "../mascot/lines";
 import { SPEEDS, choosePerso, hideBubble, sample, stopTalking, update, useMascot } from "../mascot/state";
 import { Wardrobe } from "../mascot/Wardrobe";
@@ -47,7 +49,16 @@ export function Reglages() {
           <button type="button" className={cx("chip", m.s.narrate && "chip--on")} aria-pressed={m.s.narrate} onClick={() => update({ narrate: true })}>Oui</button>
           <button type="button" className={cx("chip", !m.s.narrate && "chip--on")} aria-pressed={!m.s.narrate} onClick={() => update({ narrate: false })}>Non</button>
         </div>
-        <VoicePanel />
+      </Section>
+
+      <Section title="Change ma voix !" kicker="Une voix pour chaque personnage">
+        <VoicePicker />
+      </Section>
+
+      <Section title="Réglages avancés de la voix" kicker="Code parent">
+        <CodeParent titre="Réglages avancés de la voix">
+          <VoicePanel />
+        </CodeParent>
       </Section>
 
       <Section title="Les bruitages" kicker={sound ? "Allumés" : "Coupés"}>

@@ -314,8 +314,11 @@ function footTip(p: Pose, leg: "A" | "B"): { dx: number; dz: number } {
   const ky = THIGH * Math.cos(h);
   const ax = kx - SHIN * Math.sin(h + k);
   const ay = ky + SHIN * Math.cos(h + k);
-  // the instep, a little in front of the ankle
-  return { dx: (ax + 7) * U, dz: (129 - (HIP.y + p.bob + ay + 3)) * U };
+  // the tip of the boot: the shoe points forward from the ankle (14 units long), turned with shin and foot
+  const f = h + k + ((leg === "A" ? p.fA : p.fB) * Math.PI) / 180;
+  const tx = ax + 13 * Math.cos(f) - 1 * Math.sin(f);
+  const ty = ay + 13 * Math.sin(f) + 1 * Math.cos(f);
+  return { dx: tx * U, dz: (129 - (HIP.y + p.bob + ty)) * U };
 }
 
 function applyPose(p: Pose) {
@@ -538,8 +541,8 @@ function juggleStep(a: Extract<Act, { k: "juggle" }>, dt: number, idle: Pose): P
   const p0 = pl!;
   const s = scaleAt(p0.y);
   const ready: Pose = { ...STAND, lean: 6, hA: -6, kA: 14, hB: 4, kB: 12, sA: -28, eA: -40, sB: 30, eB: -40 };
-  const up: Pose = { ...ready, hA: -58, kA: 82, fA: -14 };
-  const upB: Pose = { ...ready, hB: -58, kB: 82, fB: -14 };
+  const up: Pose = { ...ready, hA: -74, kA: 58, fA: -10 };
+  const upB: Pose = { ...ready, hB: -74, kB: 58, fB: -10 };
   const target = a.leg === 0 ? up : upB;
   let pose = mix(idle, ready, 0.9);
   a.age += dt;
@@ -548,7 +551,8 @@ function juggleStep(a: Extract<Act, { k: "juggle" }>, dt: number, idle: Pose): P
   } else {
     const contact = footTip(target, a.leg === 0 ? "A" : "B");
     const footX = p0.x + p0.dir * contact.dx * s;
-    const contactZ = contact.dz * s + BALL_R * s * 0.6;
+    // the ball sits right on the tip of the boot when it is hit (its bottom touches the toe)
+    const contactZ = contact.dz * s;
     if (!a.swinging && ball.vz < 0) {
       // time until the ball comes down to the foot
       const tFall = (ball.z - contactZ) / Math.max(1, -ball.vz);
@@ -561,12 +565,14 @@ function juggleStep(a: Extract<Act, { k: "juggle" }>, dt: number, idle: Pose): P
       a.t += dt;
       const t = a.t;
       pose = t < 0.14 ? mix(ready, target, ease(t / 0.14)) : mix(target, ready, ease((t - 0.14) / 0.22));
-      if (t >= 0.12 && t < 0.2 && ball.vz < 0 && ball.z <= contactZ + 8 && Math.abs(ball.x - footX) < 18 * s) {
+      if (t >= 0.08 && t < 0.26 && ball.vz < 0 && ball.z <= contactZ + 10 && ball.z > 0 && Math.abs(ball.x - footX) < 20 * s) {
         a.left -= 1;
         const h = a.left > 0 ? (26 + Math.random() * 22) * s : 12 * s;
+        // the ball is on the tip of the boot at the moment of the touch, then goes straight up (a little drift)
         ball.z = contactZ;
+        ball.x = lerp(ball.x, footX, 0.75);
         ball.vz = Math.sqrt(2 * G * h);
-        ball.vx = (footX - ball.x) * 2 + (p0.x - footX) * 1.4 + (Math.random() - 0.5) * 22;
+        ball.vx = (footX - ball.x) / Math.max(0.2, (2 * ball.vz) / G) + (Math.random() - 0.5) * 14 * s;
         ball.vy = (p0.y - ball.y) * 2;
         ballKick(0.32);
         a.leg = a.left % 3 === 0 ? a.leg : ((1 - a.leg) as 0 | 1);

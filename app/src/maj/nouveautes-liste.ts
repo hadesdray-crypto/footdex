@@ -3,6 +3,19 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    date: "2026-10-29",
+    titre: "Version 25 : une voix pour chaque personnage",
+    type: "appli",
+    points: [
+      "« Change ma voix ! » dans le menu du personnage : touche une voix pour l'écouter, puis « C'est elle ! ».",
+      "Chaque personnage a sa propre voix. Les ⭐⭐⭐ sont les plus fluides.",
+      "Un curseur 🐭 / 🐻 pour une voix plus aiguë ou plus grave.",
+      "Pendant les jongles, le ballon touche la pointe de la chaussure, comme un vrai jongleur.",
+      "Code parent (4 chiffres) pour les réglages avancés, le temps d'écran et Internet.",
+      "45 minutes de jeu par jour, puis il faut le code parent pour continuer.",
+    ],
+  },
+  {
     date: "2026-10-28",
     titre: "Version 24 : la fenêtre de mise à jour tient dans l'écran",
     type: "appli",

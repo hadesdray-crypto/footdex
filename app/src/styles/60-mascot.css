@@ -341,3 +341,22 @@
 .fball__shadow { position: absolute; left: 6%; right: 6%; bottom: -3px; height: 5px; border-radius: 50%; background: #000; opacity: .32; transform: translateY(var(--sh, 0px)) scaleX(var(--shs, 1)); }
 .fball.is-held { cursor: grabbing; }
 .fball::after { content: ""; position: absolute; inset: -14px; } /* a bigger area to grab it with a finger */
+
+/* ---- « Change ma voix ! » (for a child) */
+.vp { display: grid; gap: 10px; }
+.vp__step { display: flex; align-items: center; gap: 8px; font: 800 15px/1.2 var(--f-body); color: var(--fg); margin: 4px 0 0; }
+.vp__step b { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--gold); color: var(--gold-ink); font-size: 14px; }
+.vp__who { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.vp__face { flex: none; display: grid; justify-items: center; gap: 2px; width: 74px; padding: 6px 4px; border-radius: 14px; border: 2px solid var(--line-2); background: var(--glass); color: var(--fg-2); font: 700 11px/1.1 var(--f-body); }
+.vp__face.is-on { border-color: var(--gold); background: rgba(246, 196, 83, .12); color: var(--fg); }
+.vp__cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+.vp__card { display: grid; gap: 2px; justify-items: center; text-align: center; padding: 12px 8px; min-height: 104px; border-radius: 18px; border: 2px solid var(--line-2); background: var(--glass); color: var(--fg); }
+.vp__card.s3 { background: linear-gradient(180deg, rgba(246, 196, 83, .14), rgba(246, 196, 83, .04)); }
+.vp__card.is-on { border-color: var(--pitch); box-shadow: 0 0 18px -6px rgba(52, 211, 153, .9); }
+.vp__card strong { font: 900 22px/1 var(--f-display); text-transform: uppercase; letter-spacing: .02em; }
+.vp__card em { font-style: normal; font-weight: 800; font-size: 13px; color: var(--gold-hi); }
+.vp__card small { font-size: 11.5px; color: var(--muted); }
+.vp__stars { font-size: 16px; letter-spacing: 1px; }
+.vp__pitch { display: flex; align-items: center; gap: 10px; font-size: 28px; }
+.vp__pitch input { flex: 1; accent-color: var(--gold); height: 34px; }
+.vp__keep { width: 100%; margin-top: 4px; }

@@ -1,5 +1,5 @@
 // The parents' corner (from the Encyclopédie de la vie) and the one journal of what's new.
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useState } from "react";
 import { LuCopy, LuDownload, LuRefreshCw, LuUpload } from "react-icons/lu";
 import { PageTitle, Section } from "../ui/bits";
 import { cx } from "../util";
@@ -7,7 +7,8 @@ import { EST_APK, HORS_LIGNE, LIEN_APK, VERSION_APK, VERSION_APP } from "../maj/
 import { useHorsLigne, verifierMiseAJour } from "../maj/hors-ligne";
 import { useMajApk, verifierApk } from "../maj/maj-apk";
 import { useNouveautes } from "../maj/nouveautes";
-import { permettreInternet, questionAdulte, useInternetPermis } from "../maj/parents";
+import { permettreInternet, useInternetPermis } from "../maj/parents";
+import { CodeParent } from "../maj/code";
 import { creerCode, restaurerCode } from "../maj/sauvegarde";
 import { LIMITES, choisirLimiteEcran, limiteEcran, useTempsEcran } from "../maj/temps-ecran";
 
@@ -90,26 +91,21 @@ function Sauvegarde() {
       <p className="note">Pour passer du site à l'appli Android, ou à un nouveau téléphone, sans rien perdre.</p>
       <button type="button" className="btn btn--gold" onClick={() => void sauver()}><LuCopy aria-hidden="true" /> Créer mon code de sauvegarde</button>
       {code ? <textarea className="save__code" readOnly value={code} rows={3} onFocus={(e: { currentTarget: { select: () => void } }) => e.currentTarget.select()} /> : null}
+      <CodeParent titre="Récupérer une progression">
       <p className="mm__label">Récupérer une progression</p>
-      <textarea className="save__code" value={colle} onChange={(e: { target: { value: string } }) => setColle(e.target.value)} rows={3} placeholder="Colle ici le code FOOTDEX1:…" />
-      <button type="button" className="btn btn--soft" disabled={!colle.trim()} onClick={() => void recuperer()}><LuUpload aria-hidden="true" /> Récupérer</button>
+        <textarea className="save__code" value={colle} onChange={(e: { target: { value: string } }) => setColle(e.target.value)} rows={3} placeholder="Colle ici le code FOOTDEX1:…" />
+        <button type="button" className="btn btn--soft" disabled={!colle.trim()} onClick={() => void recuperer()}><LuUpload aria-hidden="true" /> Récupérer</button>
+      </CodeParent>
       {msg ? <p className="note" role="status">{msg}</p> : null}
     </Section>
   );
 }
 
-/** The settings below need an adult: a multiplication, different each time. */
+/** The settings below need the parents' code. */
 function Verrou({ children }: { children: ReactNode }) {
-  const [ok, setOk] = useState(false);
-  const [rep, setRep] = useState("");
-  const [a, b] = useMemo(questionAdulte, []);
-  if (ok) return <>{children}</>;
   return (
-    <Section title="Réglages des parents" kicker="Pour un adulte">
-      <label className="parents__lock">Combien font {a} × {b} ?
-        <input inputMode="numeric" value={rep} onChange={(e: { target: { value: string } }) => setRep(e.target.value)} />
-      </label>
-      <button type="button" className="btn btn--soft" disabled={rep.trim() !== String(a * b)} onClick={() => setOk(true)}>Ouvrir</button>
+    <Section title="Réglages des parents" kicker="Code parent">
+      <CodeParent titre="Réglages des parents">{children}</CodeParent>
     </Section>
   );
 }

@@ -7,9 +7,10 @@ import { cx, dayKey } from "../util";
 import { Fig } from "./Fig";
 import { PERSOS } from "./lines";
 import { CaracList } from "./Carac";
+import { VoicePicker } from "./VoicePicker";
 import { ballOpen } from "../sound";
 import { piperDownload, piperRemove } from "../piper";
-import { SPEEDS, choosePerso, wornLook, hasMore, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, VOICE_TYPES, androidVoices, installAndroidVoices, isApp, type Engine } from "./state";
+import { SPEEDS, choosePerso, wornLook, hasMore, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, androidVoices, installAndroidVoices, isApp, type Engine } from "./state";
 import { Wardrobe, type Tab } from "./Wardrobe";
 import { go, type Route } from "../router";
 import { createActor } from "./actor";
@@ -24,7 +25,7 @@ const H = 84;
 export function Mascot({ album, page }: { album: Album; page: string }) {
   const m = useMascot();
   const perso = PERSOS[m.s.perso];
-  const [menu, setMenu] = useState<null | "main" | "settings" | "go">(null);
+  const [menu, setMenu] = useState<null | "main" | "settings" | "go" | "voix">(null);
   const [wardrobe, setWardrobe] = useState<false | Tab>(false);
   const menuRef = useRef<unknown>(null);
   const wardrobeRef = useRef(false);
@@ -398,7 +399,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
         s.lastTap = now;
         s.tapTimer = window.setTimeout(() => {
           stopTalking();
-          setMenu((v: null | "main" | "settings" | "go") => (v ? null : "main"));
+          setMenu((v: null | "main" | "settings" | "go" | "voix") => (v ? null : "main"));
         }, 340);
       }
     }
@@ -454,7 +455,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
           onKeyDown={(e: { key: string; preventDefault: () => void }) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              setMenu((v: null | "main" | "settings" | "go") => (v ? null : "main"));
+              setMenu((v: null | "main" | "settings" | "go" | "voix") => (v ? null : "main"));
             }
           }}
         >
@@ -505,7 +506,7 @@ const DESTINATIONS: { to: Route; label: string; icon: typeof LuHouse }[] = [
   { to: { page: "sources" }, label: "Les sources", icon: LuShieldCheck },
 ];
 
-function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "settings" | "go"; setView: (v: null | "main" | "settings" | "go") => void; album: Album; page: string; openWardrobe: (tab: Tab) => void }) {
+function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "settings" | "go" | "voix"; setView: (v: null | "main" | "settings" | "go" | "voix") => void; album: Album; page: string; openWardrobe: (tab: Tab) => void }) {
   const m = useMascot();
   const perso = PERSOS[m.s.perso];
   const close = () => setView(null);
@@ -542,8 +543,8 @@ function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "se
             <Fig look={m.s.look} size={52} crop="bust" mouth={perso.mouth} />
           )}
           <div className="mm__who">
-            <strong>{view === "settings" ? "Réglages" : view === "go" ? "Aller quelque part" : perso.name}</strong>
-            <span>{view === "settings" ? "Voix et caractère" : view === "go" ? "Touche où tu veux aller" : perso.tag}</span>
+            <strong>{view === "settings" ? "Réglages" : view === "go" ? "Aller quelque part" : view === "voix" ? "Change ma voix !" : perso.name}</strong>
+            <span>{view === "settings" ? "Voix et caractère" : view === "go" ? "Touche où tu veux aller" : view === "voix" ? "Une voix pour chaque personnage" : perso.tag}</span>
           </div>
           <button type="button" className="iconbtn" onClick={close} aria-label="Fermer le menu">
             <LuX aria-hidden="true" />
@@ -553,6 +554,9 @@ function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "se
           <div className="mm__tiles">
             <button type="button" className="mm__tile" onClick={run(() => explain(page))}>
               <LuMessageCircle aria-hidden="true" /> <span>Explique-moi</span>
+            </button>
+            <button type="button" className="mm__tile mm__tile--voix" onClick={() => setView("voix")}>
+              <LuMessageCircle aria-hidden="true" /> <span>Change ma voix !</span>
             </button>
             <button type="button" className="mm__tile" onClick={run(readPage)}>
               <LuVolume2 aria-hidden="true" /> <span>Lis-moi la page</span>
@@ -576,6 +580,8 @@ function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "se
               <LuCompass aria-hidden="true" /> <span>{m.s.narrate ? "Dis-moi tout : OUI" : "Dis-moi tout : NON"}</span>
             </button>
           </div>
+        ) : view === "voix" ? (
+          <VoicePicker compact />
         ) : view === "go" ? (
           <div className="mm__tiles mm__tiles--go">
             {DESTINATIONS.map((d) => (
@@ -594,7 +600,8 @@ function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "se
                 </button>
               ))}
             </div>
-            <VoicePanel />
+            <button type="button" className="btn btn--gold" onClick={() => setView("voix")}>Change ma voix !</button>
+            <button type="button" className="btn btn--soft" onClick={() => { close(); go({ page: "reglages" }); }}>Réglages avancés de la voix (code parent)</button>
             <p className="mm__label">Dis-moi tout ce qui se passe</p>
             <div className="chips">
               <button type="button" className={cx("chip", m.s.narrate && "chip--on")} aria-pressed={m.s.narrate} onClick={() => update({ narrate: true })}>Oui</button>
@@ -698,12 +705,6 @@ export function VoicePanel() {
 
   return (
     <div className="voicepanel">
-      <p className="mm__label">Type de voix</p>
-      <div className="chips" role="radiogroup" aria-label="Type de voix">
-        {VOICE_TYPES.map((v) => (
-          <button key={v.id} type="button" role="radio" aria-checked={m.s.voiceType === v.id} className={cx("chip", m.s.voiceType === v.id && "chip--on")} onClick={() => { update({ voiceType: v.id }); window.setTimeout(sample, 60); }}>{v.label}</button>
-        ))}
-      </div>
       <p className="mm__label">Comment il parle</p>
       <button type="button" className="btn btn--gold" onClick={() => { const q: Engine[] = ENGINES.map((x) => x.id).filter((id) => id !== "piper" || m.s.piper); test(q[0], q); }}>
         Trouver ma voix, pas à pas

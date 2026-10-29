@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 const CLE_LIMITE = "footdex.ecran.limite";
 const CLE_JOUR = "footdex.ecran.jour";
 export const LIMITES = [0, 20, 30, 45, 60, 90] as const; // 0 = pas de limite
-export const LIMITE_DEFAUT = 0; // Footdex : pas de limite tant qu'un parent n'en choisit pas
+export const LIMITE_DEFAUT = 45; // 45 minutes par jour, puis il faut le code parent
 
 type Jour = { date: string; secondes: number; bonus: number; libre: boolean; prevenu: boolean };
 

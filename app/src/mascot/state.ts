@@ -4,7 +4,7 @@ import { babble as babbleSound, robot as robotSound } from "../sound";
 import { piperWav } from "../piper";
 import { appeler, moduleDisponible } from "../natif";
 import { storageGet, storageSet } from "../util";
-import { PAGES, PERSOS, pick, type Kind } from "./lines";
+import { PAGES, PERSOS, pick, type Kind, type Mode } from "./lines";
 import { DEFAULT_LOOK, sanitizeLook, type Look } from "./look";
 import { CARAC } from "./caractere";
 
@@ -35,12 +35,26 @@ export const VOICE_TYPES: { id: VoiceType; label: string; pitch: number }[] = [
   { id: "grave", label: "Grave", pitch: 0.78 },
   { id: "perso", label: "Celle du personnage", pitch: 0 },
 ];
-export type Settings = { look: Look; perso: number; speed: number; auto: boolean; engine: "auto" | Engine; heard: Partial<Record<Engine, boolean>>; piper: boolean; nativeVoice: number; voiceType: VoiceType; looks: Record<string, Look>; rest: boolean; narrate: boolean; fx: number; fy: number; day: string };
+/** The voice of one character: which way of speaking, which exact voice, how high. */
+export type PVoice = { engine: "auto" | Engine; native: number; phone: string; pitch: number };
+/** A boy's voice by default, each character a little different (Footdex is Raphaël's). */
+export const DEFAULT_PITCH: Record<Mode, number> = { statue: 0.9, excite: 1.22, poli: 1.05, joueur: 1.3, pointu: 1.12 };
+export function voiceOf(mode: Mode): PVoice {
+  const v = snap.s.pvoice[mode];
+  return { engine: v?.engine ?? "auto", native: typeof v?.native === "number" ? v.native : -1, phone: v?.phone ?? "", pitch: typeof v?.pitch === "number" ? Math.max(0.6, Math.min(1.6, v.pitch)) : DEFAULT_PITCH[mode] };
+}
+/** Sets the voice of one character (only what changes). */
+export function setVoiceOf(mode: Mode, patch: Partial<PVoice>) {
+  update({ pvoice: { ...snap.s.pvoice, [mode]: { ...voiceOf(mode), ...patch } } });
+}
+/** For a moment, a voice to try (in the voice picker): used by the next sentence instead of the chosen one. */
+let trying: PVoice | null = null;
+export type Settings = { look: Look; perso: number; speed: number; auto: boolean; engine: "auto" | Engine; heard: Partial<Record<Engine, boolean>>; piper: boolean; nativeVoice: number; voiceType: VoiceType; pvoice: Partial<Record<Mode, PVoice>>; looks: Record<string, Look>; rest: boolean; narrate: boolean; fx: number; fy: number; day: string };
 export type Bubble = { id: number; text: string; top: boolean } | null;
 type Snap = { reading: boolean; s: Settings; eng: Partial<Record<Engine, "ok" | "ko">>; using: Engine | null; bubble: Bubble; talking: boolean; busy: boolean; anim: string | null; animId: number; vx: number; vy: number; hurt: number };
 
 function loadSettings(): Settings {
-  const d: Settings = { look: DEFAULT_LOOK, perso: 0, speed: 1, auto: true, engine: "auto", heard: {}, piper: false, nativeVoice: -1, voiceType: "garcon", looks: {}, rest: false, narrate: false, fx: 1, fy: 1, day: "" };
+  const d: Settings = { look: DEFAULT_LOOK, perso: 0, speed: 1, auto: true, engine: "auto", heard: {}, piper: false, nativeVoice: -1, voiceType: "garcon", pvoice: {}, looks: {}, rest: false, narrate: false, fx: 1, fy: 1, day: "" };
   try {
     const raw = JSON.parse(storageGet(KEY) ?? "null") as Partial<Settings> | null;
     if (!raw) return d;
@@ -61,6 +75,7 @@ function loadSettings(): Settings {
       engine: raw.engine === "native" || raw.engine === "phone" || raw.engine === "piper" || raw.engine === "robot" || raw.engine === "babble" ? raw.engine : "auto",
       heard: raw.heard && typeof raw.heard === "object" ? raw.heard : {},
       piper: raw.piper === true,
+      pvoice: raw.pvoice && typeof raw.pvoice === "object" ? (raw.pvoice as Partial<Record<Mode, PVoice>>) : {},
       voiceType: raw.voiceType === "perso" || raw.voiceType === "homme" || raw.voiceType === "grave" ? raw.voiceType : "garcon",
       nativeVoice: typeof raw.nativeVoice === "number" && raw.nativeVoice >= 0 ? Math.floor(raw.nativeVoice) : -1,
       narrate: raw.narrate === true,
@@ -236,17 +251,17 @@ function mark(e: Engine, v: "ok" | "ko") {
 }
 
 /** One way of speaking. `done` when the text is finished, `fail` when this way does not work (the next one can take over). */
-function runEngine(e: Engine, text: string, my: number, done: () => void, fail: () => void) {
+function runEngine(e: Engine, text: string, my: number, done: () => void, fail: () => void, given?: PVoice) {
   const p = PERSOS[snap.s.perso];
   const rate = Math.max(0.5, Math.min(2, p.rate * SPEEDS[snap.s.speed].factor));
   // A real voice (Android's, the phone's) gets ugly when pushed too high or too fast: only a gentle nudge per character.
-  const vt = VOICE_TYPES.find((v) => v.id === snap.s.voiceType);
-  // the chosen kind of voice, with a small touch of the character's own pitch
-  const softPitch = vt && vt.pitch ? vt.pitch * (1 + (p.pitch - 1) * 0.08) : 1 + (p.pitch - 1) * 0.3;
+  const pv = given ?? voiceOf(p.mode);
+  // the pitch chosen for this character (🐭 high … 🐻 low)
+  const softPitch = pv.pitch;
   const softRate = Math.max(0.6, Math.min(1.5, 1 + (p.rate - 1) * 0.45)) * SPEEDS[snap.s.speed].factor;
   const alive = () => my === wake;
   if (e === "robot" || e === "babble") {
-    const r = (e === "robot" ? robotSound : babbleSound)(text, vt && vt.pitch ? vt.pitch * 0.9 : p.pitch, softRate, p.voice.formant, p.voice.vib);
+    const r = (e === "robot" ? robotSound : babbleSound)(text, pv.pitch * 0.9, softRate, p.voice.formant, p.voice.vib);
     if (!r) {
       mark(e, "ko");
       return fail();
@@ -334,7 +349,8 @@ function runEngine(e: Engine, text: string, my: number, done: () => void, fail: 
       .then(() => {
         if (!alive()) return;
         const opts: Record<string, unknown> = { text, lang: "fr-FR", rate: softRate, pitch: softPitch, volume: 1, category: "playback" };
-        if (snap.s.nativeVoice >= 0) opts.voice = snap.s.nativeVoice;
+        if (pv.native >= 0) opts.voice = pv.native;
+        else if (snap.s.nativeVoice >= 0) opts.voice = snap.s.nativeVoice;
         return appeler("TextToSpeech", "speak", opts);
       })
       .then(
@@ -382,7 +398,8 @@ function runEngine(e: Engine, text: string, my: number, done: () => void, fail: 
         parts.forEach((part, k) => {
           const u = new SpeechSynthesisUtterance(part);
           u.lang = "fr-FR";
-          const v = pickVoice ? frenchVoice() : undefined;
+          const chosen = pv.phone ? window.speechSynthesis.getVoices().find((x) => x.name === pv.phone) : undefined;
+          const v = chosen ?? (pickVoice ? frenchVoice() : undefined);
           if (v) u.voice = v;
           u.pitch = softPitch;
           u.rate = softRate;
@@ -447,7 +464,11 @@ function voice(text: string, onEnd?: () => void) {
     mouthFor(text);
     return;
   }
-  const list = snap.s.engine === "auto" ? order() : [snap.s.engine];
+  // the character's own way of speaking first (if one was chosen), then the usual order as a back-up
+  const pv = trying ?? voiceOf(PERSOS[snap.s.perso].mode);
+  trying = null;
+  const base = snap.s.engine === "auto" ? order() : [snap.s.engine];
+  const list = pv.engine !== "auto" ? [pv.engine, ...base.filter((e) => e !== pv.engine)] : base;
   const my = wake;
   let idx = 0;
   const next = () => {
@@ -459,7 +480,7 @@ function voice(text: string, onEnd?: () => void) {
       onEnd?.();
       return;
     }
-    runEngine(e, text, my, () => onEnd?.(), next);
+    runEngine(e, text, my, () => onEnd?.(), next, pv);
   };
   next();
 }
@@ -676,3 +697,50 @@ export async function androidVoices(): Promise<{ index: number; name: string; lo
 export function installAndroidVoices() {
   appeler("TextToSpeech", "openInstall").catch(() => undefined);
 }
+
+/** Plays a sentence with a voice, without keeping it (the voice picker's « écouter »). */
+export function tryVoice(v: PVoice, text?: string) {
+  trying = v;
+  const t = text ?? P().sample;
+  say(t.length > 4 ? t : "Salut ! C'est moi, avec cette voix-là !");
+}
+
+/** One choice in the voice picker. */
+export type VoiceOption = { key: string; label: string; stars: 1 | 2 | 3; tag: string; v: Pick<PVoice, "engine" | "native" | "phone"> };
+
+/** Every voice this phone can give, best first (⭐⭐⭐ the most fluid). Simple names for a child: « Voix 1 », « Voix 2 »… */
+export async function voiceCatalog(): Promise<VoiceOption[]> {
+  const out: Omit<VoiceOption, "label">[] = [];
+  if (isApp()) {
+    let list: { index: number; name: string; local: boolean }[] = [];
+    try {
+      const r = await appeler<{ voices: { name?: string; lang?: string; voiceURI?: string; localService?: boolean }[] }>("TextToSpeech", "getSupportedVoices");
+      list = (r?.voices ?? [])
+        .map((v, index) => ({ index, name: `${v.name || ""} ${v.voiceURI || ""}`, lang: v.lang || "", local: v.localService !== false }))
+        .filter((v) => /^fr/i.test(v.lang) || /fr[-_]/i.test(v.name));
+    } catch {
+      list = [];
+    }
+    for (const v of list) {
+      const net = /network/i.test(v.name) || !v.local;
+      const google = /x-[a-z]{3}-(local|network)|google/i.test(v.name);
+      const samsung = /smt|samsung/i.test(v.name);
+      const stars: 1 | 2 | 3 = google || net ? 3 : samsung ? 2 : 2;
+      out.push({ key: `n${v.index}`, stars, tag: net ? "Avec Internet" : "Sans Internet", v: { engine: "native", native: v.index, phone: "" } });
+    }
+    if (!list.length) out.push({ key: "n-1", stars: 2, tag: "Sans Internet", v: { engine: "native", native: -1, phone: "" } });
+  } else if (hasVoice()) {
+    const all = window.speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith("fr"));
+    for (const v of all) {
+      const good = /google|natural|neural|premium|enhanced|online/i.test(v.name) || !v.localService;
+      out.push({ key: `p${v.name}`, stars: good ? 3 : 2, tag: v.localService ? "Sans Internet" : "Avec Internet", v: { engine: "phone", native: -1, phone: v.name } });
+    }
+  }
+  if (snap.s.piper) out.push({ key: "piper", stars: 3, tag: "Belle voix · sans Internet", v: { engine: "piper", native: -1, phone: "" } });
+  out.sort((a, b) => b.stars - a.stars);
+  const named = out.map((o, i) => ({ ...o, label: o.key === "piper" ? "Belle voix" : `Voix ${i + 1}` }));
+  named.push({ key: "robot", label: "Voix robot", stars: 1, tag: "Marche partout", v: { engine: "robot", native: -1, phone: "" } });
+  named.push({ key: "babble", label: "Bruits rigolos", stars: 1, tag: "Sans mots", v: { engine: "babble", native: -1, phone: "" } });
+  return named;
+}
+export const optionKey = (v: PVoice) => (v.engine === "native" ? `n${v.native}` : v.engine === "phone" ? `p${v.phone}` : v.engine === "auto" ? "" : v.engine);

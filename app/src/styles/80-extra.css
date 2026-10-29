@@ -193,3 +193,8 @@
 .majfull__actions { display: flex; gap: 8px; padding: 12px 14px 14px; border-top: 1px solid var(--line); background: var(--night-2); }
 .majfull__actions .btn { flex: 1; }
 .majfull__box--long { max-height: calc(100vh - 32px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.pcode { display: grid; gap: 8px; justify-items: center; text-align: center; padding: 14px; border-radius: 18px; border: 1px dashed var(--line-2); background: var(--glass); }
+.pcode__title { font: 800 20px/1.1 var(--f-display); text-transform: uppercase; letter-spacing: .03em; }
+.pcode__in { width: 170px; text-align: center; font: 800 24px/1.2 var(--f-body); letter-spacing: .3em; border-radius: 14px; border: 1px solid var(--line-2); background: rgba(0, 0, 0, .35); color: var(--fg); padding: 8px 10px; }
+.pcode__msg { color: var(--bad); font-weight: 700; }
+.pcode__in::placeholder { font-size: 14px; letter-spacing: 0; font-weight: 600; }

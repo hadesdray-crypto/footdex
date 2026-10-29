@@ -1,10 +1,10 @@
 // When today's screen time is over, the character says it gently, each in his own way (from the Encyclopédie de la vie).
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Fig } from "../mascot/Fig";
 import { PERSOS, type Mode } from "../mascot/lines";
 import { say, stopTalking, useMascot } from "../mascot/state";
-import { questionAdulte } from "./parents";
+import { SaisieCode } from "./code";
 import { encoreDuTemps, marquerPrevenu, sansLimiteAujourdhui, useTempsEcran } from "./temps-ecran";
 
 const FIN: Record<Mode, string> = {
@@ -46,34 +46,26 @@ export function TempsEcran() {
 function Repos({ mode }: { mode: Mode }) {
   const m = useMascot();
   const [adulte, setAdulte] = useState(false);
-  const [rep, setRep] = useState("");
-  const [a, b] = useMemo(questionAdulte, []);
-  const bon = rep.trim() === String(a * b);
+  const [ok, setOk] = useState(false);
   return (
     <div className="majfull" role="dialog" aria-modal="true" aria-label="Temps d'écran terminé">
       <div className="majfull__box">
         <Fig look={m.s.look} size={120} crop="full" mouth="smile" cheer mode={mode} />
-        <p className="majfull__title">C'est l'heure d'aller dehors !</p>
+        <p className="majfull__title">C'est l'heure d'aller jouer dehors !</p>
         <p>{FIN[mode]}</p>
         <button type="button" className="btn btn--soft" onClick={() => say(FIN[mode])}>Écouter</button>
-        <div className="parents__lock">
-          {!adulte ? (
-            <button type="button" className="btn btn--ghost btn--small" onClick={() => setAdulte(true)}>Pour un adulte</button>
-          ) : (
-            <>
-              <label>Pour un adulte : combien font {a} × {b} ?
-                <input inputMode="numeric" value={rep} onChange={(ev: { target: { value: string } }) => setRep(ev.target.value)} />
-              </label>
-              {bon ? (
-                <div className="majbar__actions">
-                  <button type="button" className="btn btn--gold" onClick={() => encoreDuTemps(15)}>15 min de plus</button>
-                  <button type="button" className="btn btn--gold" onClick={() => encoreDuTemps(30)}>30 min de plus</button>
-                  <button type="button" className="btn btn--soft" onClick={() => sansLimiteAujourdhui()}>Sans limite aujourd'hui</button>
-                </div>
-              ) : null}
-            </>
-          )}
-        </div>
+        {!adulte ? (
+          <button type="button" className="btn btn--ghost btn--small" onClick={() => setAdulte(true)}>Pour un adulte</button>
+        ) : (
+          <SaisieCode titre="Encore un peu de temps ?" onOk={() => setOk(true)} />
+        )}
+        {ok ? (
+          <div className="majbar__actions">
+            <button type="button" className="btn btn--gold" onClick={() => encoreDuTemps(15)}>15 min de plus</button>
+            <button type="button" className="btn btn--gold" onClick={() => encoreDuTemps(30)}>30 min de plus</button>
+            <button type="button" className="btn btn--soft" onClick={() => sansLimiteAujourdhui()}>Sans limite aujourd'hui</button>
+          </div>
+        ) : null}
       </div>
     </div>
   );
