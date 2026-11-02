@@ -42,8 +42,12 @@
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --gutter-l: max(16px, env(safe-area-inset-left, 0px));
   --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+  /* Marge du bas : la barre de navigation d'Android peut recouvrir l'appli sans le dire */
+  --bas: env(safe-area-inset-bottom, 0px);
   color-scheme: dark;
 }
+
+html.native { --bas: max(env(safe-area-inset-bottom, 0px), 48px); }
 
 @property --spin {
   syntax: "<angle>";
@@ -180,7 +184,7 @@ abbr { text-decoration: underline dotted; }
   max-width: 1160px;
   margin: 0 auto;
   padding-top: 20px;
-  padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(120px + var(--bas));
   padding-left: var(--gutter-l);
   padding-right: var(--gutter-r);
   display: grid;
@@ -210,7 +214,7 @@ abbr { text-decoration: underline dotted; }
   position: fixed;
   inset: auto 0 0;
   z-index: 30;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: var(--bas);
   background: rgba(7, 11, 22, 0.78);
   -webkit-backdrop-filter: saturate(1.5) blur(18px);
   backdrop-filter: saturate(1.5) blur(18px);
@@ -282,8 +286,8 @@ abbr { text-decoration: underline dotted; }
 .signal { position: fixed; inset: 0; z-index: 80; display: grid; align-items: end; justify-items: center; animation: fadein 0.2s ease both; }
 .signal__backdrop { position: fixed; inset: 0; border: 0; padding: 0; background: rgba(3, 5, 10, 0.72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .signal__sheet {
-  position: relative; width: min(100%, 520px); max-height: 92vh; overflow-y: auto; display: grid; gap: 12px;
-  padding: 12px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  position: relative; width: min(100%, 520px); max-height: 92vh; max-height: 92dvh; overflow-y: auto; display: grid; gap: 12px;
+  padding: 12px 18px calc(18px + var(--bas));
   background: var(--night-2); border: 1px solid rgba(246, 196, 83, 0.35); border-bottom: 0; border-radius: 24px 24px 0 0;
   box-shadow: 0 -20px 60px -20px #000; animation: rise 0.35s var(--ease) both;
 }

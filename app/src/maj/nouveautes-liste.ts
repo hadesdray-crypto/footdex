@@ -3,6 +3,16 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    date: "2026-11-02",
+    titre: "Version 32 : les boutons du bas sont toujours visibles",
+    type: "appli",
+    points: [
+      "Dans le Vestiaire, « Annuler » et « Valider » restent toujours affichés en bas, au-dessus de la barre d'Android.",
+      "La barre d'onglets du bas, le coffre, les cartes, les paquets, les mises à jour et les fenêtres de la mascotte gardent une marge sous leurs boutons : plus rien n'est caché ou impossible à toucher.",
+      "La cabine du Vestiaire est un peu moins haute, pour laisser plus de place aux choix.",
+    ],
+  },
+  {
     date: "2026-10-29",
     titre: "Version 31 : 26 bruitages et les options du Zombie",
     type: "appli",

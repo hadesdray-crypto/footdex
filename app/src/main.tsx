@@ -97,6 +97,9 @@ function App() {
 }
 
 const root = document.getElementById("root");
+// Dans l'application Android : on garde une marge sous les boutons, au-dessus de la barre de navigation.
+if ((window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.()) document.documentElement.classList.add("native");
+
 if (root) createRoot(root).render(<App />);
 
 // Saved progress also lives in claude.ai when the page is opened there, signed in.

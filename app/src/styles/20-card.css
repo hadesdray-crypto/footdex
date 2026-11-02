@@ -383,7 +383,7 @@
 .viewer {
   position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; overflow-y: auto;
   padding-top: max(16px, env(safe-area-inset-top, 0px));
-  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(16px, var(--bas));
   padding-left: var(--gutter-l); padding-right: var(--gutter-r);
   animation: fadein 0.25s ease both;
 }
