@@ -1,8 +1,9 @@
 // The Footballinis on screen: the card, the figurine on its turning pedestal, and the treasure chest that opens.
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Piece } from "../ui/Piece";
 import { cx } from "../util";
 import { FBX, RARITY, fbx, fbxSvg } from "./art";
-import { chestCoins, chestStars, freeChestToday, openChest, useCollec, type Loot } from "./store";
+import { chestStars, freeChestToday, openChest, useCollec, type Loot } from "./store";
 import { spendStars, useStore } from "../store";
 import { Chest } from "../pages/coffre";
 import { Fig } from "../mascot/Fig";
@@ -136,15 +137,14 @@ type Step = { loot: Loot; shown: number };
 /** The chest opens: a shake, a burst of light, then what is inside, one thing after the other. */
 export function ChestModal({ onClose }: { onClose: () => void }) {
   const s = useStore();
-  const c = useCollec();
   const [phase, setPhase] = useState<"choose" | "shake" | "open" | "loot">("choose");
   const [loot, setLoot] = useState<Loot[]>([]);
   const [i, setI] = useState(0);
   const [cardI, setCardI] = useState(0);
   const free = freeChestToday();
 
-  function start(pay: "free" | "coins" | "stars") {
-    if (pay === "stars" && !spendStars(chestStars())) return say(`Il te faut ${chestStars()} étoiles pour ouvrir un coffre.`);
+  function start(pay: "free" | "paid") {
+    if (pay === "paid" && !spendStars(chestStars())) return say(`Il te faut ${chestStars()} pièces pour ouvrir un coffre.`);
     const got = openChest(pay);
     if (!got) return;
     click("button");
@@ -190,8 +190,7 @@ export function ChestModal({ onClose }: { onClose: () => void }) {
             <p className="chm__hint">Dedans : des pièces, des paquets cadeaux de cartes Footdex, des cartes Footballinis (rares), des figurines, des personnages stylés… On ne sait jamais !</p>
             <div className="chm__pay">
               <button type="button" className="btn btn--gold btn--big btn--glow" disabled={!free} onClick={() => start("free")}>{free ? "🎁 Le coffre gratuit du jour" : "Coffre gratuit : reviens demain"}</button>
-              <button type="button" className="btn btn--soft" disabled={c.coins < chestCoins()} onClick={() => start("coins")}>🪙 Ouvrir pour {chestCoins()} pièces ({c.coins})</button>
-              <button type="button" className="btn btn--soft" disabled={s.stars < chestStars()} onClick={() => start("stars")}>⭐ Ouvrir pour {chestStars()} étoiles ({s.stars})</button>
+              <button type="button" className="btn btn--soft" disabled={s.stars < chestStars()} onClick={() => start("paid")}><Piece /> Ouvrir pour {chestStars()} pièces ({s.stars})</button>
             </div>
             <button type="button" className="btn btn--ghost" onClick={onClose}>Fermer</button>
           </>

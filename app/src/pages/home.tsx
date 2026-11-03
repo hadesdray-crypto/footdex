@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { LuArrowRight, LuBookOpen, LuCalendarDays, LuFilm, LuGift, LuGraduationCap, LuLibrary, LuMessageSquareQuote, LuPackageOpen, LuQuote, LuSearch, LuStar, LuTrophy, LuUsers, LuGlobe, LuGem, LuPlay } from "react-icons/lu";
+import { Piece } from "../ui/Piece";
+import { LuArrowRight, LuBookOpen, LuCalendarDays, LuFilm, LuGift, LuGraduationCap, LuLibrary, LuMessageSquareQuote, LuPackageOpen, LuQuote, LuSearch, LuTrophy, LuUsers, LuGlobe, LuGem, LuPlay } from "react-icons/lu";
 import { CARDS_PER_CHEMIN, CHEMINS, RARITY, albumCard, cheminOf, milestoneRewards, momentCard, type CardRef } from "../cards";
 import type { Album } from "../data";
 import { go } from "../router";
@@ -163,9 +164,9 @@ export function Home({ album }: { album: Album }) {
           <dd>{fmt(owned)}</dd>
         </div>
         <div>
-          <dt>Étoiles</dt>
+          <dt>Pièces</dt>
           <dd className="statstrip__stars">
-            <LuStar aria-hidden="true" /> {fmt(state.stars)}
+            <Piece />  {fmt(state.stars)}
           </dd>
         </div>
         <div>

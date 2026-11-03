@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { Piece } from "./Piece";
 import { createPortal } from "react-dom";
-import { LuFastForward, LuGift, LuStar, LuX } from "react-icons/lu";
+import { LuFastForward, LuGift, LuX } from "react-icons/lu";
 import { CARDS_PER_CHEMIN, CHEMINS, RARITY, cheminOf, isBig, type CardRef, type Pulled } from "../cards";
 import { RARITY_COLORS, burst, rain, reducedMotion, sparkle, vibrate } from "../fx";
 import { go } from "../router";
@@ -220,7 +221,7 @@ export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose
                 <h2 className="reveal__name">{current.card.name}</h2>
                 <p className="reveal__sub">{current.card.sub}</p>
                 <p className={cx("reveal__flag", fresh ? "reveal__flag--new" : "reveal__flag--dup")}>
-                  {fresh ? "Nouvelle carte dans ton classeur" : `Doublon : +${result.starsByCard[current.card.id] ?? 0} étoiles`}
+                  {fresh ? "Nouvelle carte dans ton classeur" : `Doublon : +${result.starsByCard[current.card.id] ?? 0} pièces`}
                 </p>
               </>
             ) : (
@@ -391,10 +392,10 @@ function Recap({ opening, onClose, onGift }: { opening: Opening; onClose: () => 
 
       {result.stars > 0 ? (
         <p className="recap__stars">
-          <LuStar aria-hidden="true" /> +<CountUp to={result.stars} /> étoiles avec les doublons
+          <Piece />  +<CountUp to={result.stars} /> pièces avec les doublons
         </p>
       ) : null}
-      {kind === "boutique" ? <p className="recap__note">Il te reste {fmt(state.stars)} étoiles.</p> : null}
+      {kind === "boutique" ? <p className="recap__note">Il te reste {fmt(state.stars)} pièces.</p> : null}
 
       {isPack ? (
         <section className="recap__path" aria-label="Ton chemin">

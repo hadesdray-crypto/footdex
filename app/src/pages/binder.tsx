@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { LuBookOpen, LuCheck, LuLayers, LuLock, LuPackageOpen, LuStar, LuStore } from "react-icons/lu";
+import { Piece } from "../ui/Piece";
+import { LuBookOpen, LuCheck, LuLayers, LuLock, LuPackageOpen, LuStore } from "react-icons/lu";
 import { BACKS, CHEMINS, GROUPS, RARITIES, RARITY, cardById, cheminOf, drawRarity, openGroups, shopRarities, type CardRef, type GroupId, type Rarity } from "../cards";
 import { albumPages } from "../collection";
 import type { Album } from "../data";
@@ -68,7 +69,7 @@ export function Binder({ album }: { album: Album }) {
   return (
     <div className="binder">
       <PageTitle kicker="Collection" title="Ton classeur">
-        <p>Tes cartes, l'album à compléter page par page, et la boutique où dépenser tes étoiles.</p>
+        <p>Tes cartes, l'album à compléter page par page, et la boutique où dépenser tes pièces.</p>
       </PageTitle>
 
       <dl className="statstrip">
@@ -85,9 +86,9 @@ export function Binder({ album }: { album: Album }) {
           <dd>{fmt(shinies)}</dd>
         </div>
         <div>
-          <dt>Étoiles</dt>
+          <dt>Pièces</dt>
           <dd className="statstrip__stars">
-            <LuStar aria-hidden="true" /> {fmt(state.stars)}
+            <Piece />  {fmt(state.stars)}
           </dd>
         </div>
       </dl>
@@ -317,12 +318,12 @@ function Shop({ pools, chemin, ready, onBuy }: { pools: ReturnType<typeof usePoo
     <>
       <section className="shop">
         <div className="shop__balance">
-          <LuStar aria-hidden="true" />
+          <Piece /> 
           <strong>{fmt(state.stars)}</strong>
-          <span>étoiles</span>
+          <span>pièces</span>
         </div>
         <p className="note">
-          Les étoiles viennent des doublons (Base +2, Rare +5, Éclat +15, Légende et Moment +25, Brillante +40 en plus) et des récompenses du chemin. Une carte achetée est toujours une carte
+          Les pièces viennent des doublons (Base +2, Rare +5, Éclat +15, Légende et Moment +25, Brillante +40 en plus) et des récompenses du chemin. Une carte achetée est toujours une carte
           que tu n'as pas encore, quand il en reste.
         </p>
         <div className="offers">
@@ -337,14 +338,14 @@ function Shop({ pools, chemin, ready, onBuy }: { pools: ReturnType<typeof usePoo
                 <p className="offer__text">{RARITY[r].text}</p>
                 {open ? (
                   <button type="button" className="btn btn--gold" disabled={!ready || missing > 0} onClick={() => onBuy(r)}>
-                    <LuStar aria-hidden="true" /> {fmt(price)}
+                    <Piece />  {fmt(price)}
                   </button>
                 ) : (
                   <p className="offer__lock">
                     <LuLock aria-hidden="true" /> Arrive au chemin {(ARRIVES[r] ?? 0) + 1}
                   </p>
                 )}
-                {open && missing > 0 ? <p className="offer__need">Encore {fmt(missing)} étoiles</p> : null}
+                {open && missing > 0 ? <p className="offer__need">Encore {fmt(missing)} pièces</p> : null}
               </article>
             );
           })}

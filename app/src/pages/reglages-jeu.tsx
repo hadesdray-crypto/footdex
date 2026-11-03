@@ -134,8 +134,7 @@ export function ReglagesJeu() {
       </Bloc>
 
       <Bloc titre="Le coffre au trésor">
-        <Nombre label="Prix en étoiles" value={r.coffreEtoiles} min={1} max={500} suffixe="⭐" onChange={(n) => regler({ coffreEtoiles: Math.round(n) })} />
-        <Nombre label="Prix en pièces" value={r.coffrePieces} min={1} max={2000} suffixe="🪙" onChange={(n) => regler({ coffrePieces: Math.round(n) })} />
+        <Nombre label="Prix en pièces" value={r.coffreEtoiles} min={1} max={500} suffixe="🪙" onChange={(n) => regler({ coffreEtoiles: Math.round(n) })} />
         <h4>Ce qu'il y a dedans (poids)</h4>
         <Nombre label="Pièces d'or" aide={`≈ ${wp(w.pieces)} %`} value={w.pieces} min={0} max={1000} onChange={(n) => regler({ coffreChances: { ...w, pieces: n } })} />
         <Nombre label="Paquet cadeau Footdex" aide={`≈ ${wp(w.paquet)} % · de vraies cartes de l'album`} value={w.paquet} min={0} max={1000} onChange={(n) => regler({ coffreChances: { ...w, paquet: n } })} />
@@ -146,8 +145,8 @@ export function ReglagesJeu() {
       </Bloc>
 
       <Bloc titre="Les gains des jeux">
-        <Nombre label="Étoiles la 1re fois qu'une carte passe dans la machine" value={r.gainMachine} min={0} max={50} suffixe="⭐" onChange={(n) => regler({ gainMachine: Math.round(n) })} />
-        <Nombre label="Étoiles pour un jeu gagné" aide="Une fois par jour et par jeu." value={r.gainJeu} min={0} max={50} suffixe="⭐" onChange={(n) => regler({ gainJeu: Math.round(n) })} />
+        <Nombre label="Pièces la 1re fois qu'une carte passe dans la machine" value={r.gainMachine} min={0} max={50} suffixe="🪙" onChange={(n) => regler({ gainMachine: Math.round(n) })} />
+        <Nombre label="Pièces pour un jeu gagné" aide="Une fois par jour et par jeu." value={r.gainJeu} min={0} max={50} suffixe="🪙" onChange={(n) => regler({ gainJeu: Math.round(n) })} />
       </Bloc>
 
       <Bloc titre="La mission de Papa (carte Mbappé)">

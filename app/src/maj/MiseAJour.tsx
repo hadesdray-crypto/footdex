@@ -57,7 +57,7 @@ export function MiseAJour() {
                 </ul>
               </>
             ) : null}
-            <p className="majbar__note">Tes cartes, tes étoiles et ton classeur sont gardés.</p>
+            <p className="majbar__note">Tes cartes, tes pièces et ton classeur sont gardés.</p>
             {EST_APK && apk.taille ? <p className="majbar__note"><strong>Téléchargement : environ {apk.taille} Mo. Mieux avec le Wi-Fi.</strong></p> : null}
           </div>
           <div className="majfull__actions">

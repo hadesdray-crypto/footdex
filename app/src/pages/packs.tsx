@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { LuCheck, LuGift, LuGraduationCap, LuPackageOpen, LuStar } from "react-icons/lu";
+import { Piece } from "../ui/Piece";
+import { LuCheck, LuGift, LuGraduationCap, LuPackageOpen, } from "react-icons/lu";
 import {
   CARDS_PER_CHEMIN, CHEMINS, GIFT_LABEL, RARITIES, RARITY, SHINY_STARS, SLOT_ODDS, buildPools, byValue, cheminOf, drawGift, drawPack, needsPeople, openGroups,
   type GiftKind, type Pools, type Pulled, type Rarity,
@@ -215,7 +216,7 @@ export function Packs({ album }: { album: Album }) {
         <h2 className="section-title">Ce qu'il y a dans un paquet</h2>
         <p className="note">
           {reglages().cartesParPaquet} cartes différentes, tirées parmi les {ready ? fmt(poolSize) : "…"} cartes de ce chemin. La dernière est toujours au moins Rare. Parfois, une carte Footballini rare tombe en plus. Une carte déjà reçue est un doublon : elle
-          rapporte des étoiles, à dépenser dans la boutique du classeur.
+          rapporte des pièces, à dépenser dans la boutique du classeur.
         </p>
         <div className="tablewrap">
           <table className="oddstable">
@@ -238,7 +239,7 @@ export function Packs({ album }: { album: Album }) {
                   <td>{counts[r] > 0 ? (odds("last", r) > 0 ? pct(odds("last", r)) : "–") : "–"}</td>
                   <td className="oddstable__stars">
                     +{RARITY[r].stars}
-                    <LuStar aria-label="étoiles" />
+                    <Piece /> 
                   </td>
                 </tr>
               ))}
@@ -250,7 +251,7 @@ export function Packs({ album }: { album: Album }) {
                 <td colSpan={2}>1 carte sur 60</td>
                 <td className="oddstable__stars">
                   +{SHINY_STARS}
-                  <LuStar aria-label="étoiles" /> en plus
+                  <Piece />  en plus
                 </td>
               </tr>
             </tbody>

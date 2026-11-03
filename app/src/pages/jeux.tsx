@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Piece } from "../ui/Piece";
 import { faute } from "../mascot/terrain";
 import { LuArrowLeft, LuCircleCheck, LuGem, LuLayers, LuPlay, LuRotateCcw, LuStar, LuTrophy, LuVolume2, LuX } from "react-icons/lu";
 import { Fig } from "../mascot/Fig";
@@ -784,7 +785,7 @@ export function Jeux() {
   return (
     <div className="jeux">
       <PageTitle kicker="On joue ensemble" title="Les jeux">
-        <p>Dix petits jeux où le personnage joue avec toi et parle à voix haute. Gagne-en un chaque jour : 3 étoiles par jeu !</p>
+        <p>Dix petits jeux où le personnage joue avec toi et parle à voix haute. Gagne-en un chaque jour : 3 pièces par jeu !</p>
       </PageTitle>
       {game ? (
         <GameFrame key={game.id} game={game} onExit={() => setGame(null)} lv={lv} setLv={setLv} />
@@ -844,7 +845,7 @@ function GameFrame({ game, onExit, lv, setLv }: { game: Game; onExit: () => void
     if (!alive()) return;
     const stars = gameReward(game.id, win);
     setOver({ win, text, stars });
-    const full = `${win ? "Bravo ! " : ""}${text}${stars ? ` Tu gagnes ${stars} étoiles !` : ""}`;
+    const full = `${win ? "Bravo ! " : ""}${text}${stars ? ` Tu gagnes ${stars} pièces !` : ""}`;
     setMsg(full);
     // his recorded « victoire ! » or « oh non… », exactly now; otherwise he says it
     if (!playFx(perso.mode, win ? "victoire" : "defaite")) sayLabel(full);
@@ -869,7 +870,7 @@ function GameFrame({ game, onExit, lv, setLv }: { game: Game; onExit: () => void
         <div className={cx("gm__over", over.win && "gm__over--win")} role="status">
           <strong>{over.win ? "Victoire !" : "Fin de la partie"}</strong>
           <p>{over.text}</p>
-          {over.stars ? <p className="gm__stars"><LuStar aria-hidden="true" /> +{over.stars} étoiles</p> : null}
+          {over.stars ? <p className="gm__stars"><Piece />  +{over.stars} pièces</p> : null}
           <div className="gm__btns">
             <button type="button" className="btn btn--gold" onClick={() => { stopTalking(); setOver(null); setMsg(""); setRun(run + 1); }}><LuRotateCcw aria-hidden="true" /> Rejouer</button>
             <button type="button" className="btn btn--soft" onClick={onExit}>Autres jeux</button>

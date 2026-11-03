@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
-import { LuCheck, LuGem, LuGift, LuLayers, LuLock, LuStar } from "react-icons/lu";
+import { Piece } from "./Piece";
+import { LuCheck, LuGem, LuGift, LuLayers, LuLock, } from "react-icons/lu";
 import { BACKS, CARDS_PER_CHEMIN, CHEMINS, GIFT_LABEL, MILESTONES, RARITY, cheminOf, milestoneRewards, type Reward } from "../cards";
 import { reducedMotion } from "../fx";
 import { cx, fmt } from "../util";
 import { Ball } from "./pack";
 
 export function rewardText(r: Reward): string {
-  if (r.type === "stars") return `+${r.amount} étoiles`;
+  if (r.type === "stars") return `+${r.amount} pièces`;
   if (r.type === "gift") return GIFT_LABEL[r.gift];
   return `Nouveau dos de carte : ${BACKS.find((b) => b.id === r.back)?.name ?? r.back}`;
 }
 
 export function RewardIcon({ reward, size }: { reward: Reward; size?: number }) {
-  if (reward.type === "stars") return <LuStar size={size} className="ricon ricon--stars" aria-hidden="true" />;
+  if (reward.type === "stars") return <Piece size={size} className="ricon ricon--stars"/> ;
   if (reward.type === "back") return <LuLayers size={size} className="ricon ricon--back" aria-hidden="true" />;
   if (reward.gift === "cadeau") return <LuGift size={size} className="ricon ricon--gift" aria-hidden="true" />;
   return <LuGem size={size} className={`ricon ricon--${reward.gift}`} aria-hidden="true" style={{ color: RARITY[reward.gift].color }} />;

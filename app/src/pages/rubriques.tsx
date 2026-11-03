@@ -53,7 +53,7 @@ export function Decouvrir({ album }: { album: Album }) {
         </div>
       </Section>
 
-      <Section title="Jouer et gagner" kicker="Pour les étoiles">
+      <Section title="Jouer et gagner" kicker="Pour les pièces">
         <div className="doors doors--list">
           <Door to={{ page: "jeux" }} kicker="On joue ensemble" title="Les jeux" figure="10 jeux avec le personnage" tone="gold" icon={LuPlay} />
           <Door to={{ page: "defi" }} kicker="Chaque jour" title="Le défi du jour" figure="4 bonnes réponses = un paquet bonus" tone="gold" icon={LuGraduationCap} />

@@ -148,7 +148,7 @@ export function Machine({ album }: { album: Album }) {
       fanfare("rare");
       if (marquerMachine(id)) {
         const g = reglages().gainMachine;
-        if (g > 0) { gagnerEtoiles(g); say(`Première fois dans la machine : +${g} étoiles !`); }
+        if (g > 0) { gagnerEtoiles(g); say(`Première fois dans la machine : +${g} pièces !`); }
       }
     }, 1800);
   }

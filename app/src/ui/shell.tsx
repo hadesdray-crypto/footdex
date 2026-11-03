@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { LuCompass, LuHouse, LuLibrary, LuPackageOpen, LuSearch, LuStar, LuUserRound, LuVolume2, LuVolumeX, LuSettings } from "react-icons/lu";
+import { Piece } from "./Piece";
+import { LuCompass, LuHouse, LuLibrary, LuPackageOpen, LuSearch, LuUserRound, LuVolume2, LuVolumeX, LuSettings } from "react-icons/lu";
 import { openBinderTab } from "../pages/binder";
 import { go, type Route } from "../router";
 import { click, onSoundChange, setSound, soundOn, unlockAudio } from "../sound";
@@ -84,9 +85,9 @@ export function Shell({ page, pageKey, album, children }: { page: string; pageKe
                 openBinderTab("boutique");
                 go({ page: "classeur" });
               }}
-              aria-label={`${fmt(state.stars)} étoiles, ouvrir la boutique`}
+              aria-label={`${fmt(state.stars)} pièces, ouvrir la boutique`}
             >
-              <LuStar aria-hidden="true" />
+              <Piece /> 
               <span>{fmt(state.stars)}</span>
             </button>
             <Signal />

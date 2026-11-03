@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Piece } from "./Piece";
 import { createPortal } from "react-dom";
 import { LuArrowRight, LuHeart, LuX } from "react-icons/lu";
 import { GROUPS, RARITY, type CardRef, type Visual } from "../cards";
@@ -188,7 +189,7 @@ export function Carte({ card, shiny, count, fresh, stars, flipped = true, back, 
               </div>
             </div>
             {fresh ? <span className="carte__flag carte__flag--new">Nouvelle</span> : null}
-            {!fresh && stars ? <span className="carte__flag carte__flag--stars">+{stars} ★</span> : null}
+            {!fresh && stars ? <span className="carte__flag carte__flag--stars">+{stars} <Piece /></span> : null}
             {!fresh && !stars && count && count > 1 ? <span className="carte__flag carte__flag--count">×{count}</span> : null}
             {children}
           </div>

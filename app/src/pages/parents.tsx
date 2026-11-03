@@ -105,7 +105,7 @@ function Sauvegarde() {
     }
   }
   return (
-    <Section title="Sauvegarder ma progression" kicker="Cartes, étoiles, classeur, personnage">
+    <Section title="Sauvegarder ma progression" kicker="Cartes, pièces, classeur, personnage">
       <p className="note">Pour passer du site à l'appli Android, ou à un nouveau téléphone, sans rien perdre.</p>
       <button type="button" className="btn btn--gold" onClick={() => void sauver()}><LuCopy aria-hidden="true" /> Créer mon code de sauvegarde</button>
       {code ? <textarea className="save__code" readOnly value={code} rows={3} onFocus={(e: { currentTarget: { select: () => void } }) => e.currentTarget.select()} /> : null}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Piece } from "../ui/Piece";
 import { LuGem, LuGift, LuHeart, LuLock, LuSparkles, LuStar, LuTrophy, LuZap, LuFlag } from "react-icons/lu";
 import type { Look } from "../mascot/look";
 import { Fig } from "../mascot/Fig";
@@ -68,7 +69,7 @@ export function Coffre() {
 
   function buy(id: string, price: number, name: string, line: string) {
     if (s.stars < price) {
-      say(`Il te manque ${price - s.stars} étoiles. Gagne-en avec les jeux, le défi du jour, ou les doublons !`);
+      say(`Il te manque ${price - s.stars} pièces. Gagne-en avec les jeux, le défi du jour, ou les doublons !`);
       return;
     }
     if (unlockChest(id, price)) {
@@ -82,7 +83,7 @@ export function Coffre() {
   return (
     <div className="coffre">
       <PageTitle kicker="Le trésor" title="Le coffre">
-        <p>Dépense tes étoiles pour ouvrir le coffre : des personnages secrets pour la mascotte, et des cartes rigolotes qu'on ne trouve que là.</p>
+        <p>Dépense tes pièces pour ouvrir le coffre : des personnages secrets pour la mascotte, et des cartes rigolotes qu'on ne trouve que là.</p>
       </PageTitle>
       <button type="button" className="colx__chest is-free" onClick={() => go({ page: "collection" })}>
         <span className="colx__chesticon" aria-hidden="true">🧰</span>
@@ -94,12 +95,12 @@ export function Coffre() {
       <div className="coffre__top">
         <Chest open={opened > 0 && flash !== ""} />
         <div className="coffre__stars">
-          <LuStar aria-hidden="true" />
+          <Piece /> 
           <strong>{fmt(s.stars)}</strong>
-          <span>étoiles</span>
+          <span>pièces</span>
         </div>
       </div>
-      <p className="coffre__how">Comment gagner des étoiles ? Avec les doublons de tes paquets, le défi du jour, et en gagnant aux jeux (3 étoiles par jeu et par jour).</p>
+      <p className="coffre__how">Comment gagner des pièces ? Avec les doublons de tes paquets, le défi du jour, et en gagnant aux jeux (3 pièces par jeu et par jour).</p>
       {flash ? <p className="coffre__flash" role="status">Nouveau dans ton coffre : {flash} !</p> : null}
 
       <div className="segmented" role="tablist" aria-label="Le coffre">
@@ -128,7 +129,7 @@ export function Coffre() {
                     </button>
                   ) : (
                     <button type="button" className="btn btn--soft" onClick={() => buy(c.id, c.price, c.name, c.line)}>
-                      <LuStar aria-hidden="true" /> Ouvrir pour {c.price}
+                      <Piece />  Ouvrir pour {c.price}
                     </button>
                   )}
                 </div>
@@ -153,7 +154,7 @@ export function Coffre() {
                   </>
                 ) : (
                   <button type="button" className="btn btn--soft" onClick={() => buy(c.id, c.price, c.name, "")}>
-                    <LuStar aria-hidden="true" /> Ouvrir pour {c.price}
+                    <Piece />  Ouvrir pour {c.price}
                   </button>
                 )}
               </li>

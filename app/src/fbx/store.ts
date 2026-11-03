@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 import { storageGet, storageSet } from "../util";
 import { ACCESSORIES, BODIES, HAIR_COLORS, HAIRS, OUTFITS, SKINS, SPECIAL_OUTFITS, type Look } from "../mascot/look";
 import { FBX, type Rarity } from "./art";
-import { addGift } from "../store";
+import { addGift, gagnerEtoiles } from "../store";
 import { brainRotTombe, ecrireCompteurs, lireCompteurs, reglages } from "../reglages-jeu";
 
 export type Loot =
@@ -44,6 +44,13 @@ function load(): Collec {
 }
 
 let state = load();
+// one single currency now: the old coins of the chest become pièces of the main purse (once)
+if (state.coins > 0) {
+  const old = state.coins;
+  state = { ...state, coins: 0 };
+  storageSet(KEY, JSON.stringify(state));
+  gagnerEtoiles(old);
+}
 const subs = new Set<() => void>();
 function commit(next: Collec) {
   state = next;
@@ -64,7 +71,6 @@ export function useCollec(): Collec {
 const today = () => new Date().toISOString().slice(0, 10);
 export const freeChestToday = () => state.freeDay !== today();
 export const chestStars = () => reglages().coffreEtoiles;
-export const chestCoins = () => reglages().coffrePieces;
 
 // ------------------------------------------------------------------ chance
 const roll = <T,>(items: [T, number][]): T => {
@@ -113,7 +119,7 @@ function chestLoot(): Loot[] {
       ["fig", w.figurine],
       ["style", w.style],
     ]);
-    if (k === "coins") return { k: "coins", n: roll([[10, 4], [20, 4], [30, 2], [50, 1], [100, 0.3]]) };
+    if (k === "coins") return { k: "coins", n: roll([[5, 4], [10, 4], [15, 2], [25, 1], [50, 0.3]]) };
     if (k === "fig") {
       const id = drawFig();
       return { k: "fig", id, fresh: !state.figs[id] };
@@ -138,17 +144,15 @@ export function brainRotDuPaquet(): string | null {
   return id;
 }
 
-/** Opens a chest: "free" (once a day), or paid with coins. The stars are spent by the caller (store.ts). */
-export function openChest(pay: "free" | "coins" | "stars"): Loot[] | null {
+/** Opens a chest: "free" (once a day), or paid with pièces (spent by the caller, see store.ts). */
+export function openChest(pay: "free" | "paid"): Loot[] | null {
   if (pay === "free" && !freeChestToday()) return null;
-  if (pay === "coins" && state.coins < chestCoins()) return null;
   const loot = chestLoot();
   let next: Collec = { ...state, cards: { ...state.cards }, figs: { ...state.figs }, styles: [...state.styles], chests: state.chests + 1 };
   if (pay === "free") next.freeDay = today();
-  if (pay === "coins") next.coins -= chestCoins();
   for (const l of loot) {
     if (l.k === "gift") addGift("cadeau", "Le coffre au trésor");
-    if (l.k === "coins") next.coins += l.n;
+    if (l.k === "coins") gagnerEtoiles(l.n);
     if (l.k === "pack") for (const id of l.cards) next.cards[id] = (next.cards[id] ?? 0) + 1;
     if (l.k === "fig") next.figs[l.id] = (next.figs[l.id] ?? 0) + 1;
     if (l.k === "style") next.styles = [{ look: l.look, name: l.name }, ...next.styles].slice(0, 60);
@@ -165,7 +169,8 @@ export function tradeDuplicates(id: string): number {
   if (n < 2) return 0;
   const f = FBX.find((x) => x.id === id);
   const gain = (n - 1) * dupValue(f?.rar ?? 0);
-  commit({ ...state, cards: { ...state.cards, [id]: 1 }, coins: state.coins + gain });
+  commit({ ...state, cards: { ...state.cards, [id]: 1 } });
+  gagnerEtoiles(gain);
   return gain;
 }
 export function tradeFigDuplicates(id: string): number {
@@ -173,6 +178,7 @@ export function tradeFigDuplicates(id: string): number {
   if (n < 2) return 0;
   const f = FBX.find((x) => x.id === id);
   const gain = (n - 1) * dupValue(f?.rar ?? 0) * 2;
-  commit({ ...state, figs: { ...state.figs, [id]: 1 }, coins: state.coins + gain });
+  commit({ ...state, figs: { ...state.figs, [id]: 1 } });
+  gagnerEtoiles(gain);
   return gain;
 }

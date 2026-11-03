@@ -1,6 +1,7 @@
 // « Ma collection » : everything Raphaël collects in one place: the album of player cards (the binder),
 // the Footballinis cards, the figurines, the styled characters, and soon music, clips and match moments.
 import { useState } from "react";
+import { Piece } from "../ui/Piece";
 import { LuLibrary, LuLock } from "react-icons/lu";
 import { FBX, RARITY } from "../fbx/art";
 import { ChestModal, FbxCard, Figurine } from "../fbx/ui";
@@ -40,15 +41,14 @@ export function Collection() {
       <PageTitle kicker="Tout ce que tu collectionnes" title="Ma collection" />
 
       <div className="colx__purse">
-        <span>🪙 <b>{c.coins}</b> pièces</span>
-        <span>⭐ <b>{s.stars}</b> étoiles</span>
+        <span><Piece /> <b>{s.stars}</b> pièces</span>
       </div>
 
       <button type="button" className={cx("colx__chest", free && "is-free")} onClick={() => setChest(true)}>
         <span className="colx__chesticon" aria-hidden="true">🧰</span>
         <span>
           <strong>Le coffre au trésor</strong>
-          <em>{free ? "Un coffre gratuit t'attend aujourd'hui !" : "Ouvre-le avec des pièces ou des étoiles"}</em>
+          <em>{free ? "Un coffre gratuit t'attend aujourd'hui !" : "Ouvre-le avec des pièces ou des pièces"}</em>
         </span>
       </button>
 

@@ -34,7 +34,7 @@ export const DEFAUT: Reglages = {
   garantieLegende: 40,
   brainRotMoyenne: 7,
   brainRotMax: 12,
-  valeurDoublon: [3, 6, 15, 35, 80],
+  valeurDoublon: [1, 2, 5, 12, 30],
   gainMachine: 2,
   gainJeu: 3,
   coffreEtoiles: 25,

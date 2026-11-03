@@ -4,6 +4,16 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-03",
+    titre: "Version 37 : les pièces remplacent les étoiles",
+    type: "appli",
+    points: [
+      "Une seule monnaie dans toute l'appli : les pièces d'or, à la place des étoiles. Tes anciennes pièces du coffre et tes étoiles sont additionnées, rien n'est perdu.",
+      "Le coffre, la boutique, les jeux, le défi et les doublons donnent et coûtent des pièces.",
+      "Le dessin de la pièce est prêt à recevoir sa nouvelle image.",
+    ],
+  },
+  {
+    date: "2026-11-03",
     titre: "Version 36 : prêt pour les nouveaux visuels",
     type: "appli",
     points: [
