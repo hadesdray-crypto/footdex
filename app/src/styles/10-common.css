@@ -125,14 +125,14 @@
   border-radius: 999px; background: rgba(0, 0, 0, 0.35); border: 1px solid var(--line);
 }
 .segmented__tab {
-  display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 0 6px; min-width: 0; white-space: nowrap;
-  border: 0; border-radius: 999px; background: transparent; color: var(--muted); font: 800 14.5px/1 var(--f-body);
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 4px 6px; min-width: 0; white-space: normal; text-align: center; overflow-wrap: anywhere;
+  border: 0; border-radius: 999px; background: transparent; color: var(--muted); font: 800 14px/1.1 var(--f-body);
   transition: background 0.25s, color 0.25s;
 }
 .segmented__tab svg { width: 17px; height: 17px; }
 .segmented__tab--on { background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.07)); color: var(--fg); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 4px 14px -6px rgba(0, 0, 0, 0.8); }
 .segmented__tab--on svg { color: var(--gold); }
-@media (max-width: 430px) { .segmented__tab svg { display: none; } }
+@media (max-width: 430px) { .segmented__tab svg { display: none; } .segmented__tab { font-size: 13px; } }
 
 .search {
   display: flex; align-items: center; gap: 8px;

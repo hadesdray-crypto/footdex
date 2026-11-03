@@ -4,6 +4,16 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-03",
+    titre: "Version 36 : prêt pour les nouveaux visuels",
+    type: "appli",
+    points: [
+      "Les cartes et les figurines Footballinis sont prêtes à recevoir leurs nouveaux dessins : dès que les images sont ajoutées, elles remplacent les anciens dessins automatiquement.",
+      "Les figurines pourront tourner sur 8 faces, toutes seules ou avec le doigt.",
+      "Ma collection : les onglets et la légende des raretés tiennent maintenant bien sur l'écran du téléphone.",
+    ],
+  },
+  {
+    date: "2026-11-03",
     titre: "Version 35 : mission de Papa, machine à secrets et nouveaux paquets",
     type: "appli",
     points: [

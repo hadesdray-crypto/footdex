@@ -88,7 +88,8 @@
 .colx__chest strong, .colx__binder strong { display: block; font: 900 1.05rem var(--f-display, inherit); }
 .colx__chest em, .colx__binder em { display: block; font-style: normal; font-size: 0.85rem; color: #c9d4ea; }
 .colx__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; margin: 10px 0; }
-.colx__legend span { white-space: nowrap; margin-right: 8px; }
+.colx__legend { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.colx__legend span { white-space: nowrap; margin-right: 0; }
 .colx__shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px 8px; margin: 10px 0; padding: 12px 6px; border-radius: 14px; background: linear-gradient(#0000 0 88%, #6b4a2a 88% 92%, #3b2612 92%), #ffffff05; }
 .colx__figslot { display: grid; justify-items: center; gap: 4px; }
 .colx__styles { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin: 10px 0; }

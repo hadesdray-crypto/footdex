@@ -273,3 +273,7 @@
 .machine__run { display: grid; gap: 12px; justify-items: center; padding: 30px 0; text-align: center; }
 .machine__box { font-size: 80px; animation: machineSpin 1.2s linear infinite; }
 @keyframes machineSpin { to { transform: rotate(360deg); } }
+
+/* figurine: the 8 views turning */
+.fig3__tt { position: relative; display: block; margin: 0 auto; cursor: grab; user-select: none; -webkit-user-select: none; }
+.fig3__tt img { pointer-events: none; }

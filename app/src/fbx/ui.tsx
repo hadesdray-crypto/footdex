@@ -1,5 +1,5 @@
 // The Footballinis on screen: the card, the figurine on its turning pedestal, and the treasure chest that opens.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cx } from "../util";
 import { FBX, RARITY, fbx, fbxSvg } from "./art";
 import { chestCoins, chestStars, freeChestToday, openChest, useCollec, type Loot } from "./store";
@@ -11,10 +11,62 @@ import { PERSOS } from "../mascot/lines";
 import { playFx } from "../mascot/bruits";
 import { click, coins as coinSound, fanfare, flip, tear, thump } from "../sound";
 
+// The drawings made with the image AI go in public/fbx/<id>.png (card) and public/fbx/rot/<id>-0..7.png (the 8 views
+// of the turning figurine). While a file is missing, the vector drawing is used instead (cascade: nothing ever breaks).
+const absent = new Set<string>();
 const Art = ({ id, size }: { id: string; size: number }) => {
   const html = useMemo(() => fbxSvg(id, size), [id, size]);
+  const [, bump] = useState(0);
+  const src = `fbx/${id}.png`;
+  if (!absent.has(src))
+    return (
+      <span className="fbart">
+        <img src={src} width={size} height={size} alt="" draggable={false} style={{ objectFit: "contain" }} onError={() => { absent.add(src); bump((n) => n + 1); }} />
+      </span>
+    );
   return <span className="fbart" dangerouslySetInnerHTML={{ __html: html }} />;
 };
+
+const VUES = 8;
+/** The 8 views of a figurine, blended into a smooth turn: it turns by itself, and a finger can turn it by hand. */
+function Turntable({ id, size, onMissing }: { id: string; size: number; onMissing: () => void }) {
+  const [angle, setAngle] = useState(0);
+  const drag = useRef<{ x: number; a: number } | null>(null);
+  const idle = useRef(0);
+  useEffect(() => {
+    let raf = 0;
+    let last = performance.now();
+    const step = (t: number) => {
+      const dt = (t - last) / 1000;
+      last = t;
+      if (!drag.current && t - idle.current > 1200) setAngle((a) => (a + dt * 0.55 * VUES / 4) % VUES);
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  const i = Math.floor(angle) % VUES;
+  const j = (i + 1) % VUES;
+  const t = angle - Math.floor(angle);
+  const img = (k: number, o: number) => (
+    <img key={k} src={`fbx/rot/${id}-${k}.png`} width={size} height={size} alt="" draggable={false} onError={k === 0 ? onMissing : undefined} style={{ position: "absolute", inset: 0, objectFit: "contain", opacity: o }} />
+  );
+  return (
+    <span
+      className="fig3__tt"
+      role="img"
+      aria-label="Figurine : fais-la tourner avec le doigt"
+      style={{ width: size, height: size, touchAction: "pan-y" }}
+      onPointerDown={(e: { clientX: number; pointerId: number; currentTarget: HTMLElement }) => { drag.current = { x: e.clientX, a: angle }; e.currentTarget.setPointerCapture?.(e.pointerId); }}
+      onPointerMove={(e: { clientX: number }) => { if (drag.current) setAngle((((drag.current.a - (e.clientX - drag.current.x) / (size / VUES * 1.2)) % VUES) + VUES) % VUES); }}
+      onPointerUp={() => { drag.current = null; idle.current = performance.now(); }}
+      onPointerCancel={() => { drag.current = null; idle.current = performance.now(); }}
+    >
+      {img(i, 1 - t)}
+      {t > 0.001 ? img(j, t) : null}
+    </span>
+  );
+}
 
 const Bar = ({ label, icon, v, hide }: { label: string; icon: string; v: number; hide: boolean }) => (
   <span className="fbc__stat" aria-label={`${label} : ${hide ? "inconnu" : `${v} sur 10`}`}>
@@ -59,12 +111,17 @@ export function FbxCard({ id, count = 1, owned = true, big = false, onClick }: {
 export function Figurine({ id, count = 1, owned = true, size = 150 }: { id: string; count?: number; owned?: boolean; size?: number }) {
   const f = fbx(id);
   const r = RARITY[f.rar];
+  const [noRot, setNoRot] = useState(absent.has(`rot/${id}`));
   return (
     <div className={cx("fig3", !owned && "fig3--locked", f.rar === 4 && "fig3--vide")} style={{ "--rc": r.color, width: `${size}px` } as Record<string, string>}>
       <div className="fig3__stage">
-        <div className="fig3__spin">
-          <Art id={id} size={size * 0.86} />
-        </div>
+        {!noRot ? (
+          <Turntable id={id} size={size * 0.9} onMissing={() => { absent.add(`rot/${id}`); setNoRot(true); }} />
+        ) : (
+          <div className="fig3__spin">
+            <Art id={id} size={size * 0.86} />
+          </div>
+        )}
         <div className="fig3__base" aria-hidden="true"><span>{owned ? (f.rar === 4 ? "???" : f.name) : "?"}</span></div>
       </div>
       {count > 1 ? <span className="fbc__dup">×{count}</span> : null}

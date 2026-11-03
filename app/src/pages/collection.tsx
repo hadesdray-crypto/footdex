@@ -62,7 +62,7 @@ export function Collection() {
 
       <div className="segmented" role="tablist" aria-label="Ma collection">
         {([
-          ["cartes", `Footballinis ${cardsOwned}/20`],
+          ["cartes", `Cartes ${cardsOwned}/20`],
           ["figurines", `Figurines ${figsOwned}/20`],
           ["styles", `Stylés ${c.styles.length}`],
           ["bientot", "Bientôt"],
