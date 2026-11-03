@@ -151,9 +151,93 @@ export function playFx(who: string, slot: Slot): boolean {
 }
 
 // ------------------------------------------------------------------ the recorder: one touch starts, one touch stops
-export const canRecord = () => typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== "undefined";
+// Two ways, one after the other: 1) the phone's recorder (MediaRecorder), 2) if that one does not work, the sound is
+// captured by the app itself (Web Audio) and kept as a WAV file. Every failure says exactly why.
+export const canRecord = () => typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
 export const MAX_SECONDS = 8;
 let rec: { stop: () => void } | null = null;
+
+function whyNot(e: unknown): string {
+  const n = (e as { name?: string } | null)?.name ?? "";
+  if (n === "NotAllowedError" || n === "SecurityError" || n === "PermissionDeniedError")
+    return "Le micro n'est pas autorisé. Dans les réglages d'Android : Applications, Footdex, Autorisations, Micro, puis « Autoriser ».";
+  if (n === "NotFoundError" || n === "DevicesNotFoundError") return "Aucun micro trouvé sur ce téléphone.";
+  if (n === "NotReadableError" || n === "TrackStartError") return "Le micro est utilisé par une autre appli. Ferme-la et réessaie.";
+  return `Le micro ne répond pas${n ? ` (${n})` : ""}. Réessaie.`;
+}
+
+async function save(who: string, slot: Slot, blob: Blob, done: (ok: boolean, why?: string) => void) {
+  const ok = await tx("readwrite", (s) => s.put(blob, key(who, slot)));
+  if (ok === null) return done(false, "Impossible de garder ce bruit sur le téléphone (mémoire pleine ?).");
+  prepare(key(who, slot), blob);
+  changed();
+  done(true);
+}
+
+/** Way 2: the app captures the sound itself and writes a WAV file (16 000 samples a second, mono). */
+function recordWav(stream: MediaStream, who: string, slot: Slot, done: (ok: boolean, why?: string) => void) {
+  const AC = (window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext) as typeof AudioContext | undefined;
+  if (!AC) {
+    stream.getTracks().forEach((t) => t.stop());
+    return done(false, "Ce téléphone ne permet pas d'enregistrer ici.");
+  }
+  const ctx = new AC();
+  const src = ctx.createMediaStreamSource(stream);
+  const proc = ctx.createScriptProcessor(4096, 1, 1);
+  const mute = ctx.createGain();
+  mute.gain.value = 0;
+  const chunks: Float32Array[] = [];
+  proc.onaudioprocess = (e) => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+  src.connect(proc);
+  proc.connect(mute);
+  mute.connect(ctx.destination);
+  const timer = window.setTimeout(() => stopRecording(), MAX_SECONDS * 1000);
+  let over = false;
+  rec = {
+    stop: () => {
+      if (over) return;
+      over = true;
+      window.clearTimeout(timer);
+      try {
+        src.disconnect();
+        proc.disconnect();
+      } catch {
+        /* already apart */
+      }
+      stream.getTracks().forEach((t) => t.stop());
+      const rate = ctx.sampleRate;
+      void ctx.close().catch(() => undefined);
+      const n = chunks.reduce((a, c) => a + c.length, 0);
+      const flat = new Float32Array(n);
+      let at = 0;
+      for (const c of chunks) {
+        flat.set(c, at);
+        at += c.length;
+      }
+      const step = rate / 16000;
+      const out = new Int16Array(Math.floor(n / step));
+      for (let i = 0; i < out.length; i += 1) out[i] = Math.max(-1, Math.min(1, flat[Math.floor(i * step)])) * 0x7fff;
+      if (out.length < 2400) return done(false, "Trop court ! Touche le bouton, fais le bruit, puis touche encore pour arrêter.");
+      const buf = new ArrayBuffer(44 + out.length * 2);
+      const v = new DataView(buf);
+      const w = (o: number, t: string) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+      w(0, "RIFF");
+      v.setUint32(4, 36 + out.length * 2, true);
+      w(8, "WAVEfmt ");
+      v.setUint32(16, 16, true);
+      v.setUint16(20, 1, true);
+      v.setUint16(22, 1, true);
+      v.setUint32(24, 16000, true);
+      v.setUint32(28, 32000, true);
+      v.setUint16(32, 2, true);
+      v.setUint16(34, 16, true);
+      w(36, "data");
+      v.setUint32(40, out.length * 2, true);
+      new Int16Array(buf, 44).set(out);
+      void save(who, slot, new Blob([buf], { type: "audio/wav" }), done);
+    },
+  };
+}
 
 /** Starts recording (8 seconds at most). `done` gets true when the noise is saved. */
 export async function startRecording(who: string, slot: Slot, done: (ok: boolean, why?: string) => void) {
@@ -162,32 +246,45 @@ export async function startRecording(who: string, slot: Slot, done: (ok: boolean
   let stream: MediaStream;
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-  } catch {
-    return done(false, "Le micro n'est pas autorisé. Autorise-le dans les réglages du téléphone.");
+  } catch (e) {
+    try {
+      // some phones refuse the options: a plain request
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e2) {
+      return done(false, whyNot(e2 ?? e));
+    }
   }
-  const type = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"].find((t) => MediaRecorder.isTypeSupported?.(t));
-  const r = new MediaRecorder(stream, type ? { mimeType: type, audioBitsPerSecond: 32000 } : undefined);
-  const parts: Blob[] = [];
-  r.ondataavailable = (e) => e.data.size && parts.push(e.data);
-  r.onstop = () => {
-    stream.getTracks().forEach((t) => t.stop());
-    const blob = new Blob(parts, { type: r.mimeType || "audio/webm" });
-    if (blob.size < 600) return done(false, "Trop court ! Touche le bouton, fais le bruit, puis touche encore pour arrêter.");
-    void tx("readwrite", (s) => s.put(blob, key(who, slot))).then((ok) => {
-      if (ok === null) return done(false, "Impossible de garder ce bruit sur le téléphone.");
-      prepare(key(who, slot), blob);
-      changed();
-      done(true);
-    });
-  };
-  const timer = window.setTimeout(() => stopRecording(), MAX_SECONDS * 1000);
-  rec = {
-    stop: () => {
-      window.clearTimeout(timer);
-      if (r.state !== "inactive") r.stop();
-    },
-  };
-  r.start();
+  // way 1: the phone's recorder
+  if (typeof MediaRecorder !== "undefined") {
+    try {
+      const type = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"].find((t) => MediaRecorder.isTypeSupported?.(t));
+      const r = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
+      const parts: Blob[] = [];
+      let failed = false;
+      r.ondataavailable = (e) => e.data.size && parts.push(e.data);
+      r.onerror = () => {
+        failed = true;
+      };
+      r.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(parts, { type: r.mimeType || "audio/webm" });
+        if (failed || blob.size < 600) return done(false, "Trop court ! Touche le bouton, fais le bruit, puis touche encore pour arrêter.");
+        void save(who, slot, blob, done);
+      };
+      const timer = window.setTimeout(() => stopRecording(), MAX_SECONDS * 1000);
+      rec = {
+        stop: () => {
+          window.clearTimeout(timer);
+          if (r.state !== "inactive") r.stop();
+        },
+      };
+      r.start(250);
+      return;
+    } catch {
+      rec = null; // way 1 does not work here: way 2
+    }
+  }
+  recordWav(stream, who, slot, done);
 }
 export function stopRecording() {
   const x = rec;

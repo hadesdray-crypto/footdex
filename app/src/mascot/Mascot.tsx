@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { LuArrowLeft, LuBookMarked, LuBookOpen, LuCalendarDays, LuFilm, LuGlobe, LuGraduationCap, LuHouse, LuLibrary, LuMessageSquareQuote, LuPackageOpen, LuShieldCheck, LuTrophy, LuUserRound, LuUsers, LuZap, LuMessageCircle, LuSettings, LuShirt, LuVolume2, LuX } from "react-icons/lu";
+import { LuMic, LuArrowLeft, LuBookMarked, LuBookOpen, LuCalendarDays, LuFilm, LuGlobe, LuGraduationCap, LuHouse, LuLibrary, LuMessageSquareQuote, LuPackageOpen, LuShieldCheck, LuTrophy, LuUserRound, LuUsers, LuZap, LuMessageCircle, LuSettings, LuShirt, LuVolume2, LuX } from "react-icons/lu";
 import type { Album } from "../data";
 import { useOverlay } from "../ui/cards";
 import { cx, dayKey } from "../util";
@@ -8,9 +8,10 @@ import { Fig } from "./Fig";
 import { PERSOS, pick } from "./lines";
 import { CaracList } from "./Carac";
 import { VoicePicker } from "./VoicePicker";
+import { Bruitages } from "./Bruitages";
 import { ballOpen } from "../sound";
 import { piperDownload, piperRemove } from "../piper";
-import { SPEEDS, sayFx, zopt, inter, interOf, loreToldToday, oupsLines, tellLore, choosePerso, wornLook, hasMore, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, say, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, androidVoices, installAndroidVoices, isApp, type Engine } from "./state";
+import { sayFx, zopt, inter, interOf, loreToldToday, oupsLines, tellLore, choosePerso, wornLook, hasMore, askToTell, continueSpeech, explain, getMascot, greet, hideBubble, onShake, onThrown, play, readPage, sample, say, sayLabel, stopTalking, tellStory, testEngine, update, useMascot, warmVoice, ENGINES, androidVoices, installAndroidVoices, isApp, type Engine } from "./state";
 import { Wardrobe, type Tab } from "./Wardrobe";
 import { go, type Route } from "../router";
 import { createActor } from "./actor";
@@ -38,7 +39,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     document.documentElement.classList.toggle("no-bubbles", !m.s.bubbles);
   }, [m.s.bubbles]);
   const perso = PERSOS[m.s.perso];
-  const [menu, setMenu] = useState<null | "main" | "settings" | "go" | "voix">(null);
+  const [menu, setMenu] = useState<null | "main" | "go" | "voix" | "bruits" | "copains" | "perso">(null);
   const [wardrobe, setWardrobe] = useState<false | Tab>(false);
   const menuRef = useRef<unknown>(null);
   const wardrobeRef = useRef(false);
@@ -671,7 +672,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
         s.lastTap = now;
         s.tapTimer = window.setTimeout(() => {
           stopTalking();
-          setMenu((v: null | "main" | "settings" | "go" | "voix") => (v ? null : "main"));
+          setMenu((v: null | "main" | "go" | "voix" | "bruits" | "copains" | "perso") => (v ? null : "main"));
         }, 340);
       }
     }
@@ -727,7 +728,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
           onKeyDown={(e: { key: string; preventDefault: () => void }) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              setMenu((v: null | "main" | "settings" | "go" | "voix") => (v ? null : "main"));
+              setMenu((v: null | "main" | "go" | "voix" | "bruits" | "copains" | "perso") => (v ? null : "main"));
             }
           }}
         >
@@ -779,7 +780,14 @@ const DESTINATIONS: { to: Route; label: string; icon: typeof LuHouse }[] = [
   { to: { page: "sources" }, label: "Les sources", icon: LuShieldCheck },
 ];
 
-function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "settings" | "go" | "voix"; setView: (v: null | "main" | "settings" | "go" | "voix") => void; album: Album; page: string; openWardrobe: (tab: Tab) => void }) {
+const TITRES: Record<string, [string, string]> = {
+  go: ["Aller quelque part", "Touche où tu veux aller"],
+  voix: ["Ma voix", "Fais rouler une molette pour écouter"],
+  bruits: ["Mes bruitages", "Enregistre les bruits des personnages"],
+  copains: ["Ses copains", "Qui est à l'écran avec lui"],
+  perso: ["Qui est-ce ?", "Son caractère et ses bulles"],
+};
+function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "go" | "voix" | "bruits" | "copains" | "perso"; setView: (v: null | "main" | "go" | "voix" | "bruits" | "copains" | "perso") => void; album: Album; page: string; openWardrobe: (tab: Tab) => void }) {
   const m = useMascot();
   const perso = PERSOS[m.s.perso];
   const close = () => setView(null);
@@ -816,8 +824,8 @@ function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "se
             <Fig look={m.s.look} size={52} crop="bust" mouth={perso.mouth} />
           )}
           <div className="mm__who">
-            <strong>{view === "settings" ? "Voix et caractère" : view === "go" ? "Aller quelque part" : view === "voix" ? "Change ma voix !" : perso.name}</strong>
-            <span>{view === "settings" ? "Comment il parle et qui il est" : view === "go" ? "Touche où tu veux aller" : view === "voix" ? "Une voix pour chaque personnage" : perso.tag}</span>
+            <strong>{TITRES[view]?.[0] ?? perso.name}</strong>
+            <span>{TITRES[view]?.[1] ?? perso.tag}</span>
           </div>
           <button type="button" className="iconbtn" onClick={close} aria-label="Fermer le menu">
             <LuX aria-hidden="true" />
@@ -825,44 +833,60 @@ function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "se
         </div>
         {view === "main" ? (
           <>
-            <p className="mm__label">Il me raconte</p>
-            <div className="mm__tiles">
-              <button type="button" className="mm__tile" onClick={run(() => explain(page))}>
-                <LuMessageCircle aria-hidden="true" /> <span>Explique-moi</span>
-              </button>
-              <button type="button" className="mm__tile" onClick={run(readPage)}>
-                <LuVolume2 aria-hidden="true" /> <span>Lis-moi la page</span>
-              </button>
-              <button type="button" className="mm__tile" onClick={run(() => tellStory(album.matches))}>
-                <LuBookOpen aria-hidden="true" /> <span>Une histoire</span>
-              </button>
-              {perso.mode === "statue" ? (
-                <button type="button" className="mm__tile" onClick={run(tellLore)}>
-                  <LuBookOpen aria-hidden="true" /> <span>L'histoire du monde</span>
+            <section className="mm__box">
+              <p className="mm__label">Il me raconte</p>
+              <div className="mm__tiles">
+                <button type="button" className="mm__tile" onClick={run(() => explain(page))}>
+                  <LuMessageCircle aria-hidden="true" /> <span>Explique-moi</span>
                 </button>
-              ) : null}
-              <button type="button" className="mm__tile" onClick={() => setView("go")}>
-                <LuGlobe aria-hidden="true" /> <span>Aller quelque part</span>
+                <button type="button" className="mm__tile" onClick={run(readPage)}>
+                  <LuVolume2 aria-hidden="true" /> <span>Lis-moi la page</span>
+                </button>
+                <button type="button" className="mm__tile" onClick={run(() => tellStory(album.matches))}>
+                  <LuBookOpen aria-hidden="true" /> <span>Une histoire</span>
+                </button>
+                {perso.mode === "statue" ? (
+                  <button type="button" className="mm__tile" onClick={run(tellLore)}>
+                    <LuBookOpen aria-hidden="true" /> <span>L'histoire du monde</span>
+                  </button>
+                ) : null}
+                <button type="button" className="mm__tile" onClick={() => setView("go")}>
+                  <LuGlobe aria-hidden="true" /> <span>Aller quelque part</span>
+                </button>
+              </div>
+            </section>
+            <section className="mm__box">
+              <p className="mm__label">Mon personnage</p>
+              <button type="button" className="mm__big" onClick={() => openWardrobe("tenue")}>
+                <LuShirt aria-hidden="true" /> <span>Vestiaire<small>Ses habits et son look</small></span>
               </button>
-            </div>
-            <p className="mm__label">Mon personnage</p>
-            <div className="mm__tiles">
-              <button type="button" className="mm__tile" onClick={() => openWardrobe("tenue")}>
-                <LuShirt aria-hidden="true" /> <span>Vestiaire</span>
+              <button type="button" className="mm__big" onClick={() => setView("perso")}>
+                <LuUserRound aria-hidden="true" /> <span>Qui est-ce ?<small>Son caractère, les bulles, le repos</small></span>
               </button>
-              <button type="button" className="mm__tile mm__tile--voix" onClick={() => setView("voix")}>
-                <LuMessageCircle aria-hidden="true" /> <span>Change ma voix !</span>
+              <button type="button" className="mm__big" onClick={() => setView("voix")}>
+                <LuVolume2 aria-hidden="true" /> <span>Ma voix<small>Des molettes pour choisir et écouter</small></span>
               </button>
-              <button type="button" className="mm__tile" onClick={() => setView("settings")}>
-                <LuSettings aria-hidden="true" /> <span>Voix et caractère</span>
+              <button type="button" className="mm__big" onClick={() => setView("bruits")}>
+                <LuMic aria-hidden="true" /> <span>Mes bruitages<small>Enregistre tes propres bruits</small></span>
               </button>
-              <button type="button" className="mm__tile" onClick={() => { close(); go({ page: "personnage" }); }}>
-                <LuUserRound aria-hidden="true" /> <span>Tous les réglages du personnage</span>
+              <button type="button" className="mm__big" onClick={() => setView("copains")}>
+                <LuUsers aria-hidden="true" /> <span>Ses copains<small>Qui est à l'écran avec lui</small></span>
               </button>
-            </div>
+            </section>
+            <button type="button" className="btn btn--soft" onClick={() => { close(); go({ page: "personnage" }); }}>
+              <LuSettings aria-hidden="true" /> Tous les réglages du personnage
+            </button>
           </>
         ) : view === "voix" ? (
           <VoicePicker compact />
+        ) : view === "bruits" ? (
+          <Bruitages />
+        ) : view === "copains" ? (
+          <section className="mm__box">
+            <p className="mm__label">Des copains à l'écran (deux au maximum)</p>
+            <p className="mm__note">Ils parlent avec leur voix et réagissent à ce que tu fais. Touche-les pour qu'ils parlent.</p>
+            <BuddyPicker />
+          </section>
         ) : view === "go" ? (
           <div className="mm__tiles mm__tiles--go">
             {DESTINATIONS.map((d) => (
@@ -873,34 +897,26 @@ function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "se
           </div>
         ) : (
           <div className="mm__settings">
-            <p className="mm__label">Vitesse de la voix</p>
-            <div className="chips">
-              {SPEEDS.map((s, i) => (
-                <button key={s.label} type="button" className={cx("chip", m.s.speed === i && "chip--on")} aria-pressed={m.s.speed === i} onClick={() => { update({ speed: i }); sample(); }}>
-                  {s.label}
-                </button>
-              ))}
-            </div>
-            <button type="button" className="btn btn--gold" onClick={() => setView("voix")}>Change ma voix !</button>
-            <button type="button" className="btn btn--soft" onClick={() => { close(); go({ page: "parents" }); }}>Réglages avancés de la voix (Coin des parents)</button>
-            <p className="mm__label">Dis-moi tout ce qui se passe</p>
-            <div className="chips">
-              <button type="button" className={cx("chip", m.s.narrate && "chip--on")} aria-pressed={m.s.narrate} onClick={() => update({ narrate: true })}>Oui</button>
-              <button type="button" className={cx("chip", !m.s.narrate && "chip--on")} aria-pressed={!m.s.narrate} onClick={() => update({ narrate: false })}>Non</button>
-            </div>
-            <p className="mm__note">Avec « Oui », il lit à voix haute chaque bouton que tu touches et explique chaque nouvelle page.</p>
-            <p className="mm__label">Afficher ce qu'il dit (les bulles)</p>
-            <div className="chips">
-              <button type="button" className={cx("chip", m.s.bubbles && "chip--on")} aria-pressed={m.s.bubbles} onClick={() => update({ bubbles: true })}>Oui</button>
-              <button type="button" className={cx("chip", !m.s.bubbles && "chip--on")} aria-pressed={!m.s.bubbles} onClick={() => update({ bubbles: false })}>Non</button>
-            </div>
-            <p className="mm__label">Des copains à l'écran (deux au maximum)</p>
-            <BuddyPicker />
-            <p className="mm__label">Son caractère</p>
-            <p className="mm__note">Chaque caractère a sa tenue, sa voix et sa façon de parler. Les points disent combien il parle.</p>
-            <CaracList current={m.s.perso} onPick={(i) => { choosePerso(i); window.setTimeout(sample, 30); }} />
+            <section className="mm__box">
+              <p className="mm__label">Son caractère</p>
+              <p className="mm__note">Chaque caractère a sa tenue, sa voix et sa façon de parler. Les points disent combien il parle.</p>
+              <CaracList current={m.s.perso} onPick={(i) => { choosePerso(i); window.setTimeout(sample, 30); }} />
+            </section>
+            <section className="mm__box">
+              <p className="mm__label">Afficher ce qu'il dit (les bulles)</p>
+              <div className="chips">
+                <button type="button" className={cx("chip", m.s.bubbles && "chip--on")} aria-pressed={m.s.bubbles} onClick={() => update({ bubbles: true })}>Oui</button>
+                <button type="button" className={cx("chip", !m.s.bubbles && "chip--on")} aria-pressed={!m.s.bubbles} onClick={() => update({ bubbles: false })}>Non</button>
+              </div>
+              <p className="mm__label">Dis-moi tout ce qui se passe</p>
+              <div className="chips">
+                <button type="button" className={cx("chip", m.s.narrate && "chip--on")} aria-pressed={m.s.narrate} onClick={() => update({ narrate: true })}>Oui</button>
+                <button type="button" className={cx("chip", !m.s.narrate && "chip--on")} aria-pressed={!m.s.narrate} onClick={() => update({ narrate: false })}>Non</button>
+              </div>
+              <p className="mm__note">Avec « Oui », il lit à voix haute chaque bouton que tu touches et explique chaque nouvelle page.</p>
+            </section>
             <button type="button" className="btn btn--soft" onClick={() => { stopTalking(); hideBubble(); update({ rest: true }); }}>
-              💤 {perso.name} se repose (il se cache)
+              {perso.name} se repose (il se cache)
             </button>
             <button type="button" className="btn btn--soft" onClick={() => { stopTalking(); sample(); }}>
               <LuVolume2 aria-hidden="true" /> Entendre un exemple

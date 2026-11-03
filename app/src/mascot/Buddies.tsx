@@ -16,6 +16,7 @@ import { ballPlaymates, kickBallTo, looseBall, returnBall } from "./player";
 import { figSvg, type Look } from "./look";
 import { hasFx, playFx, type Slot } from "./bruits";
 import { cough, hiss, meow, sneeze, thud } from "../sound";
+import { prop, thiefRaid } from "./thief";
 import { cx } from "../util";
 import { depthZ } from "./depth";
 
@@ -507,6 +508,54 @@ async function scene<T>(f: () => Promise<T>) {
 /** He says a line and we wait until it is finished (never longer than 9 s, whatever happens). */
 const sayW = (b: Body, text: string, force = true, slot?: Slot, o?: SayOpts) => Promise.race([b.say(text, force, slot, o), wait(9000)]);
 const nearest = (p: Pos, list: Body[]) => [...list].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+
+
+/** 9. The Chapardeur: a shadow, a hole, a long purple arm… he takes a friend (or a coin) and vanishes laughing. Everybody is afraid. */
+const thiefScene = () =>
+  scene(async () => {
+    const frs = freeFriends().filter((b) => b.key !== "zombie" && b.key !== "medecin");
+    const victim = frs.length ? pick(frs) : null;
+    const vw = window.innerWidth;
+    const x = victim ? victim.x : vw * (0.3 + Math.random() * 0.4);
+    const y = victim ? victim.y : window.innerHeight * 0.6;
+    const bystanders = others(victim ?? ({} as Body)).filter((o) => o.mode === "free");
+    for (const o of bystanders) o.pause = now() + 9000;
+    if (victim) victim.pause = now() + 20000;
+    const coin = victim ? null : prop("coin", x, y);
+    window.setTimeout(() => {
+      for (const o of bystanders.slice(0, 2)) o.say(pick(["Oh non… il arrive !", "C'est lui… cachez-vous !", "J'ai peur !"]), true);
+    }, 700);
+    let sunk = 0;
+    await thiefRaid({
+      x, y, reach: 62,
+      grab: () => { victim?.say(pick(["Aaah ! Lâche-moi !", "Hé ! Qu'est-ce que… !"]), true); },
+      lift: (px) => { if (victim) { victim.mode = "held"; victim.z = px; } if (coin) coin.style.transform = `translate(-50%, calc(-100% - ${px}px))`; },
+      sink: (k) => {
+        sunk = k;
+        if (victim) { victim.z = 14 - k * 90; victim.el.style.clipPath = `inset(0 0 ${Math.max(0, k * 100)}% 0)`; }
+        if (coin) coin.style.opacity = String(1 - k);
+      },
+      gone: () => { coin?.remove(); if (victim) { victim.hidden = true; victim.el.style.display = "none"; } },
+    });
+    void sunk;
+    for (const o of bystanders) o.say(pick(["Il a pris " + (victim ? "notre copain" : "la pièce") + " !", "Quelle horreur !", "Je n'en reviens pas…"]), true);
+    await wait(3500);
+    if (victim) {
+      // he is thrown back from the sky a little later
+      victim.el.style.clipPath = "";
+      victim.x = Math.max(40, Math.min(vw - 40, x));
+      victim.y = y;
+      victim.z = 520;
+      victim.vx = 0; victim.vy = 0; victim.vz = 0;
+      victim.hidden = false;
+      victim.el.style.display = "";
+      victim.mode = "fly";
+      victim.throwSpeed = 0;
+      await wait(1200);
+      victim.say("Aïe ! Il m'a lâché !", true);
+    }
+    for (const o of bystanders) o.pause = 0;
+  });
 
 /** 1. The zombie sneezes: « A-TCHOU… » his head flies off on « tchou », rolls away… and the body ends the word alone: « …me ! » (Atchoum). */
 const sneezeScene = () =>
@@ -1366,6 +1415,7 @@ export function Buddies() {
             if (freeFriends().length >= 2) options.push(chatScene, chatScene, kickScene);
             if (freeFriends().length >= 1 && looseBall()) options.push(ballScene, ballScene);
             if ([...bodies.values()].some((b) => !b.hidden && b.mode === "free" && Math.abs(b.x - window.innerWidth / 2) < window.innerWidth * 0.16 && b.y > window.innerHeight * 0.25)) options.push(middleScene, middleScene, middleScene);
+            if (freeFriends().filter((b) => b.key !== "zombie" && b.key !== "medecin").length >= 1 && Math.random() < 0.4) options.push(thiefScene);
             if (options.length) void pick(options)();
           }
           nextScene();
@@ -1393,7 +1443,7 @@ export function Buddies() {
     window.addEventListener("footdex:terrain", onEv);
     // for checking the scenes in a browser (« ?essai-terrain »)
     if (location.search.includes("essai-terrain")) (window as unknown as { __scenes?: unknown }).__scenes = {
-      sneezeScene, hideScene, checkupScene, sleepScene, passScene, catScene, ola, recre, chatScene, kickScene, teams, ballScene, middleScene, headFootball: () => scene(async () => { const z = bodies.get("zombie"); if (z) { dropHead(z, 200, 160); await wait(800); await headFootball(z); } }),
+      thiefScene, sneezeScene, hideScene, checkupScene, sleepScene, passScene, catScene, ola, recre, chatScene, kickScene, teams, ballScene, middleScene, headFootball: () => scene(async () => { const z = bodies.get("zombie"); if (z) { dropHead(z, 200, 160); await wait(800); await headFootball(z); } }),
       // test helpers: throw a friend, read where everybody is
       fling: (key: Buddy, vx: number, vz: number, speed: number) => {
         const b = bodies.get(key);

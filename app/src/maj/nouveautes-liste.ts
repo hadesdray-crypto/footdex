@@ -4,6 +4,17 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-03",
+    titre: "Version 39 : le Chapardeur, des menus plus clairs, des molettes de voix",
+    type: "appli",
+    points: [
+      "Le Chapardeur débarque sans prévenir : une ombre grandit, la lumière baisse, un trou noir s'ouvre, un long bras violet attrape un personnage (ou une pièce) et l'emporte dans le trou. On entend son rire. Tout le monde a peur. Le personnage revient plus tard en tombant du ciel.",
+      "Le menu du personnage est rangé en grandes cases : Vestiaire, Qui est-ce ?, Ma voix, Mes bruitages, Ses copains.",
+      "Choix de la voix avec des molettes : une pour les voix sans connexion, une pour les voix avec connexion. Tu fais rouler, tu entends la voix tout de suite, puis tu valides.",
+      "Mes bruitages : l'enregistrement essaie plusieurs méthodes et dit clairement quoi faire si le micro est refusé. Liste redessinée, sans débordement.",
+    ],
+  },
+  {
+    date: "2026-11-03",
     titre: "Version 38 : les personnages parlent chacun leur tour",
     type: "appli",
     points: [

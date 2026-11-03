@@ -1,6 +1,7 @@
 // « Mes bruitages » : choose a character, then for each moment: touch the red button, make the noise,
 // touch it again to stop (8 seconds at most). ▶️ to listen, 🗑️ to erase.
 import { useEffect, useState } from "react";
+import { LuMic, LuPlay, LuSquare, LuTrash2 } from "react-icons/lu";
 import { cx } from "../util";
 import { WHO } from "./VoicePicker";
 import { MAX_SECONDS, SLOTS, canRecord, clearFx, hasFx, playFx, startRecording, stopRecording, useBruits, type Slot } from "./bruits";
@@ -28,7 +29,7 @@ export function Bruitages() {
     setRec(slot);
     void startRecording(key, slot, (ok, why) => {
       setRec(null);
-      setMsg(ok ? "✅ Enregistré ! Touche ▶️ pour l'écouter." : why ?? "");
+      setMsg(ok ? "Enregistré ! Touche le bouton Écouter pour l'entendre." : why ?? "");
     });
   };
   const count = SLOTS.filter((s) => hasFx(key, s.id)).length;
@@ -45,9 +46,9 @@ export function Bruitages() {
           </button>
         ))}
       </div>
-      <p className="vp__step"><b>2</b> Touche 🎙️, fais le bruit, puis touche ⏹️ pour arrêter</p>
+      <p className="vp__step"><b>2</b> Touche le micro, fais le bruit, puis touche le carré pour arrêter</p>
       <p className="note">{count} bruit{count > 1 ? "s" : ""} enregistré{count > 1 ? "s" : ""} sur {SLOTS.length} pour {WHO[who].name}. Chaque bruit est joué exactement au bon moment.</p>
-      {rec ? <p className="bruit__live" role="status">🔴 J'enregistre… {secs} s (touche ⏹️ pour arrêter, {MAX_SECONDS} s au plus)</p> : null}
+      {rec ? <p className="bruit__live" role="status">J'enregistre… {secs} s (touche le carré pour arrêter, {MAX_SECONDS} s au plus)</p> : null}
       {msg ? <p className="note" role="status">{msg}</p> : null}
       {groups.map((g) => (
         <div key={g}>
@@ -57,16 +58,15 @@ export function Bruitages() {
               const has = hasFx(key, s.id);
               return (
                 <div key={s.id} className={cx("bruit__row", has && "has", rec === s.id && "is-rec")}>
-                  <span className="bruit__icon" aria-hidden="true">{s.icon}</span>
                   <span className="bruit__txt">
                     <strong>{s.label}</strong>
                     <em>{s.hint}</em>
                   </span>
                   <button type="button" className={cx("bruit__rec", rec === s.id && "is-on")} aria-label={rec === s.id ? "Arrêter l'enregistrement" : `Enregistrer : ${s.label}`} onClick={() => toggle(s.id)}>
-                    {rec === s.id ? "⏹️" : "🎙️"}
+                    {rec === s.id ? <LuSquare aria-hidden="true" /> : <LuMic aria-hidden="true" />}
                   </button>
-                  <button type="button" className="bruit__btn" disabled={!has} onClick={() => playFx(key, s.id)} aria-label="Écouter">▶️</button>
-                  <button type="button" className="bruit__btn" disabled={!has} onClick={() => clearFx(key, s.id)} aria-label="Effacer">🗑️</button>
+                  <button type="button" className="bruit__btn" disabled={!has} onClick={() => playFx(key, s.id)} aria-label="Écouter"><LuPlay aria-hidden="true" /></button>
+                  <button type="button" className="bruit__btn" disabled={!has} onClick={() => clearFx(key, s.id)} aria-label="Effacer"><LuTrash2 aria-hidden="true" /></button>
                 </div>
               );
             })}

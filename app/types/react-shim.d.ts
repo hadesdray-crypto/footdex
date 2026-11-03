@@ -52,7 +52,7 @@ declare module "react-icons/lu" {
     LuGift: Icon, LuGraduationCap: Icon, LuHeart: Icon, LuHouse: Icon, LuLayers: Icon, LuLibrary: Icon,
     LuLock: Icon, LuMenu: Icon, LuMessageSquareQuote: Icon, LuPackageOpen: Icon, LuPlay: Icon, LuQuote: Icon,
     LuRotateCcw: Icon, LuSearch: Icon, LuShieldCheck: Icon, LuShirt: Icon, LuStar: Icon, LuStore: Icon,
-    LuTrophy: Icon, LuUserRound: Icon, LuDices: Icon, LuUsers: Icon, LuVolume2: Icon, LuVolumeX: Icon, LuX: Icon, LuZap: Icon;
+    LuTrophy: Icon, LuMic: Icon, LuWifi: Icon, LuWifiOff: Icon, LuTrash2: Icon, LuUserRound: Icon, LuDices: Icon, LuUsers: Icon, LuVolume2: Icon, LuVolumeX: Icon, LuX: Icon, LuZap: Icon;
 }
 declare namespace JSX {
   interface IntrinsicElements { [name: string]: any }
