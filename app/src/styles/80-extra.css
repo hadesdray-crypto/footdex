@@ -323,3 +323,10 @@
 .bruit, .bruit * { min-width: 0; box-sizing: border-box; }
 .bruit { max-width: 100%; overflow-x: hidden; }
 .bruit__btn { width: 40px; padding: 0; display: grid; place-items: center; }
+.thief__hole { pointer-events: none; }
+.thief__hole:not(.thief__hole--top) { width: 120px; height: 44px; }
+.thief__hole--top { width: 70px; height: 20px; }
+.thief__boss { position: absolute; width: 70px; height: 80px; margin: -80px 0 0 -35px; opacity: 0; transform: translateY(-30px); transition: opacity .4s, transform .4s; }
+.thief__boss.is-on { opacity: 1; transform: none; }
+.thief__hint { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%); width: max-content; max-width: 86vw; padding: 8px 14px; border-radius: 14px; background: #f6c453; color: #1a1205; font: 800 14px/1.2 var(--f-body); text-decoration: none; text-align: center; opacity: 0; transition: opacity .3s; }
+.thief__hint.is-on { opacity: 1; }

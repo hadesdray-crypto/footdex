@@ -4,6 +4,18 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-03",
+    titre: "Version 40 : on peut attraper le Chapardeur",
+    type: "appli",
+    points: [
+      "Le Chapardeur arrive en haut de l'écran et plante son bras dans un premier trou noir ; un deuxième trou s'ouvre là où il vole.",
+      "Touche 2 fois le trou noir au bon moment : le trou l'attrape lui-même, il rend ce qu'il avait volé et tout le monde est content.",
+      "Tout le monde a peur de lui : les personnages s'enfuient hors de l'écran, puis reviennent en montrant d'abord la tête.",
+      "S'il n'est pas attrapé, le personnage volé revient quand même un peu plus tard.",
+      "Les voix changent un peu de ton selon la phrase : question, cri, ou phrase qui traîne.",
+    ],
+  },
+  {
+    date: "2026-11-03",
     titre: "Version 39 : le Chapardeur, des menus plus clairs, des molettes de voix",
     type: "appli",
     points: [

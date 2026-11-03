@@ -510,7 +510,52 @@ const sayW = (b: Body, text: string, force = true, slot?: Slot, o?: SayOpts) => 
 const nearest = (p: Pos, list: Body[]) => [...list].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
 
 
-/** 9. The Chapardeur: a shadow, a hole, a long purple arm… he takes a friend (or a coin) and vanishes laughing. Everybody is afraid. */
+/** What the thief has taken and not given back yet (a friend), and what is on stage now. */
+let loot: Body[] = [];
+const comeBack = (v: Body, fromSky: boolean) => {
+  loot = loot.filter((o) => o !== v);
+  v.el.style.clipPath = "";
+  v.hidden = false;
+  v.el.style.display = "";
+  v.vx = 0; v.vy = 0; v.vz = 0; v.throwSpeed = 0;
+  if (fromSky) { v.z = 520; v.mode = "fly"; } else { v.z = 0; v.mode = "free"; }
+  v.pause = 0;
+};
+/** Everybody is afraid: they run off the screen away from him, then come back, head first, peeking. */
+async function flee(list: Body[], fromX: number) {
+  const vw = window.innerWidth;
+  await Promise.all(list.map(async (o, i) => {
+    o.pause = now() + 12000;
+    o.goal?.done(false); o.goal = null;
+    o.mode = "held";
+    o.el.classList.add("is-scared", "s2", "is-run");
+    const dir: 1 | -1 = o.x >= fromX ? 1 : -1;
+    o.dir = dir;
+    const x0 = o.x, x1 = dir > 0 ? vw + 60 : -60;
+    const t0 = now();
+    await new Promise<void>((done) => { const f = () => { const k = Math.min(1, (now() - t0) / (700 + i * 150)); o.x = x0 + (x1 - x0) * k; if (k < 1) requestAnimationFrame(f); else done(); }; requestAnimationFrame(f); });
+    o.el.classList.remove("is-run");
+  }));
+}
+async function peek(list: Body[]) {
+  const vw = window.innerWidth;
+  await Promise.all(list.map(async (o, i) => {
+    await wait(i * 400);
+    const right = o.x > vw / 2;
+    const edge = right ? vw + 18 : -18;
+    const inX = right ? vw - 8 : 8; // only the head shows
+    o.dir = right ? -1 : 1;
+    o.x = edge;
+    const t0 = now();
+    await new Promise<void>((done) => { const f = () => { const k = Math.min(1, (now() - t0) / 500); o.x = edge + (inX - edge) * k; if (k < 1) requestAnimationFrame(f); else done(); }; requestAnimationFrame(f); });
+    o.say(pick(["Il est parti ?", "Chut… je regarde si c'est fini.", "Je ne vois plus son bras…"]), true);
+    await wait(1400);
+    o.mode = "free"; o.x = Math.max(40, Math.min(vw - 40, o.x)); o.pause = now() + 1500;
+    o.el.classList.remove("is-scared", "s2");
+  }));
+}
+
+/** 9. The Chapardeur: a shadow, two black holes (his arm goes into one, comes out of the other), he takes a friend or a coin. Double tap on the hole: he is caught and gives back what he took before. */
 const thiefScene = () =>
   scene(async () => {
     const frs = freeFriends().filter((b) => b.key !== "zombie" && b.key !== "medecin");
@@ -519,42 +564,32 @@ const thiefScene = () =>
     const x = victim ? victim.x : vw * (0.3 + Math.random() * 0.4);
     const y = victim ? victim.y : window.innerHeight * 0.6;
     const bystanders = others(victim ?? ({} as Body)).filter((o) => o.mode === "free");
-    for (const o of bystanders) o.pause = now() + 9000;
-    if (victim) victim.pause = now() + 20000;
+    if (victim) victim.pause = now() + 30000;
     const coin = victim ? null : prop("coin", x, y);
     window.setTimeout(() => {
-      for (const o of bystanders.slice(0, 2)) o.say(pick(["Oh non… il arrive !", "C'est lui… cachez-vous !", "J'ai peur !"]), true);
+      for (const o of bystanders.slice(0, 2)) o.say(pick(["Oh non… il arrive !", "C'est lui… sauvez-vous !", "J'ai peur !"]), true);
     }, 700);
-    let sunk = 0;
-    await thiefRaid({
+    window.setTimeout(() => void flee(bystanders, x), 1500);
+    const caught = await thiefRaid({
       x, y, reach: 62,
       grab: () => { victim?.say(pick(["Aaah ! Lâche-moi !", "Hé ! Qu'est-ce que… !"]), true); },
       lift: (px) => { if (victim) { victim.mode = "held"; victim.z = px; } if (coin) coin.style.transform = `translate(-50%, calc(-100% - ${px}px))`; },
       sink: (k) => {
-        sunk = k;
         if (victim) { victim.z = 14 - k * 90; victim.el.style.clipPath = `inset(0 0 ${Math.max(0, k * 100)}% 0)`; }
         if (coin) coin.style.opacity = String(1 - k);
       },
-      gone: () => { coin?.remove(); if (victim) { victim.hidden = true; victim.el.style.display = "none"; } },
+      gone: () => { coin?.remove(); if (victim) { victim.hidden = true; victim.el.style.display = "none"; loot.push(victim); } },
+      release: () => { coin?.remove(); if (victim) { victim.el.style.clipPath = ""; victim.z = 0; victim.mode = "free"; victim.pause = 0; } },
+      caught: () => { for (const v of [...loot]) comeBack(v, true); },
     });
-    void sunk;
-    for (const o of bystanders) o.say(pick(["Il a pris " + (victim ? "notre copain" : "la pièce") + " !", "Quelle horreur !", "Je n'en reviens pas…"]), true);
-    await wait(3500);
-    if (victim) {
-      // he is thrown back from the sky a little later
-      victim.el.style.clipPath = "";
-      victim.x = Math.max(40, Math.min(vw - 40, x));
-      victim.y = y;
-      victim.z = 520;
-      victim.vx = 0; victim.vy = 0; victim.vz = 0;
-      victim.hidden = false;
-      victim.el.style.display = "";
-      victim.mode = "fly";
-      victim.throwSpeed = 0;
-      await wait(1200);
-      victim.say("Aïe ! Il m'a lâché !", true);
+    await wait(300);
+    await peek(bystanders);
+    if (caught) {
+      for (const o of [victim, ...bystanders]) o?.say(pick(["Bravo ! On l'a eu !", "Il est tombé dans son piège !", "Hourra !"]), true);
+    } else {
+      for (const o of bystanders.slice(0, 1)) o.say("Il a pris " + (victim ? "notre copain" : "la pièce") + " ! Il faut le piéger : touche 2 fois son trou noir !", true);
+      if (victim) window.setTimeout(() => { if (loot.includes(victim)) { comeBack(victim, true); victim.say("Aïe ! Il m'a lâché !", true); } }, 45000);
     }
-    for (const o of bystanders) o.pause = 0;
   });
 
 /** 1. The zombie sneezes: « A-TCHOU… » his head flies off on « tchou », rolls away… and the body ends the word alone: « …me ! » (Atchoum). */

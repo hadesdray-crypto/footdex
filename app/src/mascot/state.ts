@@ -336,8 +336,9 @@ function runEngine(e: Engine, text: string, my: number, done: () => void, fail: 
   const pv = given ?? voiceOf(p.mode);
   // the pitch chosen for this character (🐭 high … 🐻 low)
   const fk = FUN_K[pv.fun ?? ""] ?? FUN_K[""];
-  const softPitch = Math.max(0.5, Math.min(2, pv.pitch * fk.pitch));
-  const softRate = Math.max(0.5, Math.min(2, Math.max(0.6, Math.min(1.5, 1 + (p.rate - 1) * 0.45)) * SPEEDS[snap.s.speed].factor * fk.rate));
+  const tone = /\?\s*$/.test(text) ? { p: 1.06, r: 1 } : /!\s*$/.test(text) ? { p: 1.04, r: 1.07 } : /(…|\.\.\.)\s*$/.test(text) ? { p: 0.97, r: 0.9 } : { p: 1, r: 1 };
+  const softPitch = Math.max(0.5, Math.min(2, pv.pitch * fk.pitch * tone.p));
+  const softRate = Math.max(0.5, Math.min(2, Math.max(0.6, Math.min(1.5, 1 + (p.rate - 1) * 0.45)) * SPEEDS[snap.s.speed].factor * fk.rate * tone.r));
   const alive = () => my === wake;
   if (e === "robot" || e === "babble") {
     const r = (e === "robot" ? robotSound : babbleSound)(text, pv.pitch * 0.9, softRate, p.voice.formant, p.voice.vib);
