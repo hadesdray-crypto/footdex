@@ -10,6 +10,7 @@ import { Parents } from "./pages/parents";
 import { Decouvrir, Moi, Personnage } from "./pages/rubriques";
 import { demarrerHorsLigne } from "./maj/hors-ligne";
 import { demarrerMajApk } from "./maj/maj-apk";
+import { garderEcranAllume } from "./maj/ecran-allume";
 import { demarrerTempsEcran } from "./maj/temps-ecran";
 import { garderLesLiensExternes } from "./maj/parents";
 import { Carte } from "./pages/carte";
@@ -23,7 +24,7 @@ import { Packs } from "./pages/packs";
 import { Players } from "./pages/players";
 import { Scores } from "./pages/scores";
 import { type Route, token, useRoute } from "./router";
-import { connectRemote } from "./store";
+import { collectPacks, connectRemote } from "./store";
 import { Failure, useLoad } from "./ui/bits";
 import { Shell } from "./ui/shell";
 
@@ -107,6 +108,9 @@ const root = document.getElementById("root");
 // Dans l'application Android : on garde une marge sous les boutons, au-dessus de la barre de navigation.
 if ((window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.()) document.documentElement.classList.add("native");
 
+garderEcranAllume();
+collectPacks();
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") collectPacks(); });
 if (root) createRoot(root).render(<App />);
 
 // Saved progress also lives in claude.ai when the page is opened there, signed in.

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Piece } from "../ui/Piece";
-import { LuCheck, LuGift, LuGraduationCap, LuPackageOpen, } from "react-icons/lu";
+import { LuGift, LuGraduationCap, LuPackageOpen, } from "react-icons/lu";
 import {
-  CARDS_PER_CHEMIN, CHEMINS, GIFT_LABEL, RARITIES, RARITY, SHINY_STARS, SLOT_ODDS, buildPools, byValue, cheminOf, drawGift, drawPack, needsPeople, openGroups,
+  CARDS_PER_CHEMIN, CHEMINS, GIFT_LABEL, PACK_TYPES, RARITIES, RARITY, SHINY_STARS, SLOT_ODDS, buildPools, byValue, cheminOf, drawGift, drawPack, needsPeople, openGroups,
   type GiftKind, type Pools, type Pulled, type Rarity,
 } from "../cards";
 import { type Album, type Person, loadPeople } from "../data";
@@ -53,10 +53,10 @@ const KIND_TITLE: Record<PackKind, string> = {
 };
 
 /** Records the pack first (nothing is lost if the page closes), then hands the cards to the opening scene. */
-export function startOpening(kind: PackKind, pulled: Pulled[], giftId?: string, title?: string): Opening | null {
+export function startOpening(kind: PackKind, pulled: Pulled[], giftId?: string, title?: string, stockIdx?: number): Opening | null {
   if (pulled.length === 0) return null;
   const chemin = cheminOf(getState().opened).index;
-  const result = recordPack(kind, pulled, giftId);
+  const result = recordPack(kind, pulled, giftId, 0, stockIdx);
   return { id: ++openingSeq, kind, title: title ?? KIND_TITLE[kind], pulled: [...pulled].sort(byValue), result, chemin };
 }
 
@@ -79,11 +79,11 @@ export function Packs({ album }: { album: Album }) {
   const [opening, setOpening] = useState<Opening | null>(null);
   const [drop, setDrop] = useState<string | null>(null);
 
-  function openPack(kind: "jour" | "bonus") {
+  function openPack(idx = 0) {
     const s = getState();
-    const st = packStatus(s);
-    if (kind === "jour" ? !st.free : !st.bonus) return;
-    const next = startOpening(kind, drawPack(pools, cheminOf(s.opened).index, s.cards));
+    const size = s.stock[idx];
+    if (!size) return;
+    const next = startOpening("jour", drawPack(pools, cheminOf(s.opened).index, s.cards, size), undefined, PACK_TYPES[size]?.name ?? "Paquet", idx);
     if (next) {
       setOpening(next);
       setDrop(brainRotDuPaquet());
@@ -116,7 +116,7 @@ export function Packs({ album }: { album: Album }) {
     } catch {
       /* ignore */
     }
-    if (wanted === "jour") openPack("jour");
+    if (wanted === "jour") openPack(0);
     else if (wanted === "cadeau") openGift();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
@@ -149,30 +149,40 @@ export function Packs({ album }: { album: Album }) {
           </p>
         </div>
         <div className="packhero__pack">
-          <PackArt kind="jour" chemin={ch.index} className="paquet--float" />
+          <PackArt kind="jour" chemin={ch.index} size={state.stock[0]} className="paquet--float" />
         </div>
         <div className="packhero__actions">
           {!ready ? failed ? <Failure text="Les joueurs du monde n'ont pas pu être chargés. Vérifie la connexion." /> : <Loading text="Préparation des cartes du chemin…" /> : null}
-          <button type="button" className="btn btn--gold btn--big btn--glow" disabled={!status.free || !ready} onClick={() => openPack("jour")}>
+          <button type="button" className="btn btn--gold btn--big btn--glow" disabled={!status.free || !ready} onClick={() => openPack(0)}>
             <LuPackageOpen aria-hidden="true" />
-            {status.free ? "Ouvrir le paquet du jour" : "Paquet du jour ouvert"}
+            {status.free ? "Déchirer un paquet" : "Plus de paquet pour l'instant"}
           </button>
-          {status.bonus ? (
-            <button type="button" className="btn btn--pitch btn--big" disabled={!ready} onClick={() => openPack("bonus")}>
-              <LuGift aria-hidden="true" /> Ouvrir le paquet bonus
-            </button>
-          ) : status.bonusLocked ? (
+          {!status.free ? <p className="packhero__done">Un nouveau paquet arrive chaque jour. Ils s'accumulent si tu ne viens pas.</p> : null}
+          {status.bonusLocked ? (
             <Link to={{ page: "defi" }} className="btn btn--soft btn--big">
-              <LuGraduationCap aria-hidden="true" /> Gagner un bonus au défi
+              <LuGraduationCap aria-hidden="true" /> Gagner un paquet au défi
             </Link>
-          ) : (
-            <p className="packhero__done">
-              <LuCheck aria-hidden="true" /> Paquet bonus déjà ouvert aujourd'hui.
-            </p>
-          )}
-          {!status.free && !status.bonus ? <p className="packhero__done">Les paquets reviennent demain.</p> : null}
+          ) : null}
         </div>
       </section>
+
+      {state.stock.length > 0 ? (
+        <section className="stock" aria-label="Ta réserve de paquets">
+          <h2 className="section-title">
+            <LuPackageOpen aria-hidden="true" /> Ta réserve : {state.stock.length} paquet{state.stock.length > 1 ? "s" : ""}
+          </h2>
+          <ul className="stock__list">
+            {state.stock.map((size, i) => (
+              <li key={`${i}-${size}`} className="stock__item">
+                <PackArt kind="jour" chemin={ch.index} size={size} className="stock__art" />
+                <button type="button" className="btn btn--gold" disabled={!ready} onClick={() => openPack(i)}>
+                  Déchirer
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {state.gifts.length > 0 ? (
         <section className="gifts" aria-label="Tes cadeaux">

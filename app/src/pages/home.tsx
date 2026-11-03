@@ -141,14 +141,14 @@ export function Home({ album }: { album: Album }) {
         <div className="chemincard__actions">
           {status.free ? (
             <button type="button" className="btn btn--gold btn--big btn--glow" onClick={() => openPackFromHome("jour")}>
-              <LuPackageOpen aria-hidden="true" /> Ouvrir le paquet du jour
+              <LuPackageOpen aria-hidden="true" /> Déchirer un paquet ({status.stock} en réserve)
             </button>
           ) : status.bonus ? (
             <Link to={{ page: "paquets" }} className="btn btn--pitch btn--big">
               <LuGift aria-hidden="true" /> Ton paquet bonus t'attend
             </Link>
           ) : (
-            <p className="chemincard__done">Paquet du jour ouvert. Le prochain arrive demain.</p>
+            <p className="chemincard__done">Plus de paquet en réserve. Le prochain arrive demain.</p>
           )}
           {state.gifts.length > 0 ? (
             <button type="button" className="btn btn--soft btn--big" onClick={() => openPackFromHome("cadeau")}>

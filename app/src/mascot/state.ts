@@ -1,4 +1,5 @@
 // The character's memory (look, character, voice speed, place on screen), its voice and its bubble.
+import { mouthOff, mouthOn, mouthPlan } from "./mouth";
 import { useSyncExternalStore } from "react";
 import { babble as babbleSound, robot as robotSound } from "../sound";
 import { piperWav } from "../piper";
@@ -142,7 +143,13 @@ const listeners = new Set<() => void>();
 /** While a visitor (doctor, referee) speaks, the character's mouth stays still: it is not him talking. */
 let visitorTalking = false;
 let nextIsVisitor = false;
+let speechWho = "main";
 function set(patch: Partial<Snap>) {
+  if (patch.talking !== undefined) {
+    // the mouth follows the real sound: open when the voice starts, closed the moment it stops
+    if (patch.talking) mouthOn();
+    else mouthOff();
+  }
   if (visitorTalking && patch.talking) patch = { ...patch, talking: false };
   snap = { ...snap, ...patch };
   for (const fn of listeners) fn();
@@ -549,6 +556,7 @@ function voice(text: string, onEnd?: () => void) {
   const forced: "auto" | Engine = pv.fun === "robot" ? "robot" : pv.fun === "charabia" ? "babble" : pv.engine;
   const list = forced !== "auto" ? [forced, ...base.filter((e) => e !== forced)] : base;
   text = funText(text, pv.fun);
+  mouthPlan(visitorTalking ? speechWho : "main", text, Math.max(0.6, Math.min(1.5, 1 + (PERSOS[snap.s.perso].rate - 1) * 0.45)) * SPEEDS[snap.s.speed].factor);
   const my = wake;
   let idx = 0;
   const next = () => {
@@ -987,6 +995,7 @@ export function speakAs(text: string, who: VoiceKey, onEnd?: () => void) {
   if (!snap.s.auto) return;
   trying = voiceOf(who);
   nextIsVisitor = true;
+  speechWho = who;
   voice(text, onEnd);
 }
 /** Something happened to the character: the friends on the screen react. */

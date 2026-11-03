@@ -191,7 +191,7 @@ export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose
 
       {phase === "pack" || phase === "open" ? (
         <div className="reveal__stage reveal__stage--pack">
-          <TearPack kind={kind} chemin={opening.chemin} glow={glowOf(best)} hot={isBig(best)} torn={phase === "open"} onOpen={openPack} />
+          <TearPack size={kind === "jour" ? pulled.length : undefined} kind={kind} chemin={opening.chemin} glow={glowOf(best)} hot={isBig(best)} torn={phase === "open"} onOpen={openPack} />
           <p className="reveal__hint" aria-live="polite">
             {phase === "pack" ? "Glisse ton doigt sur le paquet pour le déchirer, ou touche-le." : "Le paquet s'ouvre…"}
           </p>
@@ -250,7 +250,7 @@ export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose
   );
 }
 
-function TearPack({ kind, chemin, glow, hot, torn, onOpen }: { kind: PackKind; chemin: number; glow: string; hot: boolean; torn: boolean; onOpen: () => void }) {
+function TearPack({ kind, chemin, glow, hot, torn, onOpen, size }: { size?: number; kind: PackKind; chemin: number; glow: string; hot: boolean; torn: boolean; onOpen: () => void }) {
   const [progress, setProgress] = useState(0);
   const start = useRef<{ x: number; y: number } | null>(null);
   const button = useRef<HTMLButtonElement | null>(null);
@@ -295,7 +295,7 @@ function TearPack({ kind, chemin, glow, hot, torn, onOpen }: { kind: PackKind; c
         if (e.detail === 0) onOpen();
       }}
     >
-      <PackArt kind={kind} chemin={chemin} glow={glow} tear={torn ? 1 : progress} torn={torn} />
+      <PackArt size={size} kind={kind} chemin={chemin} glow={glow} tear={torn ? 1 : progress} torn={torn} />
       <span className="reveal__swipe" aria-hidden="true" />
     </button>
   );

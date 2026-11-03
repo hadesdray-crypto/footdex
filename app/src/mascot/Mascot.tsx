@@ -717,6 +717,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       <div ref={rootRef} className={cx("mascot", m.busy && "is-hidden")} aria-live="polite" style={{ zIndex: dragging || showAside ? 74 : depthZ(pos.y + H) }}>
         <button
           ref={fabRef}
+          data-who="main"
           type="button"
           className={cx("mascot__fab", dragging && "is-drag", thrown && "is-thrown", m.anim === "shake" && "is-shake", m.anim === "jump" && "is-jump", m.talking && "is-talk")}
           style={fabStyle}

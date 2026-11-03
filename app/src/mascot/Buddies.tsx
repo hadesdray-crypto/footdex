@@ -14,7 +14,8 @@ import { DOCTOR_LOOK, getMascot, play, say, sayFx, speakAs, takeTurn, turnsBusy,
 import { fallApart } from "./zombie";
 import { ballPlaymates, kickBallTo, looseBall, returnBall } from "./player";
 import { figSvg, type Look } from "./look";
-import { hasFx, playFx, type Slot } from "./bruits";
+import { hasFx, playFx, fxAudio, type Slot } from "./bruits";
+import { loudness, mouthOff, mouthOn, mouthPlan } from "./mouth";
 import { cough, hiss, meow, sneeze, thud } from "../sound";
 import { prop, thiefRaid } from "./thief";
 import { cx } from "../util";
@@ -1153,8 +1154,14 @@ function One({ b, index }: { b: Buddy; index: number }) {
             });
           };
           const recorded = slot ? playFx(b, slot) : false;
-          if (recorded) later(Math.min(ms, 2600), finish);
-          else if (!getMascot().talking) speakAs(text, b, finish);
+          if (recorded) {
+            const au = slot ? fxAudio(b, slot) : null;
+            mouthPlan(b, text, 1);
+            mouthOn(au ? loudness(au) : null);
+            if (au) au.addEventListener("ended", () => mouthOff(), { once: true });
+            later(Math.min(ms, 2600), () => { mouthOff(); finish(); });
+          }
+          else if (!getMascot().talking || force) speakAs(text, b, finish);
           else later(ms, finish);
           later(ms + 2300, finish); // safety: no voice at all
         },
@@ -1416,6 +1423,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
     <>
       <button
         ref={btnRef}
+        data-who={b}
         type="button"
         className={cx("buddy", b === "statue" && "is-old", b === "zombie" && "is-zombie")}
         style={{ display: hidden ? "none" : undefined }}

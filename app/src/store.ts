@@ -2,7 +2,7 @@
 // Saved in this browser, and also in the artifact's private per-person store
 // when the page is opened signed in on claude.ai.
 import { useSyncExternalStore } from "react";
-import { CARDS_PER_CHEMIN, MILESTONES, RARITY, SHINY_STARS, cheminOf, milestoneRewards, type GiftKind, type Pulled, type Reward } from "./cards";
+import { CARDS_PER_CHEMIN, MILESTONES, RARITY, randomPackSize, SHINY_STARS, cheminOf, milestoneRewards, type GiftKind, type Pulled, type Reward } from "./cards";
 import { dayKey, daysSinceEpoch, storageGet, storageSet } from "./util";
 import { reglages } from "./reglages-jeu";
 
@@ -26,6 +26,9 @@ export type State = {
   back: string;
   freeDay: string;
   bonusDay: string;
+  /** the reserve: the packs waiting to be torn, each one is its number of cards */
+  stock: number[];
+  stockDay: string;
   quiz: QuizResult | null;
   seen: string[];
   fav: string[];
@@ -44,7 +47,7 @@ const KEY = "footdex.etat.v3";
 function blank(): State {
   return {
     v: 3, cards: {}, order: 0, opened: 0, packs: 0, stars: 0, gifts: [], claimed: 0, backs: ["dos-0"], back: "dos-0",
-    freeDay: "", bonusDay: "", quiz: null, seen: [], fav: [], quizBest: 0, log: [], chest: [], gamesDay: {}, gamesWon: 0, book: {}, updated: 0,
+    freeDay: "", bonusDay: "", stock: [], stockDay: "", quiz: null, seen: [], fav: [], quizBest: 0, log: [], chest: [], gamesDay: {}, gamesWon: 0, book: {}, updated: 0,
   };
 }
 
@@ -71,6 +74,8 @@ function sane(raw: unknown): State | null {
     chest: strings(st.chest),
     gamesDay: st.gamesDay && typeof st.gamesDay === "object" ? st.gamesDay : {},
     book: st.book && typeof st.book === "object" ? st.book : {},
+    stock: Array.isArray(st.stock) ? st.stock.filter((x): x is number => typeof x === "number" && x >= 1 && x <= 12).slice(0, 80) : [],
+    stockDay: typeof st.stockDay === "string" ? st.stockDay : "",
   };
 }
 
@@ -217,16 +222,36 @@ export function chooseBack(back: string) {
   commit({ ...state, back });
 }
 
-export type PackStatus = { free: boolean; bonus: boolean; bonusLocked: boolean; gifts: number };
+export type PackStatus = { free: boolean; bonus: boolean; bonusLocked: boolean; gifts: number; stock: number };
 
+/** The reserve: free = at least one pack waits to be torn. (The daily pack and the quiz bonus now pile up here.) */
 export function packStatus(s: State, today = dayKey()): PackStatus {
   const passed = s.quiz?.day === today && s.quiz.passed;
-  return {
-    free: s.freeDay !== today,
-    bonus: passed && s.bonusDay !== today,
-    bonusLocked: !passed && s.bonusDay !== today,
-    gifts: s.gifts.length,
-  };
+  return { free: s.stock.length > 0, bonus: false, bonusLocked: !passed && s.bonusDay !== today, gifts: s.gifts.length, stock: s.stock.length };
+}
+
+/** One new pack for each day since the last visit (the packs pile up, up to 30 days), and one for the quiz passed today. */
+export function collectPacks() {
+  const today = dayKey();
+  let stock = [...state.stock];
+  let stockDay = state.stockDay;
+  let bonusDay = state.bonusDay;
+  if (stockDay !== today) {
+    let days = 1;
+    if (stockDay) {
+      const a = Date.parse(`${stockDay}T12:00:00`);
+      const b = Date.parse(`${today}T12:00:00`);
+      days = Number.isFinite(a) && Number.isFinite(b) ? Math.max(1, Math.min(30, Math.round((b - a) / 86400000))) : 1;
+    } else if (state.freeDay === today) days = 0; // the daily pack of the old system was already opened today
+    for (let i = 0; i < days; i += 1) stock.push(randomPackSize());
+    stockDay = today;
+  }
+  if (state.quiz?.day === today && state.quiz.passed && bonusDay !== today) {
+    stock.push(randomPackSize());
+    bonusDay = today;
+  }
+  stock = stock.slice(-80);
+  if (stockDay !== state.stockDay || bonusDay !== state.bonusDay || stock.length !== state.stock.length) commit({ ...state, stock, stockDay, bonusDay });
 }
 
 export type PackResult = {
@@ -241,7 +266,7 @@ export type PackResult = {
 };
 
 /** Records an opened pack (daily, bonus, gift or bought card) and gives the path rewards. */
-export function recordPack(kind: PackKind, pulled: Pulled[], giftId?: string, cost = 0): PackResult {
+export function recordPack(kind: PackKind, pulled: Pulled[], giftId?: string, cost = 0, stockIdx?: number): PackResult {
   const today = dayKey();
   const fresh = new Set<string>();
   const owned = { ...state.cards };
@@ -272,7 +297,7 @@ export function recordPack(kind: PackKind, pulled: Pulled[], giftId?: string, co
     stars: state.stars + stars - cost,
     gifts: giftId ? state.gifts.filter((g) => g.id !== giftId) : state.gifts,
     freeDay: kind === "jour" ? today : state.freeDay,
-    bonusDay: kind === "bonus" ? today : state.bonusDay,
+    stock: stockIdx === undefined ? state.stock : state.stock.filter((_, i) => i !== stockIdx),
     log: [{ day: today, kind, cards: pulled.map((p) => p.card.id) }, ...state.log].slice(0, 40),
   };
   const { state: withRewards, granted } = grant(base, before, after);
@@ -290,6 +315,7 @@ export function recordQuiz(score: number, total: number, passMark: number) {
   const today = dayKey();
   if (state.quiz?.day === today) return;
   commit({ ...state, quiz: { day: today, score, total, passed: score >= passMark } });
+  collectPacks();
 }
 
 export function recordBigQuiz(score: number) {

@@ -29,7 +29,7 @@ const TABS: { to: Route; label: string; icon: typeof LuHouse; match: string[] }[
 export function Shell({ page, pageKey, album, children }: { page: string; pageKey: string; album: Album; children: ReactNode }) {
   const state = useStore();
   const status = packStatus(state);
-  const ready = (status.free ? 1 : 0) + (status.bonus ? 1 : 0) + status.gifts;
+  const ready = status.stock + status.gifts;
   const sound = useSyncExternalStore(onSoundChange, soundOn);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | undefined>(undefined);

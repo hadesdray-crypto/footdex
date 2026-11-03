@@ -4,6 +4,17 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-03",
+    titre: "Version 42 : bouche synchronisée, écran allumé, paquets qui s'accumulent",
+    type: "appli",
+    points: [
+      "La bouche des personnages suit le son : elle s'ouvre quand la voix démarre, bouge syllabe par syllabe (grande sur « a », petite sur « i »), se ferme sur les pauses et s'arrête pile quand la voix s'arrête. Pour un bruit enregistré, elle suit le volume réel.",
+      "Les paroles des scènes ne sont plus coupées quand le grand personnage parle.",
+      "L'écran reste allumé tant que l'appli est ouverte.",
+      "Les paquets s'accumulent dans ta réserve : un nouveau chaque jour (même si tu ne viens pas, jusqu'à 30 jours), plus un pour le défi réussi. Il y a 5 types de 1 à 5 cartes (Penalty, Corner, Contre-attaque, Remontada, Finale) et, très rarement, le Ballon d'or (7 cartes) ou la Coupe du monde (10 cartes). Tu choisis lequel déchirer.",
+    ],
+  },
+  {
+    date: "2026-11-03",
     titre: "Version 41 : plus de bulles inutiles, de vrais chocs, la fête des fans",
     type: "appli",
     points: [

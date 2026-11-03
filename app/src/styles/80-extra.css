@@ -330,3 +330,15 @@
 .thief__boss.is-on { opacity: 1; transform: none; }
 .thief__hint { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%); width: max-content; max-width: 86vw; padding: 8px 14px; border-radius: 14px; background: #f6c453; color: #1a1205; font: 800 14px/1.2 var(--f-body); text-decoration: none; text-align: center; opacity: 0; transition: opacity .3s; }
 .thief__hint.is-on { opacity: 1; }
+
+/* the mouth follows the sound: only while the voice is really playing */
+[data-who] .mfw.talk:not(.live) .m-static { display: inline; }
+[data-who] .mfw.talk:not(.live) .m-open { display: none; animation: none; }
+[data-who] .mfw.talk.live .m-open { display: block; animation: none; transform-box: fill-box; transform-origin: 50% 0; transform: scale(calc(0.85 + var(--mo, 0.2) * 0.3), var(--mo, 0.2)); }
+[data-who] .mfw.talk.live .m-static { display: none; }
+
+.stock { margin: 18px 0; }
+.stock__list { list-style: none; margin: 10px 0 0; padding: 4px 2px 10px; display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x proximity; }
+.stock__item { flex: none; display: grid; gap: 8px; justify-items: center; width: 118px; scroll-snap-align: start; }
+.stock__art { width: 104px; }
+.stock__item .btn { width: 100%; }

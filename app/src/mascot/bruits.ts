@@ -133,6 +133,7 @@ export function clearFx(who: string, slot: Slot) {
 }
 
 /** Plays the recorded noise of this character for this moment, at once. True when something is played. */
+export const fxAudio = (who: string, slot: Slot): HTMLAudioElement | null => ready.get(key(who, slot)) ?? null;
 export function playFx(who: string, slot: Slot): boolean {
   const a = ready.get(key(who, slot));
   if (a) {

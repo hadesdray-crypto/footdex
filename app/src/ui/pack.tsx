@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { reglages } from "../reglages-jeu";
-import { CHEMINS, GIFT_LABEL, RARITY, type GiftKind } from "../cards";
+import { CHEMINS, GIFT_LABEL, PACK_TYPES, RARITY, type GiftKind } from "../cards";
 import type { PackKind } from "../store";
 import { cx } from "../util";
 
@@ -43,8 +43,9 @@ export function packTone(kind: PackKind, chemin: number): [string, string] {
 }
 
 /** The foil wrapper of a pack: the colours of the path, or a ribbon for a gift. */
-export function PackArt({ kind, chemin, glow, tear = 0, torn, className, label }: { kind: PackKind; chemin: number; glow?: string; tear?: number; torn?: boolean; className?: string; label?: string }) {
-  const [light, deep] = packTone(kind, chemin);
+export function PackArt({ kind, chemin, glow, tear = 0, torn, className, label, size }: { size?: number; kind: PackKind; chemin: number; glow?: string; tear?: number; torn?: boolean; className?: string; label?: string }) {
+  const type = size ? PACK_TYPES[size] : undefined;
+  const [light, deep] = type ? type.tone : packTone(kind, chemin);
   const gift = kind === "cadeau" || kind === "rare" || kind === "eclat" || kind === "legende";
   const ch = CHEMINS[Math.min(chemin, CHEMINS.length - 1)];
   const style = { "--p1": light, "--p2": deep, "--glow": glow ?? light, "--tear": String(tear) } as CSSProperties;
@@ -57,11 +58,11 @@ export function PackArt({ kind, chemin, glow, tear = 0, torn, className, label }
         </span>
         {gift ? <span className="paquet__ribbon" /> : null}
         <div className="paquet__face">
-          <span className="paquet__chapter">{gift ? "Cadeau" : kind === "bonus" ? "Paquet bonus" : `Chemin ${chemin + 1}`}</span>
+          <span className="paquet__chapter">{type ? `Chemin ${chemin + 1}` : gift ? "Cadeau" : kind === "bonus" ? "Paquet bonus" : `Chemin ${chemin + 1}`}</span>
           <span className="paquet__brand">FOOTDEX</span>
           <Ball className="paquet__ball" />
-          <span className="paquet__name">{label ?? (gift ? GIFT_LABEL[kind as GiftKind] : ch.name)}</span>
-          <span className="paquet__count">{kind === "cadeau" || !gift ? `${reglages().cartesParPaquet} cartes` : "1 carte"}</span>
+          <span className="paquet__name">{label ?? type?.name ?? (gift ? GIFT_LABEL[kind as GiftKind] : ch.name)}</span>
+          <span className="paquet__count">{size ? `${size} carte${size > 1 ? "s" : ""}` : kind === "cadeau" || !gift ? `${reglages().cartesParPaquet} cartes` : "1 carte"}</span>
         </div>
         <span className="paquet__crimp paquet__crimp--bottom" />
       </div>
