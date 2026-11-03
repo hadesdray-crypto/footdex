@@ -93,7 +93,7 @@ type Body = {
   hidden: boolean;
 };
 /** at: where his bubble shows (his head rolled away: the voice comes from there); onStart: at the very moment he starts to talk. */
-type SayOpts = { at?: Pos; onStart?: () => void };
+type SayOpts = { at?: Pos; onStart?: () => void; /** show the words in a bubble (only to explain something) */ read?: boolean };
 const bodies = new Map<Buddy, Body>();
 let running = 0;
 let lastT = 0;
@@ -163,6 +163,17 @@ function burstZombie(zb: Body, vx: number) {
   window.dispatchEvent(new CustomEvent("footdex:zombiehead", { detail: { x: zb.x, y: zb.y } }));
 }
 
+const hits = new WeakMap<Body, number>();
+const OUCH = ["Aïe !", "Ouch !", "Aouh !", "Ouille !", "Aïaïaïe !"];
+/** A shock against something hard: he squashes, you hear the thud, he says « aïe » (a different one each time). */
+function shock(b: Body, say = true) {
+  const n = (hits.get(b) ?? 0) + 1;
+  hits.set(b, n);
+  b.flip.animate([{ transform: `scaleX(${b.dir}) scale(1.28,0.74)` }, { transform: `scaleX(${b.dir}) scale(0.92,1.1)`, offset: 0.6 }, { transform: `scaleX(${b.dir})` }], { duration: 260 });
+  thud();
+  if (say && b.key !== "zombie") void b.say(b.key === "statue" ? pick(["Ouille ! Mon dos !", "Aïe ! Mes os !", "Hm ! Ma canne !", "Ouille !"]) : OUCH[(n - 1) % OUCH.length], true, "aie");
+}
+
 function step(t: number) {
   const dt = Math.min(0.04, (t - lastT) / 1000 || 0.016);
   lastT = t;
@@ -186,6 +197,7 @@ function step(t: number) {
             burstZombie(b, hitVx); // against a friend: he falls to pieces right there
             continue outer;
           }
+          shock(b, false);
           b.vx = -b.vx * 0.35;
         }
       }
@@ -202,6 +214,7 @@ function step(t: number) {
           burstZombie(b, b.vx); // the wall: he falls to pieces at the shock
           continue outer;
         }
+        if (Math.abs(b.vx) > 140) shock(b);
         b.vx = -b.vx * 0.5;
         b.x = Math.max(W / 2, Math.min(vw - W / 2, b.x));
       }
@@ -223,7 +236,10 @@ function step(t: number) {
           thud();
           b.el.classList.add("is-down");
           const who = b;
-          window.setTimeout(() => who.say(who.key === "zombie" ? "Grrr… atterrissage…" : who.key === "statue" ? "Ouille… mon dos…" : pick(["Aïe !", "Ouille…", "Ouf ! Ça va…"]), true, "atterrit"), 120);
+          const nh = hits.get(who) ?? 0;
+          hits.set(who, 0);
+          shock(who, false);
+          window.setTimeout(() => who.say(who.key === "zombie" ? "Grrr… atterrissage…" : nh >= 2 ? pick(["J'ai mal…", "J'ai mal partout…", "Ouf… j'ai trop mal…"]) : who.key === "statue" ? "Ouille… mon dos…" : pick(["Aïe !", "Ouille…", "Ouf ! Ça va…"]), true, nh >= 2 ? undefined : "atterrit"), 120);
         }
       }
     } else if (b.mode === "down") {
@@ -294,7 +310,7 @@ function step(t: number) {
   for (const b of list) {
     b.el.style.transform = `translate(${b.x - W / 2}px,${b.y - H - b.z}px)`;
     b.el.style.zIndex = String(depthZ(b.y));
-    b.flip.style.transform = `scaleX(${b.dir})`;
+    b.flip.style.transform = b.mode === "fly" ? `scaleX(${b.dir}) rotate(${Math.max(-50, Math.min(50, b.vx * 0.09 * (b.vz > 0 ? 1 : 1.4))) * b.dir}deg)` : `scaleX(${b.dir})`;
   }
   moveHead(dt);
   running = bodies.size ? requestAnimationFrame(step) : 0;
@@ -554,6 +570,40 @@ async function peek(list: Body[]) {
     o.el.classList.remove("is-scared", "s2");
   }));
 }
+
+
+/** 10. The fête: a match is open, the friends are fans. They shout, jump, line up in a conga, shove each other a little. */
+const partyScene = (title = "", year = "") =>
+  scene(async () => {
+    const fans = freeFriends().filter((b) => b.key !== "zombie" && b.key !== "medecin");
+    if (fans.length < 1) return;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    for (const f of fans) f.pause = now() + 20000;
+    const cries = ["Allez les Bleus !", "Quel match !", year ? `Ah ! ${year} ! Quel souvenir !` : "Quel souvenir !", "On a gagné !", "Vive le foot !"];
+    fans.forEach((f, i) => window.setTimeout(() => { f.act("cheer", 1600); void f.say(cries[(i + Math.floor(Math.random() * 3)) % cries.length], true, "ola"); }, i * 900));
+    await wait(fans.length * 900 + 800);
+    // they run to the middle and jump together
+    await Promise.all(fans.map((f, i) => goTo(f, vw * (0.3 + 0.4 * (fans.length > 1 ? i / (fans.length - 1) : 0.5)), vh * 0.62, 150, { stop: 8, timeout: 5000 })));
+    for (const f of fans) f.act("cheer", 1500);
+    await wait(900);
+    // a shove, as in every crowd
+    if (fans.length >= 2) {
+      const [a, c] = fans;
+      void a.say("Pousse-toi, je ne vois rien !", true);
+      await wait(1400);
+      knock(c, c.x >= a.x ? 220 : -220);
+      await wait(2600);
+      void c.say("Hé ! On se bat pas, on fait la fête !", true);
+      await wait(2200);
+    }
+    // the conga: they line up one behind the other, then hop one after the other
+    const ys = vh * 0.66;
+    await Promise.all(fans.map((f, i) => (f.mode === "free" ? goTo(f, vw * 0.22 + i * 56, ys, 130, { stop: 6, timeout: 5000 }) : Promise.resolve(false))));
+    for (let r = 0; r < 2; r += 1) for (const f of fans) { f.act("cheer", 500); await wait(280); }
+    await wait(600);
+    for (const f of fans) f.pause = 0;
+    void title;
+  });
 
 /** 9. The Chapardeur: a shadow, two black holes (his arm goes into one, comes out of the other), he takes a friend or a coin. Double tap on the hole: he is caught and gives back what he took before. */
 const thiefScene = () =>
@@ -1084,7 +1134,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
           bubbleTok.current += 1;
           const tok = bubbleTok.current;
           const t0 = Date.now();
-          setBubble(text);
+          if (o.read) setBubble(text);
           setTalk(true);
           o.onStart?.();
           // the bubble stays as long as his voice goes on (at least a moment), then disappears
@@ -1093,7 +1143,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
             if (over) return;
             over = true;
             // he keeps his bubble a moment at least, so it can be read; then the next one speaks
-            later(Math.max(120, 1500 - (Date.now() - t0)), () => {
+            later(Math.max(120, (o.read ? 1500 : 150) - (Date.now() - t0)), () => {
               end();
               resolve();
               if (bubbleTok.current === tok) {
@@ -1185,7 +1235,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
         );
         return;
       }
-      if (k < 0.3 && !st.talking && !st.bubble) speak(b === "statue" && Math.random() < 0.4 ? OLD_STORIES[Math.floor(Math.random() * OLD_STORIES.length)].split(/(?<=[.!?])\s/)[0] : pick(TALK[b]));
+      if (k < 0.3 && !st.talking && !st.bubble) speak(b === "statue" && Math.random() < 0.4 ? OLD_STORIES[Math.floor(Math.random() * OLD_STORIES.length)].split(/(?<=[.!?])\s/)[0] : pick(TALK[b]), false, undefined, { read: b === "statue" });
       else if (k < 0.42 && !st.talking && !st.bubble) {
         const mode = PERSOS[st.s.perso].mode;
         const fits = CHATS.filter((c) => (!c.who || c.who === b) && (!c.to || c.to === mode));
@@ -1193,7 +1243,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
         speak(c.a);
         later(Math.max(2800, c.a.length * 70), () => say(c.b));
       } else if (k < 0.5) doAct("wave", 2000);
-      else if (k < 0.54 && b !== "statue" && b !== "medecin") speak(pick(LORE_HINTS));
+      else if (k < 0.54 && b !== "statue" && b !== "medecin") speak(pick(LORE_HINTS), false, undefined, { read: true });
       else if (k < 0.58) speak(pick(TALK[b]), false, "bruit");
     };
     const loop = () =>
@@ -1235,6 +1285,8 @@ function One({ b, index }: { b: Buddy; index: number }) {
       if (ev === "card" && Math.random() < 0.6) later(1400 + index * 300, () => speak(pick(REACT.card[b] ?? REACT.card.all), false, "carton"));
       if (ev === "lore" && b !== "statue") doAct("listen", 30000);
     };
+    const onParty = (e: Event) => { const d = (e as CustomEvent<{ title: string; year: string }>).detail; if (!sceneOn) void partyScene(d?.title, d?.year); };
+    window.addEventListener("footdex:party", onParty);
     window.addEventListener("footdex:terrain", onEv);
     // the ball hits him
     const onBall = (e: Event) => {
@@ -1274,6 +1326,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
     };
     window.addEventListener("footdex:zombiehead", onHead);
     return () => {
+      window.removeEventListener("footdex:party", onParty);
       window.removeEventListener("footdex:terrain", onEv);
       window.removeEventListener("footdex:ballhit", onBall);
       window.removeEventListener("footdex:knock", onKnock);
@@ -1478,7 +1531,7 @@ export function Buddies() {
     window.addEventListener("footdex:terrain", onEv);
     // for checking the scenes in a browser (« ?essai-terrain »)
     if (location.search.includes("essai-terrain")) (window as unknown as { __scenes?: unknown }).__scenes = {
-      thiefScene, sneezeScene, hideScene, checkupScene, sleepScene, passScene, catScene, ola, recre, chatScene, kickScene, teams, ballScene, middleScene, headFootball: () => scene(async () => { const z = bodies.get("zombie"); if (z) { dropHead(z, 200, 160); await wait(800); await headFootball(z); } }),
+      partyScene, thiefScene, sneezeScene, hideScene, checkupScene, sleepScene, passScene, catScene, ola, recre, chatScene, kickScene, teams, ballScene, middleScene, headFootball: () => scene(async () => { const z = bodies.get("zombie"); if (z) { dropHead(z, 200, 160); await wait(800); await headFootball(z); } }),
       // test helpers: throw a friend, read where everybody is
       fling: (key: Buddy, vx: number, vz: number, speed: number) => {
         const b = bodies.get(key);

@@ -218,10 +218,6 @@ export class Visitor {
           end();
         };
         if (this.dead) return done();
-        this.bubble.textContent = text;
-        this.bubble.classList.add("is-on");
-        window.clearTimeout(this.sayTimer);
-        this.sayTimer = window.setTimeout(() => this.bubble.classList.remove("is-on"), show);
         // the end of his line: his voice is finished (and the bubble stayed long enough to be read)
         const t0 = Date.now();
         const finish = () => window.setTimeout(done, Math.max(100, 1300 - (Date.now() - t0)));

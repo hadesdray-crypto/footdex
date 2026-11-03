@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { LuExternalLink } from "react-icons/lu";
 import { matchPoster, matchVideo, momentCard } from "../cards";
 import type { Album } from "../data";
@@ -65,6 +66,11 @@ export function MatchPage({ album, id }: { album: Album; id: string }) {
   }
   const video = matchVideo(m.id);
   const poster = matchPoster(m.id);
+  useEffect(() => {
+    // the friends on the screen are fans: they celebrate this match
+    const t = window.setTimeout(() => window.dispatchEvent(new CustomEvent("footdex:party", { detail: { title: m.title, year: m.date.slice(0, 4) } })), 1800);
+    return () => window.clearTimeout(t);
+  }, [m.id]);
   return (
     <div className="matchpage">
       <BackLink to={{ page: "matchs" }} label="Les matchs" />

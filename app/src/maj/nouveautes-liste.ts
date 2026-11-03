@@ -4,6 +4,16 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-03",
+    titre: "Version 41 : plus de bulles inutiles, de vrais chocs, la fête des fans",
+    type: "appli",
+    points: [
+      "Les personnages parlent avec la voix, sans encart de texte. Une bulle n'apparaît que pour expliquer quelque chose (histoire du Papi, petit conseil).",
+      "Les chocs sont plus réalistes pour tous les personnages : ils tournent en l'air, s'écrasent contre le mur, et disent un « aïe » différent à chaque choc. Après plusieurs chocs, ils finissent par « J'ai mal… ».",
+      "Quand tu ouvres un match, les personnages font la fête comme des fans : ils crient, sautent ensemble, se bousculent un peu, puis font la queue leu leu.",
+    ],
+  },
+  {
+    date: "2026-11-03",
     titre: "Version 40 : on peut attraper le Chapardeur",
     type: "appli",
     points: [

@@ -115,26 +115,12 @@ export async function thiefRaid(r: Raid): Promise<boolean> {
   }
 }
 function speakCaught() {
-  const b = document.createElement("div");
-  b.className = "thief__laugh";
-  b.textContent = "Aïe ! Lâchez-moi !";
-  b.style.left = "50%";
-  b.style.top = "130px";
-  document.body.appendChild(b);
   speakAs("Aïe ! Lâchez-moi, je rends tout !", "excite");
-  window.setTimeout(() => b.remove(), 2400);
   return wait(300);
 }
 
 function laugh(x: number, y: number) {
-  const b = document.createElement("div");
-  b.className = "thief__laugh";
-  b.textContent = "Hi hi hi hi hi !";
-  b.style.left = `${Math.max(70, Math.min(window.innerWidth - 70, x))}px`;
-  b.style.top = `${Math.max(70, y - 90)}px`;
-  document.body.appendChild(b);
   speakAs("Hi hi hi hi hi !", "excite");
-  window.setTimeout(() => b.remove(), 2800);
 }
 
 /** A coin or a card lying on the ground, to be taken. Returns its element (move it with `style.transform`). */
