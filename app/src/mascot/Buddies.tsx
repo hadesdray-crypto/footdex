@@ -129,13 +129,42 @@ function knock(b: Body, vx: number) {
   b.say(b.key === "zombie" ? pick(["Grrr !", "Grrraaah… pas gentil !"]) : b.key === "statue" ? pick(["Ouille ! Mes vieux os !", "Hm ! Ma canne !"]) : pick(["AÏE !", "Ouille !", "Hé !"]), true, "aie");
 }
 
+/** The zombie thrown hard falls to pieces at the very moment of a shock: a wall, a friend, the ground. */
+const canBurst = (b: Body, vx: number) => b.key === "zombie" && zopt().limbs && b.throwSpeed >= 1000 && Math.abs(vx) > 380;
+function burstZombie(zb: Body, vx: number) {
+  const sp = zb.throwSpeed;
+  const at = { x: zb.x, y: zb.y, z: zb.z };
+  zb.mode = "free";
+  zb.vz = 0;
+  zb.vx = 0;
+  zb.vy = 0;
+  zb.z = 0;
+  zb.hidden = true;
+  zb.el.style.display = "none";
+  zb.throwSpeed = 0;
+  fallApart(
+    zb.look,
+    at,
+    sp >= 1800 ? 3 : sp >= 1300 ? 2 : 1,
+    (p) => {
+      zb.x = p.x;
+      zb.y = p.y;
+      zb.hidden = false;
+      zb.el.style.display = "";
+    },
+    { vx: vx || (Math.random() < 0.5 ? -300 : 300) },
+  );
+  thud();
+  window.dispatchEvent(new CustomEvent("footdex:zombiehead", { detail: { x: zb.x, y: zb.y } }));
+}
+
 function step(t: number) {
   const dt = Math.min(0.04, (t - lastT) / 1000 || 0.016);
   lastT = t;
   const list = [...bodies.values()].filter((b) => !b.hidden);
   const vw = window.innerWidth;
   const main = mainSpot();
-  for (const b of list) {
+  outer: for (const b of list) {
     if (b.mode === "held") continue;
     if (b.mode === "fly") {
       b.vz -= G * dt;
@@ -146,15 +175,28 @@ function step(t: number) {
       for (const o of list) {
         if (o === b || o.mode === "fly" || o.mode === "held" || !sameLine(b, o)) continue;
         if (Math.abs(o.x - b.x) < 40 && b.z < H * 0.8) {
+          const hitVx = b.vx;
           knock(o, b.vx);
+          if (canBurst(b, hitVx)) {
+            burstZombie(b, hitVx); // against a friend: he falls to pieces right there
+            continue outer;
+          }
           b.vx = -b.vx * 0.35;
         }
       }
       if (main && sameLine(b, main) && Math.abs(main.x - b.x) < 36 && b.z < H * 0.8 && Math.abs(b.vx) > 120) {
         window.dispatchEvent(new CustomEvent("footdex:mainknock", { detail: { vx: b.vx } }));
+        if (canBurst(b, b.vx)) {
+          burstZombie(b, b.vx);
+          continue outer;
+        }
         b.vx = -b.vx * 0.35;
       }
       if (b.x < W / 2 || b.x > vw - W / 2) {
+        if (canBurst(b, b.vx)) {
+          burstZombie(b, b.vx); // the wall: he falls to pieces at the shock
+          continue outer;
+        }
         b.vx = -b.vx * 0.5;
         b.x = Math.max(W / 2, Math.min(vw - W / 2, b.x));
       }
@@ -166,22 +208,7 @@ function step(t: number) {
           thud();
         } else if (b.key === "zombie" && zopt().limbs && b.throwSpeed >= 1000) {
           // the zombie thrown hard: at the shock, his head and arms come off (put them back, or he looks for them)
-          const zb = b;
-          zb.mode = "free";
-          zb.vz = 0;
-          zb.vx = 0;
-          zb.hidden = true;
-          zb.el.style.display = "none";
-          const sp = zb.throwSpeed;
-          zb.throwSpeed = 0;
-          fallApart(zb.look, { x: zb.x, y: zb.y }, sp >= 1800 ? 3 : sp >= 1300 ? 2 : 1, (p) => {
-            zb.x = p.x;
-            zb.y = p.y;
-            zb.hidden = false;
-            zb.el.style.display = "";
-          }, { vx: zb.vx || (Math.random() < 0.5 ? -300 : 300) });
-          thud();
-          window.dispatchEvent(new CustomEvent("footdex:zombiehead", { detail: { x: zb.x, y: zb.y } }));
+          burstZombie(b, b.vx || (Math.random() < 0.5 ? -300 : 300));
         } else {
           b.mode = "down";
           b.vz = 0;
@@ -388,9 +415,24 @@ function think() {
       const sp = b.key === "statue" ? 14 : 30;
       b.wish = { x: (Math.random() - 0.5) * 2 * sp, y: (Math.random() - 0.5) * sp * 0.4 };
     } else if (Math.random() < 0.12) b.wish = { x: 0, y: 0 };
+    // close friends drift back towards each other (a real group, not strangers on the same screen)
+    if (Math.random() < 0.03) {
+      const mate = others(b).filter((o) => o.key !== "zombie" && !o.hidden && o.mode === "free").sort((p, q) => aff(b.key, q.key) - aff(b.key, p.key))[0];
+      if (mate && aff(b.key, mate.key) >= 2.5 && Math.abs(mate.x - b.x) > 150) {
+        const sp = b.key === "statue" ? 16 : 34;
+        b.wish = { x: Math.sign(mate.x - b.x) * sp, y: Math.sign(mate.y - b.y) * sp * 0.3 };
+      }
+    }
   }
 }
 let thinker = 0;
+
+// ------------------------------------------------------------------ friendships: who likes whom (1 = neutral, 3 = best friends)
+const AFFINITY: Record<string, number> = {
+  "excite|poli": 3, "excite|joueur": 3.5, "joueur|poli": 2, "medecin|poli": 2.5, "medecin|statue": 3, "excite|statue": 0.6, "poli|statue": 2,
+  "joueur|statue": 1.5, "excite|medecin": 1.2, "joueur|medecin": 1.4,
+};
+const aff = (a: string, b: string) => (a === "zombie" || b === "zombie" ? 0.3 : AFFINITY[[a, b].sort().join("|")] ?? 1);
 
 // ------------------------------------------------------------------ the zombie's head (it comes off: a ball in the head, a sneeze)
 let head: { el: HTMLElement; x: number; y: number; vx: number; vz: number; z: number; rot: number; carrier: Body | null } | null = null;
@@ -564,6 +606,137 @@ const passScene = () =>
     await wait(900);
     window.dispatchEvent(new CustomEvent("footdex:pass", { detail: { x: target.x, y: target.y } }));
   });
+
+
+/** Two friends meet and talk football (the closer they are, the likelier). Best friends sometimes start a kickabout. */
+const FOOT_TALK = [
+  ["Tu as vu le match d'hier ?", "Oui ! Quel but à la fin !"],
+  ["Moi je dis que c'était hors-jeu !", "Mais non, il était bien dans le jeu !"],
+  ["Ton équipe va gagner le championnat ?", "Si elle arrête de rater les penaltys…"],
+  ["Mon joueur préféré a marqué hier !", "Ah ! Le mien a été formidable aussi !"],
+  ["On fait une partie tout à l'heure ?", "Oui ! Je prends le ballon !"],
+];
+const FLAVOUR: Record<string, string[]> = {
+  excite: ["INCROYABLE !", "Je ne tiens plus en place !"],
+  poli: ["Je vous en prie, après vous.", "Avec plaisir !"],
+  statue: ["De mon temps, les ballons étaient en cuir…", "Ah… ça me rappelle ma jeunesse."],
+  medecin: ["Pensez à vous échauffer !", "Buvez de l'eau, ça fait du bien."],
+  joueur: ["Allez, une petite partie ?", "Je m'entraîne tous les jours !"],
+};
+function freeFriends() {
+  return [...bodies.values()].filter((b) => !b.hidden && b.mode === "free" && b.key !== "zombie");
+}
+function bestPair(): [Body, Body] | null {
+  const l = freeFriends();
+  const pairs: { p: [Body, Body]; w: number }[] = [];
+  for (let i = 0; i < l.length; i += 1) for (let j = i + 1; j < l.length; j += 1) pairs.push({ p: [l[i], l[j]], w: aff(l[i].key, l[j].key) });
+  if (!pairs.length) return null;
+  let r = Math.random() * pairs.reduce((a, q) => a + q.w, 0);
+  for (const q of pairs) if ((r -= q.w) <= 0) return q.p;
+  return pairs[0].p;
+}
+const chatScene = () =>
+  scene(async () => {
+    const pr = bestPair();
+    if (!pr) return;
+    const [a, b] = pr;
+    await goTo(a, b.x + (a.x < b.x ? -58 : 58), b.y, 120, { stop: 10, timeout: 7000 });
+    if (a.hidden || b.hidden) return;
+    const [la, lb] = pick(FOOT_TALK);
+    a.say(la, true);
+    await wait(2200);
+    b.say(lb, true);
+    await wait(2200);
+    const fl = FLAVOUR[Math.random() < 0.5 ? a.key : b.key];
+    if (fl) (Math.random() < 0.5 ? a : b).say(pick(fl), true);
+    await wait(1800);
+    if (aff(a.key, b.key) >= 2.5 && Math.random() < 0.6) await kickabout(a, b);
+  });
+
+let kball: HTMLElement | null = null;
+const putBall = (x: number, y: number, z = 0) => {
+  if (!kball) {
+    kball = document.createElement("div");
+    kball.className = "kball";
+    kball.textContent = "⚽";
+    document.body.appendChild(kball);
+  }
+  kball.style.transform = `translate(${x - 11}px, ${y - 22 - z}px)`;
+};
+async function flyBall(from: Pos, to: Pos, ms: number) {
+  const t0 = performance.now();
+  await new Promise<void>((done) => {
+    const step = (t: number) => {
+      const k = Math.min(1, (t - t0) / ms);
+      putBall(from.x + (to.x - from.x) * k, from.y + (to.y - from.y) * k, Math.sin(k * Math.PI) * 38);
+      if (k < 1) requestAnimationFrame(step);
+      else done();
+    };
+    requestAnimationFrame(step);
+  });
+}
+/** A few passes between friends, then a shot at the side of the screen: « BUT ! » */
+async function kickabout(a: Body, b: Body) {
+  try {
+    const at = (x: Body, off: number): Pos => ({ x: x.x + x.dir * off, y: x.y });
+    putBall(a.x + 16, a.y);
+    a.say("Allez, on s'fait une petite partie !", true);
+    b.say("Oui ! Passe !", true);
+    let from = a;
+    let to = b;
+    const passes = 3 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < passes; i += 1) {
+      if (from.hidden || to.hidden || from.mode !== "free" || to.mode !== "free") break;
+      from.act("kick", 500);
+      await flyBall({ x: from.x + from.dir * 18, y: from.y }, at(to, to.x < from.x ? 18 : -18), 700);
+      to.act("cheer", 500);
+      await goTo(to, to.x + (Math.random() - 0.5) * 120, to.y + (Math.random() - 0.5) * 60, 150, { stop: 8, timeout: 1500 });
+      [from, to] = [to, from];
+    }
+    // the shot
+    const side = from.x < window.innerWidth / 2 ? window.innerWidth - 20 : 20;
+    from.say("Tir… et c'est le BUT !", true, "ola");
+    from.act("kick", 600);
+    await flyBall({ x: from.x, y: from.y }, { x: side, y: from.y - 10 }, 800);
+    from.act("cheer", 1500);
+    to.say(pick(["Bien joué !", "Pfff, j'étais le gardien !", "Joli tir !"]), true);
+    await wait(1600);
+  } finally {
+    kball?.remove();
+    kball = null;
+  }
+}
+const kickScene = () =>
+  scene(async () => {
+    const pr = bestPair();
+    if (!pr) return;
+    const [a, b] = pr;
+    await goTo(a, b.x + (a.x < b.x ? -80 : 80), b.y, 140, { stop: 10, timeout: 6000 });
+    await kickabout(a, b);
+  });
+
+/** The Referee forms the teams: everyone lines up on one side or the other, cheers, then back to his place. */
+async function teams() {
+  const l = freeFriends();
+  const z = bodies.get("zombie");
+  if (z && !z.hidden) l.push(z);
+  if (!l.length) return;
+  const shuffled = [...l].sort(() => Math.random() - 0.5);
+  const midY = window.innerHeight * 0.52;
+  await Promise.all(
+    shuffled.map(async (b, i) => {
+      const left = i % 2 === 0;
+      const row = Math.floor(i / 2);
+      await wait(i * 200);
+      b.say(left ? pick(["Je suis dans l'équipe bleue !", "À gauche, c'est parti !"]) : pick(["Équipe rouge !", "À droite, avec moi !"]), i === 0);
+      await goTo(b, left ? 60 + row * 52 : window.innerWidth - 60 - row * 52, midY + (left ? -34 : 34) + row * 24, 230, { stop: 8, timeout: 6000 });
+      b.act("cheer", 1200);
+    }),
+  );
+  await wait(1800);
+  const ev = freeFriends();
+  if (ev.length >= 2) await kickabout(ev[0], ev[1]);
+}
 
 /** 7. The Referee whistles the end of playtime: everybody back to his place. */
 async function recre() {
@@ -991,6 +1164,10 @@ export function Buddies() {
       at = Date.now() + (level === 3 ? 3000 : 6000);
       const text = mode === "statue" ? pick(STATUE_SCARED) : mainScared(level);
       sayFx(text, "peur");
+      if (mode !== "statue" && (level === 3 || Math.random() < 0.4)) {
+        window.dispatchEvent(new CustomEvent("footdex:flee", { detail: { x: z.x, y: z.y } }));
+        return;
+      }
       play(level === 3 ? "surprised" : "shake", 1400);
     }, 500);
     const onHead = (e: Event) => {
@@ -1025,6 +1202,7 @@ export function Buddies() {
             if (has("medecin")) options.push(checkupScene);
             if (has("statue") || mode === "statue") options.push(sleepScene);
             if (mode === "joueur" && bodies.size) options.push(passScene);
+            if (freeFriends().length >= 2) options.push(chatScene, chatScene, kickScene);
             if (options.length) void pick(options)();
           }
           nextScene();
@@ -1047,10 +1225,26 @@ export function Buddies() {
       if (ev === "doctor-out") window.setTimeout(() => playFx(mode, "merci"), 300);
       if (ev === "goal") void ola();
       if (ev === "recre") void recre();
+      if (ev === "teams") void scene(async () => { await teams(); await wait(2500); await recre(); });
     };
     window.addEventListener("footdex:terrain", onEv);
     // for checking the scenes in a browser (« ?essai-terrain »)
-    if (location.search.includes("essai-terrain")) (window as unknown as { __scenes?: unknown }).__scenes = { sneezeScene, hideScene, checkupScene, sleepScene, passScene, catScene, ola, recre };
+    if (location.search.includes("essai-terrain")) (window as unknown as { __scenes?: unknown }).__scenes = {
+      sneezeScene, hideScene, checkupScene, sleepScene, passScene, catScene, ola, recre, chatScene, kickScene, teams,
+      // test helpers: throw a friend, read where everybody is
+      fling: (key: Buddy, vx: number, vz: number, speed: number) => {
+        const b = bodies.get(key);
+        if (!b) return false;
+        b.goal = null;
+        b.mode = "fly";
+        b.throwSpeed = speed;
+        b.vx = vx;
+        b.vz = vz;
+        b.vy = 0;
+        return true;
+      },
+      where: () => [...bodies.values()].map((b) => ({ k: b.key, x: Math.round(b.x), y: Math.round(b.y), z: Math.round(b.z), m: b.mode, h: b.hidden, s: b.scared })),
+    };
     return () => {
       timers.forEach((t) => window.clearTimeout(t));
       window.removeEventListener("footdex:terrain", onEv);

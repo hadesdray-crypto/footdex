@@ -37,7 +37,7 @@ function slots() {
   };
 }
 
-export function fallApart(look: Look, at: { x: number; y: number }, count: number, done: (at: { x: number; y: number }) => void, impact: { vx: number } = { vx: 0 }) {
+export function fallApart(look: Look, at: { x: number; y: number; z?: number }, count: number, done: (at: { x: number; y: number }) => void, impact: { vx: number } = { vx: 0 }) {
   const svg = figSvg(look, { size: SIZE, crop: "full", mouth: "open", label: "Le Zombie en morceaux" });
   const trunk = document.createElement("div");
   trunk.className = "ztrunk mfw";
@@ -46,7 +46,9 @@ export function fallApart(look: Look, at: { x: number; y: number }, count: numbe
   const h = Number(trunk.querySelector("svg")?.getAttribute("height")) || SIZE * 1.09;
   // the body: top-left corner of the drawing
   let tx = at.x - SIZE / 2;
-  let ty = at.y - h;
+  let lift = Math.max(0, at.z ?? 0); // burst in mid-air (against a wall…): the body falls to the ground
+  let liftV = 0;
+  let ty = at.y - h - lift;
   const S = slots();
   const slotAt = (id: PartId) => ({ x: tx + S[id].x, y: ty + S[id].y });
   const drawTrunk = () => {
@@ -128,6 +130,14 @@ export function fallApart(look: Look, at: { x: number; y: number }, count: numbe
         p.vx = -Math.abs(p.vx) * 0.5;
       }
       draw(p);
+    }
+    // burst in mid-air: the body drops to the ground
+    if (lift > 0 && !draggingBody) {
+      liftV -= G * dt;
+      lift = Math.max(0, lift + liftV * dt);
+      ty = at.y - h - lift;
+      drawTrunk();
+      if (lift === 0) ballBounce(0.4);
     }
     // the body shuffling by itself towards a piece
     if (walk && !draggingBody) {
@@ -215,6 +225,7 @@ export function fallApart(look: Look, at: { x: number; y: number }, count: numbe
         /* fine */
       }
       draggingBody = true;
+      lift = 0;
       ox = e.clientX - tx;
       oy = e.clientY - ty;
       trunk.classList.add("is-held");

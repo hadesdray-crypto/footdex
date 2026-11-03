@@ -3,7 +3,7 @@
 // They heal slowly by themselves (one bandage every quarter of an hour), and a substitute starts fresh.
 import { storageGet, storageSet } from "../util";
 
-export type Wounds = { b: number; legA: boolean; legB: boolean; arm: boolean };
+export type Wounds = { b: number; legA: boolean; legB: boolean; arm: boolean; nose?: boolean };
 export const NONE: Wounds = { b: 0, legA: false, legB: false, arm: false };
 export const MAX_BANDAGES = 6;
 const KEY = "footdex.blessures";
@@ -12,7 +12,7 @@ function load(): Wounds {
   try {
     const w = JSON.parse(storageGet(KEY) ?? "null") as Partial<Wounds> | null;
     if (!w) return { ...NONE };
-    return { b: Math.max(0, Math.min(MAX_BANDAGES, Math.floor(Number(w.b) || 0))), legA: !!w.legA, legB: !!w.legB, arm: !!w.arm };
+    return { b: Math.max(0, Math.min(MAX_BANDAGES, Math.floor(Number(w.b) || 0))), legA: !!w.legA, legB: !!w.legB, arm: !!w.arm, nose: !!w.nose };
   } catch {
     return { ...NONE };
   }
@@ -47,6 +47,9 @@ export function addCast(): "legA" | "legB" | "arm" {
   set({ ...cur, [part]: true });
   return part;
 }
+export function addNose() {
+  set({ ...cur, nose: true });
+}
 export function heal() {
   set({ ...NONE });
 }
@@ -54,7 +57,7 @@ export function heal() {
 // One bandage comes off every 15 minutes of use (the casts stay until a substitute comes in).
 if (typeof window !== "undefined") {
   window.setInterval(() => {
-    if (document.visibilityState === "visible" && cur.b > 0) set({ ...cur, b: cur.b - 1 });
+    if (document.visibilityState === "visible" && (cur.b > 0 || cur.nose)) set({ ...cur, b: Math.max(0, cur.b - 1), nose: cur.b > 0 ? cur.nose : false });
   }, 15 * 60 * 1000);
 }
 
@@ -75,7 +78,7 @@ export function frontHead(w: Wounds): string {
     plaster(66, 40, -14, 30, 11),
     `<path d="M38 40 Q80 18 122 40 L122 50 Q80 28 38 50Z" fill="#fbfbf6" stroke="#c9ccd6" stroke-width="1.4"/><path d="M100 29 h8 M104 25 v8" stroke="#e0284f" stroke-width="2.4"/>`,
   ];
-  return list.slice(0, w.b).join("");
+  return (w.nose ? plaster(80, 88, -12, 22, 9) : "") + list.slice(0, w.b).join("");
 }
 export function frontArm(w: Wounds, armX: number, top: number): string {
   return w.b >= 4 && !w.arm ? `<g><rect x="${armX - 7.5}" y="${top + 24}" width="15" height="9" rx="3" fill="#fbfbf6" stroke="#c9ccd6" stroke-width="1.2"/><path d="M${armX - 6} ${top + 28.5} h12" stroke="#c9ccd6"/></g>` : "";
@@ -94,6 +97,7 @@ export function frontLegs(w: Wounds, g: { ls: number[]; lw: number; bot: number 
 /** On the side-view footballer (player.ts): head 52,34 r 24.5; shin from the knee, 17 long. */
 export function sideHead(w: Wounds): string {
   let s = "";
+  if (w.nose) s += `<g transform="rotate(-20 69 42)"><rect x="63" y="38" width="14" height="7" rx="2.5" fill="${PLASTER}" stroke="${EDGE}" stroke-width="1"/><path d="M70 38.5 v6" stroke="${EDGE}" stroke-width=".9"/></g>`;
   if (w.b >= 1) s += `<circle cx="60" cy="46" r="4.6" fill="${PLASTER}" stroke="${EDGE}" stroke-width="1.1"/>`;
   if (w.b >= 5) s += `<g transform="rotate(-18 50 16)"><rect x="37" y="13" width="26" height="9" rx="3" fill="${PLASTER}" stroke="${EDGE}" stroke-width="1.1"/></g>`;
   if (w.b >= 6) s += `<path d="M28 26 Q52 12 76 26 L76 33 Q52 19 28 33Z" fill="#fbfbf6" stroke="#c9ccd6" stroke-width="1.1"/>`;

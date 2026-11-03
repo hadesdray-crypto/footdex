@@ -4,6 +4,18 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-03",
+    titre: "Version 34 : des personnages bien vivants",
+    type: "appli",
+    points: [
+      "Le Zombie lancé contre un mur ou un copain éclate au moment du choc, plus après.",
+      "Quand le Zombie s'approche, ton personnage et les copains se sauvent vraiment en courant, au lieu de rester là à parler.",
+      "Nouvelle scène du Jongleur : un lacet défait, il tombe, le renoue, se casse le nez, et le Docteur le soigne avec un pansement.",
+      "Les copains ont des amis préférés : ils se retrouvent, parlent foot ensemble et font parfois une petite partie avec un ballon.",
+      "L'Arbitre forme parfois des équipes, bleus à gauche et rouges à droite, puis tout le monde retourne à sa place.",
+    ],
+  },
+  {
+    date: "2026-11-03",
     titre: "Version 33 : des menus plus simples, pour explorer",
     type: "appli",
     points: [

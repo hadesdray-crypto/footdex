@@ -25,8 +25,9 @@ type Act =
   | { k: "juggle"; left: number; t: number; age: number; leg: 0 | 1; swinging: boolean; done: () => void }
   | { k: "tired"; t: number; until: number; done: () => void }
   | { k: "push"; t: number; until: number; done: () => void }
+  | { k: "lace"; t: number; until: number; done: () => void }
   | { k: "cheer"; t: number; until: number; done: () => void }
-  | { k: "fly"; z: number; vz: number; vx: number; vy: number; spin: number; ang: number; ground: number; t: number; done: () => void; hit?: (x: number, y: number, vx: number) => boolean };
+  | { k: "fly"; z: number; vz: number; vx: number; vy: number; spin: number; ang: number; ground: number; t: number; done: () => void; hit?: (x: number, y: number, vx: number) => boolean; impact?: (x: number, y: number, vx: number, z: number, kind: "wall" | "object") => boolean };
 
 type Pl = {
   look: Look;
@@ -503,6 +504,15 @@ function stepPlayer(dt: number) {
       p0.act = { k: "idle" };
       a.done();
     }
+  } else if (a.k === "lace") {
+    // crouched, a hand on his shoe, he ties his lace (the hand moves back and forth)
+    a.t += dt;
+    const tug = Math.sin(a.t * 9) * 8;
+    pose = { ...STAND, lean: 38, bob: 12, hA: 70, kA: -105, hB: 20, kB: -60, sA: 40 + tug, eA: 30, sB: 10, eB: 20 };
+    if (a.t > a.until) {
+      p0.act = { k: "idle" };
+      a.done();
+    }
   } else if (a.k === "push") {
     a.t += dt;
     const c = (Math.sin(a.t * 4.2) + 1) / 2; // 0 down, 1 up
@@ -520,13 +530,26 @@ function stepPlayer(dt: number) {
       a.z += a.vz * dt;
       p0.x = clamp(p0.x + a.vx * dt, 20, window.innerWidth - 20);
       p0.y = clamp(p0.y + a.vy * dt, top(), bottom());
-      if (p0.x <= 20 || p0.x >= window.innerWidth - 20) a.vx = -a.vx * 0.5;
+      if (p0.x <= 20 || p0.x >= window.innerWidth - 20) {
+        // the wall: at the very moment of the shock (the Zombie falls to pieces right there, not later)
+        if (a.impact && Math.abs(a.vx) > 380 && a.impact(p0.x, p0.y, a.vx, a.z, "wall")) {
+          p0.act = { k: "idle" };
+          a.done();
+          return;
+        }
+        a.vx = -a.vx * 0.5;
+      }
       a.ang += a.spin * dt;
       // he flies into a friend (or a visitor): that one is knocked over, and he bounces back
       if (Math.abs(a.vx) > 150 && a.z < 60) {
         const hitEl = touching(p0.x, p0.y);
         if (hitEl) {
           window.dispatchEvent(new CustomEvent("footdex:knock", { detail: { el: hitEl, vx: a.vx } }));
+          if (a.impact && Math.abs(a.vx) > 380 && a.impact(p0.x, p0.y, a.vx, a.z, "object")) {
+            p0.act = { k: "idle" };
+            a.done();
+            return;
+          }
           a.vx = -a.vx * 0.35;
           a.spin = -a.spin * 0.5;
           ballBounce(0.8);
@@ -674,10 +697,11 @@ export type Footballer = {
   kick: (dir: 1 | -1, power?: number) => Promise<void>;
   juggle: (touches: number) => Promise<void>;
   tired: (ms: number) => Promise<void>;
+  lace: (ms: number) => Promise<void>;
   pushups: (ms: number) => Promise<void>;
   cheer: (ms: number) => Promise<void>;
   /** Thrown by a finger: he flies (vx, vz in px/s), lands, lies down a moment, gets up. */
-  fling: (vx: number, vz: number, vy?: number, onHit?: (x: number, y: number, vx: number) => boolean) => Promise<void>;
+  fling: (vx: number, vz: number, vy?: number, onHit?: (x: number, y: number, vx: number) => boolean, onImpact?: (x: number, y: number, vx: number, z: number, kind: "wall" | "object") => boolean) => Promise<void>;
   wait: (ms: number) => Promise<void>;
   destroy: () => void;
 };
@@ -742,6 +766,7 @@ export function spawnFootballer(look: Look, x: number, y: number, hooks: { onTap
         ballKick(0.3);
         pl.act = { k: "juggle", left: touches, t: 0, age: 0, leg: 0, swinging: false, done };
       }),
+    lace: (ms) => new Promise<void>((done) => (pl ? (cancelAct(), (pl.act = { k: "lace", t: 0, until: ms / 1000, done })) : done())),
     tired: (ms) => new Promise<void>((done) => (pl ? (cancelAct(), (pl.act = { k: "tired", t: 0, until: ms / 1000, done })) : done())),
     pushups: (ms) =>
       new Promise<void>((done) => {
@@ -757,12 +782,12 @@ export function spawnFootballer(look: Look, x: number, y: number, hooks: { onTap
         }
         pl.act = { k: "push", t: 0, until: ms / 1000, done };
       }),
-    fling: (vx, vz, vy = 0, onHit) =>
+    fling: (vx, vz, vy = 0, onHit, onImpact) =>
       new Promise<void>((done) => {
         if (!pl) return done();
         cancelAct();
         if (Math.abs(vx) > 20) pl.dir = vx > 0 ? 1 : -1;
-        pl.act = { k: "fly", z: 0, vz: Math.max(250, vz), vx, vy, spin: (vx >= 0 ? 1 : -1) * (300 + Math.abs(vx) * 0.5), ang: 0, ground: 0, t: 0, done, hit: onHit };
+        pl.act = { k: "fly", z: 0, vz: Math.max(250, vz), vx, vy, spin: (vx >= 0 ? 1 : -1) * (300 + Math.abs(vx) * 0.5), ang: 0, ground: 0, t: 0, done, hit: onHit, impact: onImpact };
       }),
     cheer: (ms) => new Promise<void>((done) => (pl ? (cancelAct(), (pl.act = { k: "cheer", t: 0, until: ms / 1000, done })) : done())),
     wait: (ms) => new Promise<void>((r) => window.setTimeout(r, ms)),

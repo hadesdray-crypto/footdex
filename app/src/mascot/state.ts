@@ -917,7 +917,7 @@ export function speakAs(text: string, who: VoiceKey) {
   voice(text);
 }
 /** Something happened to the character: the friends on the screen react. */
-export function emit(ev: "thrown" | "doctor-in" | "doctor-out" | "card" | "lore" | "goal" | "recre") {
+export function emit(ev: "thrown" | "doctor-in" | "doctor-out" | "card" | "lore" | "goal" | "recre" | "teams") {
   window.dispatchEvent(new CustomEvent("footdex:terrain", { detail: ev }));
 }
 export function visitorSpeak(text: string, who: "medecin" | "arbitre") {

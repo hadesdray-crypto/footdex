@@ -38,7 +38,7 @@ const moved = (where: Where, from: Pt) => {
 
 /** The Doctor runs in with his bag, kneels next to the injured character (wherever he is), treats him, and leaves.
  *  `apply` puts the bandage or the cast on the character at the end of the treatment. */
-export async function doctorVisit(where: Where, opts: { zombie?: boolean; cast?: boolean; apply?: () => void } = {}) {
+export async function doctorVisit(where: Where, opts: { zombie?: boolean; cast?: boolean; nose?: boolean; apply?: () => void } = {}) {
   if (doctor) {
     opts.apply?.();
     return;
@@ -49,7 +49,7 @@ export async function doctorVisit(where: Where, opts: { zombie?: boolean; cast?:
   emit("doctor-in");
   let applied = false;
   try {
-    d.say(opts.cast ? pick(["Oh là là, ça a l'air cassé ! J'arrive !", "Ne bouge pas, j'apporte le plâtre !"]) : pick(["Pas de panique, le docteur arrive !", "J'arrive, j'arrive !", "Laissez passer le docteur !"]));
+    d.say(opts.nose ? "Oh là là, son nez ! J'arrive !" : opts.cast ? pick(["Oh là là, ça a l'air cassé ! J'arrive !", "Ne bouge pas, j'apporte le plâtre !"]) : pick(["Pas de panique, le docteur arrive !", "J'arrive, j'arrive !", "Laissez passer le docteur !"]));
     const fast = inter().docFast;
     await reach(d, where, 44, fast ? 440 : 300);
     if (opts.zombie) {
@@ -61,7 +61,7 @@ export async function doctorVisit(where: Where, opts: { zombie?: boolean; cast?:
     for (let tries = 0; tries < 4; tries += 1) {
       const here = at(where);
       await d.pose("kneel", 500);
-      d.say(opts.zombie ? "Un point… deux points… et voilà !" : opts.cast ? pick(["Un beau plâtre tout blanc…", "On enroule, on enroule…"]) : pick(["Voyons ça…", "Ne bouge pas, ça ne fait pas mal.", "Hmm… Un petit bandage !"]));
+      d.say(opts.nose ? "Tu t'es cassé le nez ! Les lacets, il faut les attacher !" : opts.zombie ? "Un point… deux points… et voilà !" : opts.cast ? pick(["Un beau plâtre tout blanc…", "On enroule, on enroule…"]) : pick(["Voyons ça…", "Ne bouge pas, ça ne fait pas mal.", "Hmm… Un petit bandage !"]));
       await d.pose("work", (opts.cast ? 2800 : 2200) * (fast ? 0.55 : 1));
       if (!moved(where, here)) break;
       d.say(pick(["Hé ! Reviens, je n'ai pas fini !", "Ne bouge pas comme ça !"]));
@@ -74,7 +74,7 @@ export async function doctorVisit(where: Where, opts: { zombie?: boolean; cast?:
       await d.pose("bitten", 1800);
     }
     await d.pose("think", 300);
-    d.say(opts.zombie ? "Recousu comme neuf. Grrr toi-même !" : opts.cast ? pick(["Voilà un plâtre tout neuf ! Fais attention à toi.", "Plâtré ! Tu peux écrire dessus si tu veux."]) : pick(["Un bandage, et ça repart !", "Rien de cassé… enfin, presque !", "Guéri ! Enfin, bientôt."]));
+    d.say(opts.nose ? "Voilà, un pansement sur le nez. La prochaine fois : lacets noués !" : opts.zombie ? "Recousu comme neuf. Grrr toi-même !" : opts.cast ? pick(["Voilà un plâtre tout neuf ! Fais attention à toi.", "Plâtré ! Tu peux écrire dessus si tu veux."]) : pick(["Un bandage, et ça repart !", "Rien de cassé… enfin, presque !", "Guéri ! Enfin, bientôt."]));
     await d.wait(1200);
     await d.leave();
   } finally {
@@ -329,7 +329,13 @@ export async function refereeVisit(reason?: Faute) {
         r.say("TUUUT ! Fin de la récré ! Tout le monde à sa place !", 2800);
         emit("recre");
         await r.pose("point", 2400);
-      } else if (k < 0.3) {
+      } else if (k < 0.3 && document.querySelector(".buddy")) {
+        // he forms the teams, like before a match
+        await r.pose("whistle", 900);
+        r.say("TUUUT ! On fait les équipes ! Bleus à gauche, rouges à droite !", 3200);
+        emit("teams");
+        await r.pose("point", 3200);
+      } else if (k < 0.4) {
         // he takes his cards out of his pocket, looks at them, fiddles with them… and puts them back
         await r.pose("fiddle", rnd(2600, 3600));
         r.say(pick(["Jaune… rouge… Tout est là.", "Hmm… mes cartons sont prêts.", "Un, deux… Bon."]), 2200);

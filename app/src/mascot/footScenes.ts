@@ -118,11 +118,34 @@ export async function footballOuting(f: Footballer, home: Pt, why: Outing = "pla
       await getBall(f);
     } else {
       const r = Math.random();
-      if (r < 0.4) {
+      if (r < 0.15 && onHit) {
+        // the untied lace: he runs, trips, ties it, then the Doctor sets his broken nose
+        await dribbleTo(f, spot(), 260);
+        if (f.dead) return;
+        const dir = f.x < window.innerWidth / 2 ? 1 : -1;
+        const far = { x: Math.max(60, Math.min(window.innerWidth - 60, f.x + dir * 260)), y: f.y };
+        await f.run(far, { speed: 400, timeout: 900 });
+        if (f.dead) return;
+        say(pick(["Waaah !", "Aïe, mon lacet !"]));
+        await f.fling(dir * 250, 200, 0);
+        if (f.dead) return;
+        await f.wait(500);
+        await f.lace(3200);
+        if (f.dead) return;
+        say("Évidemment, on me l'avait dit : « attache tes lacets ! » Mais bon, ça ne coûtait rien…");
+        await f.wait(3200);
+        if (f.dead) return;
+        say("Aïe… mon nez !");
+        const care = onHit();
+        if (care) await care;
+        if (f.dead) return;
+        say(pick(["Promis, je noue mes lacets !", "Double nœud, désormais !"]));
+        await getBall(f);
+      } else if (r < 0.45) {
         await dribbleTo(f, spot());
         await dribbleTo(f, spot());
         await shoot(f);
-      } else if (r < 0.75) {
+      } else if (r < 0.78) {
         await dribbleTo(f, { x: Math.min(window.innerWidth - 80, Math.max(80, home.x + rnd(-120, 120))), y: Math.max(180, home.y - rnd(40, 140)) });
         await juggling(f);
       } else {

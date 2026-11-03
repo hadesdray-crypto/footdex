@@ -20,7 +20,7 @@ import { doctorVisit, faute, refereeSendOff, refereeSurprise, startReferee, subs
 import { Buddies, BuddyPicker } from "./Buddies";
 import { depthZ } from "./depth";
 import { playFx } from "./bruits";
-import { addBandage, addCast, heal, isOut, onWounds, wounds } from "./wounds";
+import { addBandage, addCast, addNose, heal, isOut, onWounds, wounds } from "./wounds";
 import { fallApart } from "./zombie";
 import { runScript } from "./scripts";
 
@@ -257,8 +257,64 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
       });
   }
 
+  /** The zombie friend comes close: he really runs away to the far side of the screen, then comes back home. */
+  function flee(zx: number, zy: number) {
+    const st = getMascot();
+    const a = act.current;
+    const fab = fabRef.current;
+    if (a.busy || !fab || st.busy || menuRef.current || wardrobeRef.current || document.querySelector(".mm, .wd, .reveal")) return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const here = posRef.current;
+    const finish = () => {
+      a.busy = false;
+      a.cancel = null;
+      if (fabRef.current) fabRef.current.style.visibility = "";
+      setRoam(null);
+    };
+    a.busy = true;
+    const actor = createActor(wornLook(), here.x + W / 2, here.y + H - 4, {
+      onTap: () => {
+        a.cancel?.();
+        window.setTimeout(() => setMenu("main"), 30);
+      },
+      onMove: (x, y) => setRoam({ x: Math.max(0, x - W / 2), y: Math.max(0, y - H) }),
+    });
+    fab.style.visibility = "hidden";
+    a.cancel = () => {
+      actor.destroy();
+      finish();
+    };
+    const home = { x: here.x + W / 2, y: here.y + H - 4 };
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const toRight = zx < w / 2;
+    const dest = { x: toRight ? w - 60 : 60, y: Math.min(h - 120, Math.max(160, zy < h / 2 ? h * 0.7 : h * 0.3)) };
+    actor.face(dest.x - actor.x, 0);
+    (async () => {
+      await actor.walkTo(dest, "run", 10, 6000);
+      if (actor.dead) return;
+      actor.pose("idle");
+      await actor.wait(5000);
+      if (actor.dead) return;
+      await actor.walkTo(home, "walk", 10, 8000);
+      if (actor.dead) return;
+      actor.destroy();
+      finish();
+    })().catch(() => { if (!actor.dead) { actor.destroy(); finish(); } });
+  }
+
+  useEffect(() => {
+    const onFlee = (e: Event) => {
+      const d = (e as CustomEvent<{ x: number; y: number }>).detail;
+      flee(d.x, d.y);
+    };
+    window.addEventListener("footdex:flee", onFlee);
+    return () => window.removeEventListener("footdex:flee", onFlee);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /** How bad the fall is, from the speed of the throw: a bump, a cast (the Doctor comes), or a broken leg (he leaves the pitch). */
-  type Hurt = "leger" | "moyen" | "casse";
+  type Hurt = "leger" | "moyen" | "casse" | "nez";
   const severity = (sp: number): Hurt => (!inter().injuries || sp < 1800 ? "leger" : sp < 3000 || Math.random() < 0.5 ? "moyen" : "casse");
 
   /** Thrown across the room (any character): real flight with gravity, a fall, an injury that depends on the force,
@@ -304,25 +360,26 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     // the Zombie thrown hard ALWAYS loses his limbs (whatever the injury settings), unless it is turned off
     const sp = Math.hypot(vx, vy);
     const limbs = perso.mode === "zombie" && zopt().limbs && sp >= 1500;
-    const zombieHit = !limbs
-        ? ouch
-        : (x: number, y: number, vx: number) => {
-            body.destroy();
-            a.cancel = null;
-            fallApart(
-              getMascot().s.look,
-              { x, y },
-              sp >= 2800 ? 3 : sp >= 2000 ? 2 : Math.random() < 0.5 ? 2 : 1,
-              (p) => {
-                update({ fx: Math.min(1, Math.max(0, (p.x - W / 2 - area.l) / Math.max(1, area.r - area.l))), fy: Math.min(1, Math.max(0, (p.y - H + 3 - area.t) / Math.max(1, area.b - area.t))) });
-                a.busy = false;
-                if (fabRef.current) fabRef.current.style.visibility = "";
-              },
-              { vx },
-            );
-            return true;
-          };
-    void body.fling(fling.vx, fling.vz, fling.vy, zombieHit).then(async () => {
+    const burst = (x: number, y: number, vx: number, z = 0) => {
+      body.destroy();
+      a.cancel = null;
+      fallApart(
+        getMascot().s.look,
+        { x, y, z },
+        sp >= 2800 ? 3 : sp >= 2000 ? 2 : Math.random() < 0.5 ? 2 : 1,
+        (p) => {
+          update({ fx: Math.min(1, Math.max(0, (p.x - W / 2 - area.l) / Math.max(1, area.r - area.l))), fy: Math.min(1, Math.max(0, (p.y - H + 3 - area.t) / Math.max(1, area.b - area.t))) });
+          a.busy = false;
+          if (fabRef.current) fabRef.current.style.visibility = "";
+        },
+        { vx },
+      );
+      return true;
+    };
+    const zombieHit = !limbs ? ouch : (x: number, y: number, vx: number) => burst(x, y, vx);
+    // against a wall or a friend, he falls to pieces at the very moment of the shock
+    const zombieImpact = limbs ? (x: number, y: number, vx: number, z: number) => burst(x, y, vx, z) : undefined;
+    void body.fling(fling.vx, fling.vz, fling.vy, zombieHit, zombieImpact).then(async () => {
       if (body.dead) return;
       land();
     });
@@ -339,7 +396,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     // the Doctor sets off right away (he arrives while the character is still on the ground)
     await new Promise((r) => window.setTimeout(r, 300));
     let part = "";
-    await doctorVisit(where, { cast, apply: () => (cast ? (part = addCast()) : addBandage()) });
+    await doctorVisit(where, { cast, nose: hurt === "nez", apply: () => (cast ? (part = addCast()) : hurt === "nez" ? addNose() : addBandage()) });
     treating.current = false;
     if (isOut()) {
       const w = wounds();
@@ -352,7 +409,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
   }
 
   // For checking the scenes in a browser (« ?essai-terrain » in the address): window.__fall("moyen" | "casse").
-  if (typeof location !== "undefined" && location.search.includes("essai-terrain")) (window as unknown as { __fall?: unknown }).__fall = afterFall;
+  if (typeof location !== "undefined" && location.search.includes("essai-terrain")) { (window as unknown as { __fall?: unknown }).__fall = afterFall; (window as unknown as { __sortie?: unknown }).__sortie = () => footballer("play"); }
 
   /** The Papi's little accident: « J'ai un petit problème… » He walks off slowly with his cane, and comes back clean. */
   function oups() {
@@ -463,7 +520,9 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
             onThrown(hurt !== "leger");
             return afterFall(hurt, () => (player.dead ? feet(posRef.current) : { x: player.x, y: player.y }), false);
           }
-        : undefined;
+        : why === "play"
+          ? () => afterFall("nez", () => (player.dead ? feet(posRef.current) : { x: player.x, y: player.y }), false)
+          : undefined;
     footballOuting(player, home, why, fling, false, ouch, to)
       .catch(() => undefined)
       .then((r) => {
