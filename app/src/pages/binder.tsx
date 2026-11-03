@@ -150,7 +150,7 @@ function MyCards({ byId, waiting, onView, pools, chemin }: { byId: Map<string, C
   if (ownedIds.length === 0) {
     return (
       <div className="emptybinder">
-        <p>Ton classeur est vide pour l'instant. Chaque paquet y range 5 cartes.</p>
+        <p>Ton classeur est vide pour l'instant. Chaque paquet y range de nouvelles cartes.</p>
         <Link to={{ page: "paquets" }} className="btn btn--gold btn--big btn--glow">
           <LuPackageOpen aria-hidden="true" /> Ouvrir mon premier paquet
         </Link>

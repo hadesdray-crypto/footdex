@@ -58,6 +58,8 @@ export function Decouvrir({ album }: { album: Album }) {
           <Door to={{ page: "jeux" }} kicker="On joue ensemble" title="Les jeux" figure="10 jeux avec le personnage" tone="gold" icon={LuPlay} />
           <Door to={{ page: "defi" }} kicker="Chaque jour" title="Le défi du jour" figure="4 bonnes réponses = un paquet bonus" tone="gold" icon={LuGraduationCap} />
           <Door to={{ page: "grand-defi" }} kicker="Dix questions" title="Le grand défi" icon={LuZap} />
+          <Door to={{ page: "machine" }} kicker="Des secrets" title="La machine à secrets" figure="Glisse une carte : anecdotes et surprises" tone="pitch" icon={LuGem} />
+          <Door to={{ page: "mission" }} kicker="Quand papa le propose" title="La mission de Papa" figure="3 questions pour gagner la carte Mbappé" icon={LuGraduationCap} />
           <Door to={{ page: "coffre" }} kicker="Le trésor" title="Le coffre" figure="Personnages secrets et cartes spéciales" tone="gold" icon={LuGem} />
         </div>
       </Section>

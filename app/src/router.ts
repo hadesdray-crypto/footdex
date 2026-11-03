@@ -31,12 +31,14 @@ export type Route =
   | { page: "plus" }
   | { page: "decouvrir" }
   | { page: "moi" }
-  | { page: "personnage" };
+  | { page: "personnage" }
+  | { page: "mission" }
+  | { page: "machine" };
 
 const SIMPLE = new Set([
   "accueil", "joueurs", "paquets", "classeur", "collection", "matchs", "scores", "coupes", "clubs", "saison",
   "lexique", "defi", "grand-defi", "histoires", "videos", "sources", "carte", "coffre", "jeux", "parents", "reglages", "plus",
-  "decouvrir", "moi", "personnage",
+  "decouvrir", "moi", "personnage", "mission", "machine",
 ]);
 
 export function parse(hash: string): Route {

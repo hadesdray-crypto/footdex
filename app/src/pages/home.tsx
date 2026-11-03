@@ -10,6 +10,7 @@ import { PathBar, rewardText } from "../ui/chemin";
 import { dayKey, fmt, hashString } from "../util";
 import { AUTO_OPEN } from "./packs";
 import { Installer } from "../maj/Installer";
+import { useMission } from "../mission";
 
 function openPackFromHome(kind: "jour" | "cadeau") {
   try {
@@ -64,9 +65,16 @@ export function Home({ album }: { album: Album }) {
 
   const shinyOf = (c: CardRef) => (state.cards[c.id]?.[3] ?? 0) > 0;
 
+  const mission = useMission();
   return (
     <div className="home">
       <Installer />
+      {mission.en ? (
+        <section className="missionbanner" aria-label="Mission de Papa">
+          <p><b>📩 Ton père te propose une mission !</b> Réponds à 3 questions pour gagner la carte Mbappé.</p>
+          <button type="button" className="btn btn--gold btn--glow" onClick={() => go({ page: "mission" })}>Voir la mission</button>
+        </section>
+      ) : null}
       <section className="hero" aria-label="Footdex">
         <div className="hero__text">
           <p className="hero__for">Pour Raphaël</p>

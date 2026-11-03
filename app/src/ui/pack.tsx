@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { reglages } from "../reglages-jeu";
 import { CHEMINS, GIFT_LABEL, RARITY, type GiftKind } from "../cards";
 import type { PackKind } from "../store";
 import { cx } from "../util";
@@ -60,7 +61,7 @@ export function PackArt({ kind, chemin, glow, tear = 0, torn, className, label }
           <span className="paquet__brand">FOOTDEX</span>
           <Ball className="paquet__ball" />
           <span className="paquet__name">{label ?? (gift ? GIFT_LABEL[kind as GiftKind] : ch.name)}</span>
-          <span className="paquet__count">{kind === "cadeau" || !gift ? "5 cartes" : "1 carte"}</span>
+          <span className="paquet__count">{kind === "cadeau" || !gift ? `${reglages().cartesParPaquet} cartes` : "1 carte"}</span>
         </div>
         <span className="paquet__crimp paquet__crimp--bottom" />
       </div>

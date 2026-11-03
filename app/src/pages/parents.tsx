@@ -10,6 +10,7 @@ import { useNouveautes } from "../maj/nouveautes";
 import { permettreInternet, useInternetPermis } from "../maj/parents";
 import { CodeParent } from "../maj/code";
 import { Atelier } from "../mascot/Atelier";
+import { ReglagesJeu } from "./reglages-jeu";
 import { VoicePanel } from "../mascot/Mascot";
 import { creerCode, restaurerCode } from "../maj/sauvegarde";
 import { LIMITES, choisirLimiteEcran, limiteEcran, useTempsEcran } from "../maj/temps-ecran";
@@ -20,6 +21,11 @@ export function Parents() {
       <PageTitle kicker="Pour les grands" title="Coin des parents" />
       <Journal />
       <Sauvegarde />
+      <Section title="Réglages du jeu" kicker="Code parent">
+        <CodeParent titre="Réglages du jeu">
+          <ReglagesJeu />
+        </CodeParent>
+      </Section>
       <Section title="L'atelier des personnages" kicker="Code parent">
         <CodeParent titre="Caractère et interactions">
           <p className="note">Combien chaque personnage parle et bouge, s'il peut être lancé, les blessures, le Médecin et l'Arbitre.</p>

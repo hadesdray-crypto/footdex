@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { cx } from "../util";
 import { FBX, RARITY, fbx, fbxSvg } from "./art";
-import { CHEST_COINS, CHEST_STARS, freeChestToday, openChest, useCollec, type Loot } from "./store";
+import { chestCoins, chestStars, freeChestToday, openChest, useCollec, type Loot } from "./store";
 import { spendStars, useStore } from "../store";
 import { Chest } from "../pages/coffre";
 import { Fig } from "../mascot/Fig";
@@ -87,7 +87,7 @@ export function ChestModal({ onClose }: { onClose: () => void }) {
   const free = freeChestToday();
 
   function start(pay: "free" | "coins" | "stars") {
-    if (pay === "stars" && !spendStars(CHEST_STARS)) return say(`Il te faut ${CHEST_STARS} étoiles pour ouvrir un coffre.`);
+    if (pay === "stars" && !spendStars(chestStars())) return say(`Il te faut ${chestStars()} étoiles pour ouvrir un coffre.`);
     const got = openChest(pay);
     if (!got) return;
     click("button");
@@ -111,7 +111,8 @@ export function ChestModal({ onClose }: { onClose: () => void }) {
       say(`${l.n} pièces d'or ! Elles servent à ouvrir d'autres coffres.`);
     } else if (l.k === "fig") say(l.fresh ? `Une nouvelle figurine : ${fbx(l.id).name} !` : `Encore ${fbx(l.id).name} ! Un doublon, tu peux l'échanger contre des pièces.`);
     else if (l.k === "style") say(`Un nouveau personnage stylé : ${l.name} ! Tu peux habiller ton personnage comme lui.`);
-    else if (l.k === "pack") say(l.cards.length === 1 ? "Un paquet d'une carte ! Touche-le pour l'ouvrir." : `Un paquet de ${l.cards.length} cartes ! Touche-le pour l'ouvrir.`);
+    else if (l.k === "gift") say("Un paquet cadeau de cartes Footdex ! Il t'attend dans l'onglet Paquets.");
+    else if (l.k === "pack") say("Une carte Footballini, ça n'arrive pas souvent ! Touche-la pour la découvrir.");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i, phase]);
 
@@ -129,11 +130,11 @@ export function ChestModal({ onClose }: { onClose: () => void }) {
           <>
             <h2 className="chm__title">Le coffre au trésor</h2>
             <div className="chm__chest"><Chest open={false} /></div>
-            <p className="chm__hint">Dedans : des pièces, des paquets de 1, 2 ou 15 cartes Footballinis, des figurines, des personnages stylés… On ne sait jamais !</p>
+            <p className="chm__hint">Dedans : des pièces, des paquets cadeaux de cartes Footdex, des cartes Footballinis (rares), des figurines, des personnages stylés… On ne sait jamais !</p>
             <div className="chm__pay">
               <button type="button" className="btn btn--gold btn--big btn--glow" disabled={!free} onClick={() => start("free")}>{free ? "🎁 Le coffre gratuit du jour" : "Coffre gratuit : reviens demain"}</button>
-              <button type="button" className="btn btn--soft" disabled={c.coins < CHEST_COINS} onClick={() => start("coins")}>🪙 Ouvrir pour {CHEST_COINS} pièces ({c.coins})</button>
-              <button type="button" className="btn btn--soft" disabled={s.stars < CHEST_STARS} onClick={() => start("stars")}>⭐ Ouvrir pour {CHEST_STARS} étoiles ({s.stars})</button>
+              <button type="button" className="btn btn--soft" disabled={c.coins < chestCoins()} onClick={() => start("coins")}>🪙 Ouvrir pour {chestCoins()} pièces ({c.coins})</button>
+              <button type="button" className="btn btn--soft" disabled={s.stars < chestStars()} onClick={() => start("stars")}>⭐ Ouvrir pour {chestStars()} étoiles ({s.stars})</button>
             </div>
             <button type="button" className="btn btn--ghost" onClick={onClose}>Fermer</button>
           </>
@@ -149,6 +150,13 @@ export function ChestModal({ onClose }: { onClose: () => void }) {
               <div className="chm__item">
                 <div className="chm__coins">{Array.from({ length: 7 }, (_, k) => <span key={k} style={{ animationDelay: `${k * 90}ms`, left: `${10 + k * 12}%` }}>🪙</span>)}</div>
                 <h3>+{cur.loot.n} pièces d'or</h3>
+                <button type="button" className="btn btn--gold btn--big" onClick={next}>Super !</button>
+              </div>
+            ) : cur.loot.k === "gift" ? (
+              <div className="chm__item">
+                <div className="fbpack fbpack--5" aria-hidden="true"><b>🎁</b><span>PAQUET</span><em>CADEAU</em></div>
+                <h3>Un paquet cadeau Footdex !</h3>
+                <p>Des joueurs, des légendes, des moments de match. Ouvre-le dans l'onglet « Paquets ».</p>
                 <button type="button" className="btn btn--gold btn--big" onClick={next}>Super !</button>
               </div>
             ) : cur.loot.k === "fig" ? (
@@ -216,6 +224,33 @@ function PackOpen({ cards, shown, setShown, onDone }: { cards: string[]; shown: 
       <div className="chips">
         {big ? <button type="button" className="btn btn--soft" onClick={() => setShown(cards.length)}>Tout voir</button> : null}
         <button type="button" className="btn btn--gold btn--big" onClick={() => (shown + 1 < cards.length ? setShown(shown + 1) : big ? setShown(cards.length) : onDone())}>{shown + 1 < cards.length ? "Carte suivante" : "Super !"}</button>
+      </div>
+    </div>
+  );
+}
+
+/** A Footballini (Brain Rot) card that fell out of a normal pack, once the pack is open. Rare, so it gets its own moment. */
+export function BrainRotDrop({ id, onClose }: { id: string; onClose: () => void }) {
+  const c = useCollec();
+  const f = fbx(id);
+  const fresh = (c.cards[id] ?? 0) <= 1;
+  useEffect(() => {
+    flip(["base", "rare", "eclat", "legende", "legende"][f.rar]);
+    say(fresh ? `Une carte Footballini est tombée du paquet : ${f.name} !` : `Encore ${f.name} ! Un doublon, tu peux l'échanger contre des pièces.`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return (
+    <div className="chm" role="dialog" aria-modal="true" aria-label="Une carte Footballini est tombée">
+      <div className="chm__box">
+        <div className="chm__item">
+          <h2 className="chm__title">Carte surprise !</h2>
+          <div className="chm__flip">
+            <FbxCard id={id} big />
+          </div>
+          <p className="chm__new">{fresh ? "Nouvelle carte Footballini !" : "Doublon"}</p>
+          <p>Elle est rangée dans ta collection, rubrique Footballinis.</p>
+          <button type="button" className="btn btn--gold btn--big" onClick={onClose}>Super !</button>
+        </div>
       </div>
     </div>
   );

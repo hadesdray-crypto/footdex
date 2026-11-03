@@ -4,7 +4,7 @@ import { useState } from "react";
 import { LuLibrary, LuLock } from "react-icons/lu";
 import { FBX, RARITY } from "../fbx/art";
 import { ChestModal, FbxCard, Figurine } from "../fbx/ui";
-import { DUP_VALUE, freeChestToday, tradeDuplicates, tradeFigDuplicates, useCollec } from "../fbx/store";
+import { dupValue, freeChestToday, tradeDuplicates, tradeFigDuplicates, useCollec } from "../fbx/store";
 import { Fig } from "../mascot/Fig";
 import { say, update } from "../mascot/state";
 import { go } from "../router";
@@ -24,7 +24,7 @@ export function Collection() {
   const cardsOwned = FBX.filter((f) => c.cards[f.id]).length;
   const figsOwned = FBX.filter((f) => c.figs[f.id]).length;
   const free = freeChestToday();
-  const dupCards = FBX.reduce((a, f) => a + Math.max(0, (c.cards[f.id] ?? 0) - 1) * DUP_VALUE[f.rar], 0);
+  const dupCards = FBX.reduce((a, f) => a + Math.max(0, (c.cards[f.id] ?? 0) - 1) * dupValue(f.rar), 0);
 
   function tradeAll() {
     let gain = 0;

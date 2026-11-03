@@ -4,6 +4,19 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-03",
+    titre: "Version 35 : mission de Papa, machine à secrets et nouveaux paquets",
+    type: "appli",
+    points: [
+      "Mission de Papa : un message « Ton père te propose une mission » apparaît sur l'accueil. Il faut le code de papa, puis 3 questions (foot, science du ballon, maths) pour gagner la carte Mbappé spéciale.",
+      "Nouvelle machine à secrets (dans Découvrir) : on glisse une carte dedans pour voir ses anecdotes, ses vidéos et, pour la carte Mbappé, des secrets en plus.",
+      "Les paquets sont rééquilibrés : plus de surprises, des cartes rares, des doublons et une chance garantie de temps en temps.",
+      "Les cartes Footballinis (Brain Rot) sont maintenant rares : elles tombent environ tous les 7 paquets, au lieu de remplir les coffres.",
+      "Le coffre donne maintenant de vrais paquets cadeaux de cartes Footdex, des pièces, des figurines et, rarement, une carte Footballini.",
+      "Coin des parents, « Réglages du jeu » : cartes par paquet, chances de chaque carte, chances garanties, doublons, coffre, gains des jeux, code et questions de la mission. Tout se règle sans connexion.",
+    ],
+  },
+  {
+    date: "2026-11-03",
     titre: "Version 34 : des personnages bien vivants",
     type: "appli",
     points: [

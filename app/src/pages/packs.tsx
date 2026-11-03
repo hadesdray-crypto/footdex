@@ -10,6 +10,9 @@ import { Failure, Link, Loading } from "../ui/bits";
 import { Chapters, PathMap, RewardList } from "../ui/chemin";
 import { PackArt } from "../ui/pack";
 import { Reveal, type Opening } from "../ui/reveal";
+import { reglages } from "../reglages-jeu";
+import { BrainRotDrop } from "../fbx/ui";
+import { brainRotDuPaquet } from "../fbx/store";
 import { fmt, shortDate } from "../util";
 
 export function usePeople(needed: boolean): { people: Person[] | null; failed: boolean } {
@@ -73,13 +76,17 @@ export function Packs({ album }: { album: Album }) {
   const hasGame = Object.keys(state.cards).some((id) => id.startsWith("g:"));
   const { pools, ready, failed, people } = usePools(album, ch.index, hasGame);
   const [opening, setOpening] = useState<Opening | null>(null);
+  const [drop, setDrop] = useState<string | null>(null);
 
   function openPack(kind: "jour" | "bonus") {
     const s = getState();
     const st = packStatus(s);
     if (kind === "jour" ? !st.free : !st.bonus) return;
     const next = startOpening(kind, drawPack(pools, cheminOf(s.opened).index, s.cards));
-    if (next) setOpening(next);
+    if (next) {
+      setOpening(next);
+      setDrop(brainRotDuPaquet());
+    }
   }
 
   function openGift(gift?: Gift) {
@@ -207,7 +214,7 @@ export function Packs({ album }: { album: Album }) {
       <section className="panel odds">
         <h2 className="section-title">Ce qu'il y a dans un paquet</h2>
         <p className="note">
-          5 cartes différentes, tirées parmi les {ready ? fmt(poolSize) : "…"} cartes de ce chemin. La 5<sup>e</sup> est toujours au moins Rare. Une carte déjà reçue est un doublon : elle
+          {reglages().cartesParPaquet} cartes différentes, tirées parmi les {ready ? fmt(poolSize) : "…"} cartes de ce chemin. La dernière est toujours au moins Rare. Parfois, une carte Footballini rare tombe en plus. Une carte déjà reçue est un doublon : elle
           rapporte des étoiles, à dépenser dans la boutique du classeur.
         </p>
         <div className="tablewrap">
@@ -267,6 +274,7 @@ export function Packs({ album }: { album: Album }) {
         </section>
       ) : null}
 
+      {drop && !opening ? <BrainRotDrop id={drop} onClose={() => setDrop(null)} /> : null}
       {opening ? <Reveal key={opening.id} opening={opening} onClose={() => setOpening(null)} onGift={() => openGift()} /> : null}
     </div>
   );

@@ -4,6 +4,7 @@
 import { useSyncExternalStore } from "react";
 import { CARDS_PER_CHEMIN, MILESTONES, RARITY, SHINY_STARS, cheminOf, milestoneRewards, type GiftKind, type Pulled, type Reward } from "./cards";
 import { dayKey, daysSinceEpoch, storageGet, storageSet } from "./util";
+import { reglages } from "./reglages-jeu";
 
 /** count, first day (days since 1970), order of arrival, number of shiny copies */
 export type Owned = [count: number, firstDay: number, order: number, shiny: number];
@@ -312,12 +313,22 @@ export function unlockChest(id: string, price: number): boolean {
   return true;
 }
 
-/** A game won: 3 stars, once a day for each game, so nobody can farm stars by replaying. Returns the stars given. */
+/** A game won: some stars (3 by default), once a day for each game, so nobody can farm stars by replaying. Returns the stars given. */
 export function gameReward(game: string, win: boolean): number {
   const today = dayKey();
   if (!win || state.gamesDay[game] === today) return 0;
-  commit({ ...state, stars: state.stars + 3, gamesWon: state.gamesWon + 1, gamesDay: { ...state.gamesDay, [game]: today } });
-  return 3;
+  commit({ ...state, stars: state.stars + reglages().gainJeu, gamesWon: state.gamesWon + 1, gamesDay: { ...state.gamesDay, [game]: today } });
+  return reglages().gainJeu;
+}
+
+/** Stars given by something other than a game (the card machine…). */
+export function gagnerEtoiles(n: number) {
+  if (n > 0) commit({ ...state, stars: state.stars + n });
+}
+
+/** A gift pack (from the chest, a mission…): it waits in « Paquets » until it is opened. */
+export function addGift(kind: GiftKind, from: string) {
+  commit({ ...state, gifts: [...state.gifts, { id: `g${Date.now()}-${kind}`, kind, from }] });
 }
 
 /** The binder book: for each page, nine pockets holding a card id or nothing. */

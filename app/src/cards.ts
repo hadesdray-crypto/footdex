@@ -1,6 +1,7 @@
 // Collectible cards: rarities, the path of chapters, pools and packs.
 import { type Album, type Match, type Person, type Player, bornIsoOf, gameOverall, posFr, posteOf } from "./data";
 import { random } from "./util";
+import { ecrireCompteurs, lireCompteurs, reglages } from "./reglages-jeu";
 
 export type Rarity = "base" | "rare" | "eclat" | "legende" | "moment";
 
@@ -86,7 +87,7 @@ export const BACKS: { id: string; name: string }[] = [
   { id: "dos-7", name: "Le champion" },
 ];
 
-export const CARDS_PER_PACK = 5;
+export const CARDS_PER_PACK = 5; // the default; the real number is in reglages-jeu.ts
 
 export type Visual =
   | { type: "portrait"; src: string }
@@ -294,9 +295,14 @@ export function needsPeople(groups: GroupId[]): boolean {
 
 export type Pulled = { card: CardRef; shiny: boolean };
 
+/** The chances of a card in a pack (changeable by a parent, see reglages-jeu.ts). */
 export const SLOT_ODDS: Record<"normal" | "last", Record<Rarity, number>> = {
-  normal: { base: 72, rare: 22, eclat: 4.4, legende: 0.8, moment: 0.8 },
-  last: { base: 0, rare: 68, eclat: 24, legende: 4, moment: 4 },
+  get normal() {
+    return reglages().chancesNormal;
+  },
+  get last() {
+    return reglages().chancesDerniere;
+  },
 };
 
 /**
@@ -355,20 +361,31 @@ function cardOf(d: Draw, rarity: Rarity, preferNew: number): CardRef | null {
 
 function drawOne(d: Draw, odds: Record<Rarity, number>, floor: Rarity | null): CardRef | null {
   const rarity = rollRarity(odds, availableRarities(d), floor);
-  return rarity ? cardOf(d, rarity, 0.6) : null;
+  return rarity ? cardOf(d, rarity, reglages().nouvellesCartes / 100) : null;
 }
 
 /** A pack of 5 different cards from the groups open on this path. The 5th is at least Rare when the groups have one. */
 export function drawPack(pools: Pools, chemin: number, owned: Record<string, unknown>): Pulled[] {
   const d = drawContext(pools, chemin, owned);
+  const r = reglages();
+  const c = lireCompteurs();
+  // a good card is guaranteed from time to time, so nobody waits forever
+  const floorLast: Rarity | null = r.garantieLegende && c.depuisLegende + 1 >= r.garantieLegende ? "legende" : r.garantieEclat && c.depuisEclat + 1 >= r.garantieEclat ? "eclat" : null;
   const out: Pulled[] = [];
-  for (let slot = 0; slot < CARDS_PER_PACK; slot++) {
-    const last = slot === CARDS_PER_PACK - 1;
-    const card = drawOne(d, last ? SLOT_ODDS.last : SLOT_ODDS.normal, null) ?? drawOne(d, SLOT_ODDS.normal, null);
+  const n = r.cartesParPaquet;
+  for (let slot = 0; slot < n; slot++) {
+    const last = slot === n - 1 && n > 1;
+    const card = drawOne(d, last ? SLOT_ODDS.last : SLOT_ODDS.normal, last ? floorLast : null) ?? drawOne(d, last ? SLOT_ODDS.last : SLOT_ODDS.normal, null) ?? drawOne(d, SLOT_ODDS.normal, null);
     if (!card) break;
     d.taken.add(card.id);
     out.push({ card, shiny: random() < SHINY_CHANCE });
   }
+  const best = Math.max(...out.map((p) => RARITY[p.card.rarity].rank), -1);
+  ecrireCompteurs({
+    ...c,
+    depuisEclat: best >= RARITY.eclat.rank ? 0 : c.depuisEclat + 1,
+    depuisLegende: best >= RARITY.legende.rank ? 0 : c.depuisLegende + 1,
+  });
   return out;
 }
 

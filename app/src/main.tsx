@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Machine, Mission } from "./pages/mission";
 import { createRoot } from "react-dom/client";
 import { type Album, loadAlbum } from "./data";
 import { Binder } from "./pages/binder";
@@ -56,12 +57,15 @@ function Page({ route, album }: { route: Route; album: Album }) {
     case "reglages": return <Moi />;
     case "moi": return <Moi />;
     case "personnage": return <Personnage />;
+    case "mission": return <Mission />;
+    case "machine": return <Machine album={album} />;
     case "plus": return <Decouvrir album={album} />;
     case "decouvrir": return <Decouvrir album={album} />;
   }
 }
 
 const TITLES: Record<string, string> = {
+  mission: "Mission de Papa", machine: "La machine à secrets",
   accueil: "Footdex", joueurs: "Joueurs", paquets: "Paquets", classeur: "Classeur", matchs: "Matchs", scores: "Scores", coupes: "Coupes",
   clubs: "Clubs", saison: "Saison 2026-2027", lexique: "Lexique", defi: "Défi du jour", "grand-defi": "Grand défi", histoires: "Histoires",
   videos: "Vidéos", sources: "Sources", carte: "La carte", coffre: "Le coffre", collection: "Ma collection", jeux: "Les jeux", parents: "Coin des parents", reglages: "Moi", plus: "Découvrir", decouvrir: "Découvrir", moi: "Moi", personnage: "Mon personnage",
