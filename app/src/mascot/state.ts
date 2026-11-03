@@ -620,13 +620,85 @@ export function hideBubble() {
   set({ bubble: null });
 }
 
+// ------------------------------------------------------------------ turns: only one character speaks at a time, each in his turn
+type Turn = { run: (end: () => void) => void; at: number; prio: number; ms: number };
+const turns: Turn[] = [];
+let turnOn = false;
+let turnPrio = 0;
+let turnId = 0;
+let turnGuard = 0;
+/** True while somebody is speaking or waiting to speak. */
+export const turnsBusy = () => turnOn || turns.length > 0;
+function startTurn() {
+  if (turnOn) return;
+  let t = turns.shift();
+  // a line that waited too long is no more up to date: it is dropped (except the important ones)
+  while (t && t.prio === 0 && Date.now() - t.at > 9000) t = turns.shift();
+  if (!t) return;
+  turnOn = true;
+  turnPrio = t.prio;
+  turnId += 1;
+  const my = turnId;
+  const end = () => {
+    if (my !== turnId || !turnOn) return;
+    window.clearTimeout(turnGuard);
+    turnOn = false;
+    window.setTimeout(startTurn, 260);
+  };
+  window.clearTimeout(turnGuard);
+  turnGuard = window.setTimeout(end, Math.min(14000, t.ms + 2500));
+  try {
+    t.run(end);
+  } catch {
+    end();
+  }
+}
+/** A friend or a visitor wants to speak: his line starts when the previous speaker has finished. `run` must call `end` when he is done.
+ *  prio 0 = idle chatter (can be dropped), 1 = what a scene says (cuts chatter short), 2 = the Doctor and the Referee (cut everybody short). */
+export function takeTurn(run: (end: () => void) => void, opts: { prio?: number; ms?: number } = {}) {
+  const prio = opts.prio ?? 0;
+  if (prio === 0) {
+    while (turns.filter((x) => x.prio === 0).length >= 4) turns.splice(turns.findIndex((x) => x.prio === 0), 1);
+  }
+  const item: Turn = { run, at: Date.now(), prio, ms: opts.ms ?? 3000 };
+  // in front of every line of a lower priority, behind the ones of the same level
+  let i = turns.findIndex((x) => x.prio < prio);
+  if (i < 0) i = turns.length;
+  turns.splice(i, 0, item);
+  if (turnOn && turnPrio < prio) {
+    turnId += 1;
+    turnOn = false;
+    window.clearTimeout(turnGuard);
+    // the one who was talking is cut short: his bubble goes away
+    window.dispatchEvent(new Event("footdex:hush"));
+  }
+  startTurn();
+}
+/** The main character speaks: he has the floor at once, and the friends wait until he has finished. */
+function claimTurn(ms: number): () => void {
+  turns.length = 0;
+  turnId += 1;
+  turnOn = true;
+  const my = turnId;
+  const release = () => {
+    if (my !== turnId || !turnOn) return;
+    window.clearTimeout(turnGuard);
+    turnOn = false;
+    window.setTimeout(startTurn, 260);
+  };
+  window.clearTimeout(turnGuard);
+  turnGuard = window.setTimeout(release, Math.min(14000, ms + 1500));
+  return release;
+}
+
 /** Shows a bubble and speaks it. `top` shows it at the top of the screen (during a pack opening). */
 export function say(text: string, opts: { top?: boolean; quiet?: boolean; keepQueue?: boolean } = {}) {
   if (!opts.keepQueue) queue = [];
   window.clearTimeout(hideTimer);
   bubbleId += 1;
   set({ bubble: { id: bubbleId, text, top: !!opts.top } });
-  if (!opts.quiet) voice(text);
+  const release = claimTurn(Math.max(2400, text.length * 68));
+  if (!opts.quiet) voice(text, release);
   const wait = Math.max(4200, text.length * 70);
   hideTimer = window.setTimeout(() => {
     if (snap.talking) hideTimer = window.setTimeout(hideBubble, 1500);
@@ -910,22 +982,22 @@ export const optionKey = (v: PVoice) => (v.engine === "native" ? `n${v.native}` 
 
 /** A visitor's line (doctor, referee): the same speaking chain, with his own pitch; the character's mouth does not move. */
 /** A friend on the screen says something, with his own voice (the character's mouth stays still). */
-export function speakAs(text: string, who: VoiceKey) {
+export function speakAs(text: string, who: VoiceKey, onEnd?: () => void) {
   if (!snap.s.auto) return;
   trying = voiceOf(who);
   nextIsVisitor = true;
-  voice(text);
+  voice(text, onEnd);
 }
 /** Something happened to the character: the friends on the screen react. */
 export function emit(ev: "thrown" | "doctor-in" | "doctor-out" | "card" | "lore" | "goal" | "recre" | "teams") {
   window.dispatchEvent(new CustomEvent("footdex:terrain", { detail: ev }));
 }
-export function visitorSpeak(text: string, who: "medecin" | "arbitre") {
+export function visitorSpeak(text: string, who: "medecin" | "arbitre", onEnd?: () => void) {
   if (!snap.s.auto) return;
   // his own voice if one was chosen for him; otherwise the character's voice (the one that works on this phone) with his own pitch
   const his = snap.s.pvoice[who];
   const mine = voiceOf(PERSOS[snap.s.perso].mode);
   trying = his ? voiceOf(who) : { ...mine, pitch: DEFAULT_PITCH[who], fun: "" };
   nextIsVisitor = true;
-  voice(text);
+  voice(text, onEnd);
 }

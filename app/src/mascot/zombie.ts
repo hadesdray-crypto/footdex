@@ -295,6 +295,7 @@ export function fallApart(look: Look, at: { x: number; y: number; z?: number }, 
       void doctorRepair(
         loose.map((p) => ({ x: p.x, y: f.y, take: () => attach(p) })),
         f,
+        () => feet(),
       );
     }
   }, 25000);

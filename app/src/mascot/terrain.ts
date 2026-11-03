@@ -153,8 +153,27 @@ export async function doctorSack(pieces: { x: number; y: number; take: () => voi
   }
 }
 
-/** The Zombie lost one or two pieces: the Doctor puts on his metal collar, sews them back on… and gets bitten. */
-export async function doctorRepair(pieces: { x: number; y: number; take: () => void }[], at: { x: number; y: number }) {
+/** How close the Doctor must be to the Zombie for the Zombie to reach his collar (in px, feet to feet). */
+const BITE_RANGE = 38;
+
+/** The Doctor has sewn something on: if the Zombie is stuck to him, he chews the metal collar. Too far: no bite. */
+async function maybeBitten(d: Visitor, zombie: () => Pt) {
+  const z = zombie();
+  if (Math.hypot(z.x - d.x, z.y - d.y) <= BITE_RANGE) {
+    d.face(z.x - d.x || 1);
+    d.say("CRONCH ! … Vacciné ! Regardez : ça ne me fait rien !", 3400);
+    await d.talked();
+    await d.pose("bitten", 1800);
+    d.say("Il mâchouille mon collier… Bon appétit !");
+    await d.talked();
+  } else {
+    d.say(pick(["Il est trop loin pour me mordre. Mon collier peut se reposer !", "Pas de morsure aujourd'hui : il est loin !"]), 3000);
+    await d.talked();
+  }
+}
+
+/** The Zombie lost one or two pieces: the Doctor puts on his metal collar, sews them back on… and, if the Zombie is right against him, gets bitten. */
+export async function doctorRepair(pieces: { x: number; y: number; take: () => void }[], at: { x: number; y: number }, zombie: () => Pt = () => at) {
   if (doctor) return;
   const d = enter("medecin", at.x, at.y);
   doctor = d;
@@ -168,20 +187,96 @@ export async function doctorRepair(pieces: { x: number; y: number; take: () => v
       p.take();
       await d.pose("work", 600);
     }
-    const spot = at.x + 44 <= window.innerWidth - 30 ? at.x + 44 : at.x - 44;
-    await d.walk({ x: spot, y: at.y }, 200);
-    d.face(at.x - spot);
+    // he stands right against the Zombie (wherever his body is now) to sew
+    await reach(d, zombie, 26, 240);
     d.say("Un point… deux points… et voilà !");
     await d.pose("work", 1800);
-    d.say("CRONCH ! … Vacciné ! Regardez : ça ne me fait rien !", 3400);
-    await d.pose("bitten", 2000);
-    d.say("Il mâchouille mon collier… Bon appétit !");
-    await d.wait(1200);
+    await maybeBitten(d, zombie);
     await d.leave();
   } finally {
     d.destroy();
     doctor = null;
     emit("doctor-out");
+  }
+}
+
+/** The friends played football with the Zombie's head: the Doctor runs to the head, brings it back and sets it on. */
+export async function doctorHeadBack(zombie: () => Pt, setOn: () => void, head: () => Pt) {
+  if (doctor) {
+    setOn();
+    return;
+  }
+  const h = head();
+  const d = enter("medecin", h.x, h.y);
+  doctor = d;
+  emit("doctor-in");
+  try {
+    d.collar();
+    d.say("Oh là là, on a joué avec sa tête ?! Je mets mon collier… et je la rapporte !", 3200);
+    await d.talked();
+    await d.walk({ x: clampX(h.x - 20 * d.dir), y: h.y }, 300);
+    await d.pose("kneel", 500);
+    d.say("Pas de panique, on la remet.");
+    await d.talked();
+    await reach(d, zombie, 26, 280);
+    await d.pose("work", 900);
+    setOn();
+    d.say("Un point… deux points… et voilà !");
+    await d.pose("work", 1500);
+    await maybeBitten(d, zombie);
+    await d.leave();
+  } finally {
+    if (doctor === d) {
+      setOn();
+      doctor = null;
+    }
+    d.destroy();
+    emit("doctor-out");
+  }
+}
+
+/** The Referee runs to `where`, whistles and says a few lines: everybody stops. */
+export async function refereeStops(where: Pt, lines: string[]) {
+  if (referee) return;
+  const r = enter("arbitre", where.x, where.y);
+  referee = r;
+  try {
+    await reach(r, where, 80, 330);
+    r.front(true);
+    await r.pose("whistle", 800);
+    r.say("TUUUT !", 900);
+    await r.wait(500);
+    for (const l of lines) {
+      r.say(l, 3000);
+      await Promise.all([r.pose("point", 2200), r.talked()]);
+    }
+    await r.leave();
+  } finally {
+    r.destroy();
+    referee = null;
+  }
+}
+
+/** Somebody stands in the middle of the screen and hides everything: the Referee comes and tells him to move over. */
+export async function refereeMovesOver(where: Where, line: string, after: () => void) {
+  if (referee) return;
+  const p = at(where);
+  const r = enter("arbitre", p.x, p.y);
+  referee = r;
+  try {
+    await reach(r, where, 70, 320);
+    r.front(true);
+    await r.pose("whistle", 700);
+    r.say("TUUUT !", 900);
+    await r.wait(450);
+    r.say(line, 3000);
+    await Promise.all([r.pose("point", 1800), r.talked()]);
+    after();
+    await r.wait(900);
+    await r.leave();
+  } finally {
+    r.destroy();
+    referee = null;
   }
 }
 

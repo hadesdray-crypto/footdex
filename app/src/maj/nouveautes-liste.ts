@@ -4,6 +4,18 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-03",
+    titre: "Version 38 : les personnages parlent chacun leur tour",
+    type: "appli",
+    points: [
+      "Un seul personnage parle à la fois : chacun attend la fin de la phrase de l'autre, et sa bulle apparaît au moment où il parle.",
+      "Le zombie éternue en deux temps : « A-tchou… » et sa tête part au mot « tchou », puis il termine « …me ! » alors que la tête roule déjà.",
+      "Le zombie ne mâchouille le collier du docteur que s'il est collé à lui. Sinon, il est trop loin : pas de morsure.",
+      "Les amis jouent au foot avec le ballon quand il traîne. Rarement, ils jouent avec la tête du zombie : l'arbitre arrête tout, le docteur remet la tête, et tout le monde s'excuse.",
+      "Si des personnages restent au milieu de l'écran, l'arbitre arrive et leur dit de se pousser.",
+    ],
+  },
+  {
+    date: "2026-11-03",
     titre: "Version 37 : les pièces remplacent les étoiles",
     type: "appli",
     points: [

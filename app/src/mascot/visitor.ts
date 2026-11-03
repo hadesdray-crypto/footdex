@@ -1,7 +1,7 @@
 // Visitors: the Doctor and the Square Referee. They walk in from the side of the screen, do their job, and leave.
 // Same jointed body as the Jongleur (hips, knees, feet, shoulders, elbows), moved every frame: walking, kneeling,
 // whistling, showing a card, shrugging, dragging a sack. Each one has his own small speech bubble.
-import { visitorSpeak } from "./state";
+import { takeTurn, visitorSpeak } from "./state";
 import { depthZ } from "./depth";
 import { figSvg, type Look } from "./look";
 import { sideHeadSvg } from "./runner";
@@ -205,11 +205,37 @@ export class Visitor {
   }
   /** Says a line in his own bubble, with his own (lower or higher) voice. */
   say(text: string, ms = 2600) {
-    this.bubble.textContent = text;
-    this.bubble.classList.add("is-on");
-    visitorSpeak(text, this.kind);
-    window.clearTimeout(this.sayTimer);
-    this.sayTimer = window.setTimeout(() => this.bubble.classList.remove("is-on"), Math.max(ms, 1200 + text.length * 55));
+    const show = Math.max(ms, 1200 + text.length * 55);
+    this.pending += 1;
+    // his turn: the bubble and the voice start together, when the one who was talking has finished
+    takeTurn(
+      (end) => {
+        let over = false;
+        const done = () => {
+          if (over) return;
+          over = true;
+          this.pending = Math.max(0, this.pending - 1);
+          end();
+        };
+        if (this.dead) return done();
+        this.bubble.textContent = text;
+        this.bubble.classList.add("is-on");
+        window.clearTimeout(this.sayTimer);
+        this.sayTimer = window.setTimeout(() => this.bubble.classList.remove("is-on"), show);
+        // the end of his line: his voice is finished (and the bubble stayed long enough to be read)
+        const t0 = Date.now();
+        const finish = () => window.setTimeout(done, Math.max(100, 1300 - (Date.now() - t0)));
+        visitorSpeak(text, this.kind, finish);
+        window.setTimeout(finish, Math.min(show, 5000) + 2500);
+      },
+      { prio: 2, ms: Math.min(show, 5000) },
+    );
+  }
+  pending = 0;
+  /** Waits until everything he had to say has been said (so that he does not walk off in the middle of a sentence). */
+  async talked() {
+    const until = Date.now() + 14000;
+    while (this.pending > 0 && !this.dead && Date.now() < until) await this.wait(120);
   }
   sayTimer = 0;
   wait(ms: number) {
@@ -217,6 +243,7 @@ export class Visitor {
   }
   /** Walks out by the nearest side, then disappears. */
   async leave(limp = false) {
+    await this.talked();
     const side = this.x < window.innerWidth / 2 ? -60 : window.innerWidth + 60;
     await this.walk({ x: side, y: this.y }, limp ? 70 : 160, limp);
     this.destroy();

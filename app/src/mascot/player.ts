@@ -182,6 +182,7 @@ function touching(x: number, y: number): HTMLElement | null {
     bodies = [...document.querySelectorAll<HTMLElement>(".buddy, .vis")].map((el) => ({ el, r: el.getBoundingClientRect() }));
   }
   for (const { el, r } of bodies) {
+    if (isMate(el)) continue;
     if (x < r.left + 6 || x > r.right - 6 || Math.abs(y - r.bottom) > 26) continue;
     if (t - (lastHit.get(el) ?? 0) < 600) continue;
     lastHit.set(el, t);
@@ -194,6 +195,12 @@ function touching(x: number, y: number): HTMLElement | null {
 let bodies: { el: HTMLElement; r: DOMRect }[] = [];
 let bodiesAt = 0;
 const lastHit = new WeakMap<HTMLElement, number>();
+// friends who are playing with the ball: it does not hit them, they pass it to each other
+let playmates: HTMLElement[] = [];
+export function ballPlaymates(list: HTMLElement[]) {
+  playmates = list;
+}
+const isMate = (el: HTMLElement) => playmates.some((f) => f === el || el.contains(f) || f.contains(el));
 function bump(b: Ball, r: number) {
   const now = performance.now();
   if (now - bodiesAt > 150) {
@@ -201,6 +208,7 @@ function bump(b: Ball, r: number) {
     bodies = [...document.querySelectorAll<HTMLElement>(".buddy, .vis")].map((el) => ({ el, r: el.getBoundingClientRect() }));
   }
   for (const { el, r: box } of bodies) {
+    if (isMate(el)) continue;
     if (b.x < box.left + 8 - r || b.x > box.right - 8 + r) continue;
     if (Math.abs(b.y - box.bottom) > 30) continue; // not on the same line (he is in front of or behind the ball)
     if (b.z > box.height * 0.95) continue; // over his head
@@ -799,6 +807,34 @@ export function spawnFootballer(look: Look, x: number, y: number, hooks: { onTap
     },
   };
   return me;
+}
+
+/** A friend (not the Jongleur) kicks the loose ball toward a point: it flies a little and rolls. */
+export function kickBallTo(tx: number, ty: number, power = 1): boolean {
+  if (!ball || ball.held) return false;
+  const dx = tx - ball.x;
+  const dy = ty - ball.y;
+  const d = Math.hypot(dx, dy) || 1;
+  const sp = Math.min(760, 220 + d * 1.5) * power;
+  ball.vx = (dx / d) * sp;
+  ball.vy = (dy / d) * sp;
+  ball.vz = 130 + Math.random() * 110;
+  ballKick(0.45);
+  wake();
+  return true;
+}
+/** Back to its place, at the Jongleur's feet in his corner. */
+export function returnBall() {
+  if (!ball || !park || ball.held || pl) return;
+  ball.vx = ball.vy = ball.vz = 0;
+  ball.x = park.x;
+  ball.y = park.y;
+  ball.z = 0;
+  drawBall();
+}
+/** The loose ball, if the Jongleur is in his corner and nobody holds it. */
+export function looseBall() {
+  return ball && !ball.held && !pl ? { x: ball.x, y: ball.y, moving: Math.hypot(ball.vx, ball.vy) > 8 || ball.z > 0 } : null;
 }
 
 /** Where to stand to have the ball just in front of the foot, on its side `dir`. */

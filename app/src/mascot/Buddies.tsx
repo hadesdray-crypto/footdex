@@ -9,8 +9,10 @@ import { useEffect, useRef, useState } from "react";
 import { Fig } from "./Fig";
 import { CARAC } from "./caractere";
 import { LORE_HINTS, OLD_STORIES, PERSOS, pick, type Mode } from "./lines";
-import { DOCTOR_LOOK, getMascot, play, say, sayFx, speakAs, update, useMascot, zopt, type Buddy } from "./state";
+import { doctorHeadBack, refereeStops, refereeMovesOver } from "./terrain";
+import { DOCTOR_LOOK, getMascot, play, say, sayFx, speakAs, takeTurn, turnsBusy, update, useMascot, zopt, type Buddy } from "./state";
 import { fallApart } from "./zombie";
+import { ballPlaymates, kickBallTo, looseBall, returnBall } from "./player";
 import { figSvg, type Look } from "./look";
 import { hasFx, playFx, type Slot } from "./bruits";
 import { cough, hiss, meow, sneeze, thud } from "../sound";
@@ -23,7 +25,7 @@ export const BUDDY_NAME = (b: Buddy) => (b === "medecin" ? "Le Médecin" : PERSO
 const TALK: Record<Buddy, string[]> = {
   statue: ["Hm. De mon temps, les ballons étaient en cuir. Et lourds !", "Hm… Tu sais qui a gagné la Coupe du monde en 1958 ? Pelé. À 17 ans.", "Ma canne et moi, on a vu Platini jouer. Hm."],
   excite: ["Oh là là, on est plusieurs à l'écran ! C'est la fête !", "Tu veux que je te raconte un truc ? Dis oui !", "ALLEZ ! ALLEZ ! On va gagner !"],
-  poli: ["Bonjour ! Je reste à côté, si tu as besoin.", "Si je peux me permettre : les doublons s'échangent contre des étoiles.", "Belle journée pour le football, n'est-ce pas ?"],
+  poli: ["Bonjour ! Je reste à côté, si tu as besoin.", "Si je peux me permettre : les doublons s'échangent contre des pièces.", "Belle journée pour le football, n'est-ce pas ?"],
   joueur: ["Tu me fais une passe ?", "Regarde mes jongles… enfin, imagine-les !", "Un petit match après ?"],
   pointu: ["D'après les chiffres, nous sommes plusieurs. C'est mieux qu'un.", "Statistiquement, je parle moins que le supporter.", "Précisément : il y a 22 joueurs sur un terrain."],
   zombie: ["Grrr… du foot…", "Mmmh… cerveaux… euh, ballons !", "Grrr… je suis gentil. Presque."],
@@ -85,10 +87,12 @@ type Body = {
   pursuit: { dir: 1 | -1; until: number } | null; // the zombie keeps running in one direction (a chase)
   pause: number;
   throwSpeed: number; // how hard he was thrown (the zombie loses his limbs when it is hard)
-  say: (text: string, force?: boolean, slot?: Slot) => void;
+  say: (text: string, force?: boolean, slot?: Slot, o?: SayOpts) => Promise<void>;
   act: (name: string, ms: number) => void;
   hidden: boolean;
 };
+/** at: where his bubble shows (his head rolled away: the voice comes from there); onStart: at the very moment he starts to talk. */
+type SayOpts = { at?: Pos; onStart?: () => void };
 const bodies = new Map<Buddy, Body>();
 let running = 0;
 let lastT = 0;
@@ -500,20 +504,40 @@ async function scene<T>(f: () => Promise<T>) {
     sceneOn = false;
   }
 }
+/** He says a line and we wait until it is finished (never longer than 9 s, whatever happens). */
+const sayW = (b: Body, text: string, force = true, slot?: Slot, o?: SayOpts) => Promise.race([b.say(text, force, slot, o), wait(9000)]);
 const nearest = (p: Pos, list: Body[]) => [...list].sort((a, b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
 
-/** 1. The zombie sneezes… and his head flies off. A brave friend (trembling) brings it back. */
+/** 1. The zombie sneezes: « A-TCHOU… » his head flies off on « tchou », rolls away… and the body ends the word alone: « …me ! » (Atchoum). */
 const sneezeScene = () =>
   scene(async () => {
     const z = bodies.get("zombie");
     if (!z || z.hidden || head || z.mode !== "free") return;
+    z.pause = now() + 20000;
+    await sayW(z, "Aaah… AAAAH…");
+    await wait(300);
+    const side = (Math.random() < 0.5 ? -1 : 1) * 200;
+    const recorded = hasFx("zombie", "eternue");
+    const pop = () => {
+      sneeze();
+      dropHead(z, side, 160);
+    };
+    if (recorded) {
+      // his own recorded « atchoum » plays whole: the head flies off in the middle of it
+      await sayW(z, "ATCHOUM !", true, "eternue", { onStart: () => window.setTimeout(pop, 450) });
+      await wait(600);
+    } else {
+      // « A-TCHOU »: the head leaves exactly when he says « tchou »
+      await sayW(z, "A-TCHOU…", true, undefined, { onStart: () => window.setTimeout(pop, 520) });
+      // the head is already rolling on the grass when the body ends the word: « …me ! »
+      await wait(350);
+      const h = curHead();
+      await sayW(z, "…me !", true, undefined, h ? { at: { x: h.x, y: h.y } } : undefined);
+      await wait(500);
+    }
     z.pause = now() + 6000;
-    z.say("Aaah… AAAAH…", true);
-    await wait(1300);
-    z.say("ATCHOUM !", true, "eternue");
-    sneeze();
-    dropHead(z, (Math.random() < 0.5 ? -1 : 1) * 200, 160);
-    await wait(1500);
+    // rarely, the friends think the head is a ball…
+    if (curHead() && Math.random() < 0.2 && freeFriends().length >= 2) return headFootball(z);
     const brave = nearest(z, others(z).filter((o) => fearful(o.key) && o.mode === "free"));
     const h0 = curHead();
     if (!brave || !h0) return fetchHead(z);
@@ -532,6 +556,54 @@ const sneezeScene = () =>
     await goTo(brave, brave.x > z.x ? window.innerWidth + 120 : -120, brave.y, 300, { wrap: true, timeout: 6000 });
     brave.el.classList.remove("is-scared", "s2");
   });
+
+/** Gives the head a kick: it flies and rolls toward `dir`. */
+function kickHead(dir: 1 | -1) {
+  const h = head;
+  if (!h) return;
+  h.carrier = null;
+  h.vx = dir * (240 + Math.random() * 160);
+  h.vz = 150 + Math.random() * 120;
+  h.z = Math.max(h.z, 1);
+}
+
+/** Rare: the friends play football with the Zombie's head. He is not pleased: the Referee stops everybody,
+ *  the Doctor puts the head back, and everybody is sorry. */
+async function headFootball(z: Body) {
+  const players = freeFriends().slice(0, 3);
+  if (players.length < 2) return fetchHead(z);
+  players[0].say(pick(["Oh, un ballon ! Passe-la moi !", "Hé ! Un ballon tout rond ! On joue ?"]), true);
+  await wait(1800);
+  for (let i = 0; i < 5 && curHead() && !players.some((p) => p.hidden); i += 1) {
+    const p = players[i % players.length];
+    const h = curHead();
+    if (!h) break;
+    const dir: 1 | -1 = p.x < players[(i + 1) % players.length].x ? 1 : -1;
+    await goTo(p, h.x - dir * 18, h.y, 240, { stop: 8, timeout: 3500 });
+    p.act("kick", 450);
+    await wait(180);
+    kickHead(dir);
+    if (i === 1) players[1].say(pick(["Passe ! Passe !", "Ha ha ! Quel dribble !"]), true, "passe");
+    if (i === 3) z.say("GRRR ! Ce n'est PAS un ballon ! C'est ma TÊTE !", true, undefined, { at: { x: z.x, y: z.y - 60 } });
+    await wait(1100);
+  }
+  const h2 = curHead();
+  if (!h2) return;
+  z.say("Rendez-moi ma tête ! Grrrr !", true, "tete", { at: { x: h2.x, y: h2.y } });
+  players.forEach((p) => (p.pause = now() + 20000));
+  await wait(1500);
+  // the Referee stops everybody
+  await refereeStops({ x: h2.x, y: h2.y }, ["TUUUT ! Stop ! On ne joue pas au foot avec la tête du zombie !", "Rendez-lui sa tête, tout de suite !"]);
+  // the Doctor puts it back
+  await doctorHeadBack(() => ({ x: z.x, y: z.y }), () => headBack(z), () => ({ x: h2.x, y: h2.y }));
+  z.say("Grrr… merci docteur. Mais vous, les copains… pfff.", true, "merci");
+  await wait(2600);
+  for (const [i, p] of players.entries()) {
+    p.pause = 0;
+    window.setTimeout(() => p.say(pick(["Pardon, zombie… on a été de mauvais garçons.", "On n'aurait pas dû… Excuse-nous.", "Snif… c'était pas bien de faire ça."]), true), i * 300);
+  }
+  await wait(3200);
+}
 
 /** 6. Hide-and-seek: the friends hide behind the character, the zombie sniffs around… and finds them. */
 const hideScene = () =>
@@ -715,6 +787,56 @@ const kickScene = () =>
     await kickabout(a, b);
   });
 
+/** If the ball is lying there (the Jongleur is in his corner), the friends play with it: they run to it and pass it around, then put it back. */
+const ballScene = () =>
+  scene(async () => {
+    const players = freeFriends().slice(0, 3);
+    if (players.length < 1 || !looseBall()) return;
+    players[0].say(pick(["Oh, un ballon ! Je peux jouer ?", "Un ballon ! On fait une partie ?"]), true);
+    ballPlaymates(players.map((p) => p.el));
+    try {
+    for (let i = 0; i < 6; i += 1) {
+      const p = players[i % players.length];
+      const next = players[(i + 1) % players.length];
+      const b = looseBall();
+      if (!b || p.hidden || p.mode !== "free") break;
+      await goTo(p, b.x, b.y, 240, { stop: 14, timeout: 4000 });
+      const b2 = looseBall();
+      if (!b2) break;
+      p.act("kick", 450);
+      await wait(160);
+      // the pass goes to a spot just before his friend (he runs to meet it): the ball never hits him
+      const to = next === p ? { x: Math.min(window.innerWidth - 40, Math.max(40, p.x + (Math.random() < 0.5 ? -1 : 1) * 160)), y: p.y } : { x: next.x + (p.x < next.x ? -90 : 90), y: next.y + (p.y < next.y ? -18 : 18) };
+      kickBallTo(to.x, to.y, 0.9);
+      if (i === 1) next.say(pick(["Passe !", "Ici ! Ici !", "Joli ! Encore !"]), true, "passe");
+      if (i === 4) p.say(pick(["Et c'est le BUT !", "Quel tir !"]), true);
+      await wait(1300);
+    }
+    await wait(900);
+    players.forEach((p) => p.act("cheer", 1000));
+    players[0].say(pick(["Merci pour le ballon !", "On le remet à sa place."]), true);
+    await wait(1500);
+    } finally {
+      ballPlaymates([]);
+      returnBall();
+    }
+  });
+
+/** Too many friends stand in the middle of the screen: the Referee comes and tells them to move over. */
+const middleScene = () =>
+  scene(async () => {
+    const mid = [...bodies.values()].filter((b) => !b.hidden && b.mode === "free" && Math.abs(b.x - window.innerWidth / 2) < window.innerWidth * 0.16 && b.y > window.innerHeight * 0.25 && b.y < window.innerHeight - 90);
+    if (!mid.length) return;
+    const who = mid[0];
+    await refereeMovesOver(() => ({ x: who.x, y: who.y }), pick(["Poussez-vous ! Bougez, on ne voit rien !", "Hé, vous ! Bougez de là, on ne voit plus rien !", "Pas au milieu de l'écran ! Poussez-vous !"]), () => {
+      mid.forEach((b, i) => {
+        b.say(pick(["Oups, pardon !", "Oui, monsieur l'arbitre !", "On se pousse !"]), i === 0);
+        const left = b.x < window.innerWidth / 2;
+        void goTo(b, left ? 50 + i * 40 : window.innerWidth - 50 - i * 40, b.y, 220, { stop: 8, timeout: 5000 });
+      });
+    });
+  });
+
 /** The Referee forms the teams: everyone lines up on one side or the other, cheers, then back to his place. */
 async function teams() {
   const l = freeFriends();
@@ -861,21 +983,60 @@ function One({ b, index }: { b: Buddy; index: number }) {
   const look = lookOf(b, m.s.looks);
 
   /** He says something: his bubble, his voice (or the noise recorded for him), his mouth. */
-  const speak = (text: string, force = false, slot?: Slot) => {
-    if (!text) return;
+  const bubbleTok = useRef(0);
+  const speak = (text: string, force = false, slot?: Slot, o: SayOpts = {}): Promise<void> => {
+    if (!text) return Promise.resolve();
     if (slot && hasFx(b, slot)) force = true; // a recorded noise always plays, exactly at its moment
-    if (!force && Date.now() < talkingUntil) return;
+    // chatter that nobody asked for waits for silence; what the scenes say is never lost, it takes its turn
+    if (!force && (Date.now() < talkingUntil || turnsBusy() || sceneOn)) return Promise.resolve();
     const ms = Math.max(2400, text.length * 68);
-    talkingUntil = Date.now() + ms + 300;
-    const bd = bodyRef.current;
-    if (bd) setBpos({ x: bd.x, y: bd.y - bd.z });
-    setBubble(text);
-    setTalk(true);
-    const recorded = slot ? playFx(b, slot) : false;
-    if (!recorded && !getMascot().talking) speakAs(text, b);
-    later(ms * 0.8, () => setTalk(false));
-    later(ms, () => setBubble(""));
+    return new Promise<void>((resolve) => {
+      takeTurn(
+        (end) => {
+          talkingUntil = Date.now() + ms + 300;
+          const bd = bodyRef.current;
+          const at = o.at ?? (bd ? { x: bd.x, y: bd.y - bd.z } : null);
+          if (at) setBpos(at);
+          bubbleTok.current += 1;
+          const tok = bubbleTok.current;
+          const t0 = Date.now();
+          setBubble(text);
+          setTalk(true);
+          o.onStart?.();
+          // the bubble stays as long as his voice goes on (at least a moment), then disappears
+          let over = false;
+          const finish = () => {
+            if (over) return;
+            over = true;
+            // he keeps his bubble a moment at least, so it can be read; then the next one speaks
+            later(Math.max(120, 1500 - (Date.now() - t0)), () => {
+              end();
+              resolve();
+              if (bubbleTok.current === tok) {
+                setTalk(false);
+                setBubble("");
+              }
+            });
+          };
+          const recorded = slot ? playFx(b, slot) : false;
+          if (recorded) later(Math.min(ms, 2600), finish);
+          else if (!getMascot().talking) speakAs(text, b, finish);
+          else later(ms, finish);
+          later(ms + 2300, finish); // safety: no voice at all
+        },
+        { prio: force ? 1 : 0, ms },
+      );
+    });
   };
+  useEffect(() => {
+    const hush = () => {
+      bubbleTok.current += 1;
+      setBubble("");
+      setTalk(false);
+    };
+    window.addEventListener("footdex:hush", hush);
+    return () => window.removeEventListener("footdex:hush", hush);
+  }, []);
   const doAct = (name: string, ms: number) => {
     setAct(name);
     later(ms, () => setAct((a) => (a === name ? "" : a)));
@@ -1203,6 +1364,8 @@ export function Buddies() {
             if (has("statue") || mode === "statue") options.push(sleepScene);
             if (mode === "joueur" && bodies.size) options.push(passScene);
             if (freeFriends().length >= 2) options.push(chatScene, chatScene, kickScene);
+            if (freeFriends().length >= 1 && looseBall()) options.push(ballScene, ballScene);
+            if ([...bodies.values()].some((b) => !b.hidden && b.mode === "free" && Math.abs(b.x - window.innerWidth / 2) < window.innerWidth * 0.16 && b.y > window.innerHeight * 0.25)) options.push(middleScene, middleScene, middleScene);
             if (options.length) void pick(options)();
           }
           nextScene();
@@ -1230,7 +1393,7 @@ export function Buddies() {
     window.addEventListener("footdex:terrain", onEv);
     // for checking the scenes in a browser (« ?essai-terrain »)
     if (location.search.includes("essai-terrain")) (window as unknown as { __scenes?: unknown }).__scenes = {
-      sneezeScene, hideScene, checkupScene, sleepScene, passScene, catScene, ola, recre, chatScene, kickScene, teams,
+      sneezeScene, hideScene, checkupScene, sleepScene, passScene, catScene, ola, recre, chatScene, kickScene, teams, ballScene, middleScene, headFootball: () => scene(async () => { const z = bodies.get("zombie"); if (z) { dropHead(z, 200, 160); await wait(800); await headFootball(z); } }),
       // test helpers: throw a friend, read where everybody is
       fling: (key: Buddy, vx: number, vz: number, speed: number) => {
         const b = bodies.get(key);
