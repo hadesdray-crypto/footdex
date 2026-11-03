@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { LuArrowLeft, LuBookMarked, LuBookOpen, LuCalendarDays, LuCompass, LuFilm, LuGlobe, LuGraduationCap, LuHouse, LuLibrary, LuMessageSquareQuote, LuPackageOpen, LuShieldCheck, LuTrophy, LuUserPlus, LuUsers, LuZap, LuMessageCircle, LuSettings, LuShirt, LuVolume2, LuX } from "react-icons/lu";
+import { LuArrowLeft, LuBookMarked, LuBookOpen, LuCalendarDays, LuFilm, LuGlobe, LuGraduationCap, LuHouse, LuLibrary, LuMessageSquareQuote, LuPackageOpen, LuShieldCheck, LuTrophy, LuUserRound, LuUsers, LuZap, LuMessageCircle, LuSettings, LuShirt, LuVolume2, LuX } from "react-icons/lu";
 import type { Album } from "../data";
 import { useOverlay } from "../ui/cards";
 import { cx, dayKey } from "../util";
@@ -757,51 +757,51 @@ function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "se
             <Fig look={m.s.look} size={52} crop="bust" mouth={perso.mouth} />
           )}
           <div className="mm__who">
-            <strong>{view === "settings" ? "Réglages" : view === "go" ? "Aller quelque part" : view === "voix" ? "Change ma voix !" : perso.name}</strong>
-            <span>{view === "settings" ? "Voix et caractère" : view === "go" ? "Touche où tu veux aller" : view === "voix" ? "Une voix pour chaque personnage" : perso.tag}</span>
+            <strong>{view === "settings" ? "Voix et caractère" : view === "go" ? "Aller quelque part" : view === "voix" ? "Change ma voix !" : perso.name}</strong>
+            <span>{view === "settings" ? "Comment il parle et qui il est" : view === "go" ? "Touche où tu veux aller" : view === "voix" ? "Une voix pour chaque personnage" : perso.tag}</span>
           </div>
           <button type="button" className="iconbtn" onClick={close} aria-label="Fermer le menu">
             <LuX aria-hidden="true" />
           </button>
         </div>
         {view === "main" ? (
-          <div className="mm__tiles">
-            <button type="button" className="mm__tile" onClick={run(() => explain(page))}>
-              <LuMessageCircle aria-hidden="true" /> <span>Explique-moi</span>
-            </button>
-            <button type="button" className="mm__tile mm__tile--voix" onClick={() => setView("voix")}>
-              <LuMessageCircle aria-hidden="true" /> <span>Change ma voix !</span>
-            </button>
-            <button type="button" className="mm__tile" onClick={run(readPage)}>
-              <LuVolume2 aria-hidden="true" /> <span>Lis-moi la page</span>
-            </button>
-            <button type="button" className="mm__tile" onClick={run(() => tellStory(album.matches))}>
-              <LuBookOpen aria-hidden="true" /> <span>Une histoire</span>
-            </button>
-            {perso.mode === "statue" ? (
-              <button type="button" className="mm__tile" onClick={run(tellLore)}>
-                <LuBookOpen aria-hidden="true" /> <span>L'histoire du monde</span>
+          <>
+            <p className="mm__label">Il me raconte</p>
+            <div className="mm__tiles">
+              <button type="button" className="mm__tile" onClick={run(() => explain(page))}>
+                <LuMessageCircle aria-hidden="true" /> <span>Explique-moi</span>
               </button>
-            ) : null}
-            <button type="button" className="mm__tile" onClick={() => setView("go")}>
-              <LuGlobe aria-hidden="true" /> <span>Aller quelque part</span>
-            </button>
-            <button type="button" className="mm__tile" onClick={() => openWardrobe("perso")}>
-              <LuUserPlus aria-hidden="true" /> <span>Créer mon personnage</span>
-            </button>
-            <button type="button" className="mm__tile" onClick={() => openWardrobe("tenue")}>
-              <LuShirt aria-hidden="true" /> <span>Vestiaire</span>
-            </button>
-            <button type="button" className="mm__tile" onClick={() => setView("settings")}>
-              <LuSettings aria-hidden="true" /> <span>Réglages</span>
-            </button>
-            <button type="button" className={cx("mm__tile", m.s.narrate && "is-on")} aria-pressed={m.s.narrate} onClick={() => { update({ narrate: !m.s.narrate }); sayLabel(m.s.narrate ? "Je ne parle plus tout seul." : "D'accord, je te dis tout ce qui se passe !"); }}>
-              <LuCompass aria-hidden="true" /> <span>{m.s.narrate ? "Dis-moi tout : OUI" : "Dis-moi tout : NON"}</span>
-            </button>
-            <button type="button" className={cx("mm__tile", m.s.bubbles && "is-on")} aria-pressed={m.s.bubbles} onClick={() => update({ bubbles: !m.s.bubbles })}>
-              <LuMessageCircle aria-hidden="true" /> <span>{m.s.bubbles ? "Texte des bulles : OUI" : "Texte des bulles : NON"}</span>
-            </button>
-          </div>
+              <button type="button" className="mm__tile" onClick={run(readPage)}>
+                <LuVolume2 aria-hidden="true" /> <span>Lis-moi la page</span>
+              </button>
+              <button type="button" className="mm__tile" onClick={run(() => tellStory(album.matches))}>
+                <LuBookOpen aria-hidden="true" /> <span>Une histoire</span>
+              </button>
+              {perso.mode === "statue" ? (
+                <button type="button" className="mm__tile" onClick={run(tellLore)}>
+                  <LuBookOpen aria-hidden="true" /> <span>L'histoire du monde</span>
+                </button>
+              ) : null}
+              <button type="button" className="mm__tile" onClick={() => setView("go")}>
+                <LuGlobe aria-hidden="true" /> <span>Aller quelque part</span>
+              </button>
+            </div>
+            <p className="mm__label">Mon personnage</p>
+            <div className="mm__tiles">
+              <button type="button" className="mm__tile" onClick={() => openWardrobe("tenue")}>
+                <LuShirt aria-hidden="true" /> <span>Vestiaire</span>
+              </button>
+              <button type="button" className="mm__tile mm__tile--voix" onClick={() => setView("voix")}>
+                <LuMessageCircle aria-hidden="true" /> <span>Change ma voix !</span>
+              </button>
+              <button type="button" className="mm__tile" onClick={() => setView("settings")}>
+                <LuSettings aria-hidden="true" /> <span>Voix et caractère</span>
+              </button>
+              <button type="button" className="mm__tile" onClick={() => { close(); go({ page: "personnage" }); }}>
+                <LuUserRound aria-hidden="true" /> <span>Tous les réglages du personnage</span>
+              </button>
+            </div>
+          </>
         ) : view === "voix" ? (
           <VoicePicker compact />
         ) : view === "go" ? (
@@ -823,13 +823,18 @@ function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "se
               ))}
             </div>
             <button type="button" className="btn btn--gold" onClick={() => setView("voix")}>Change ma voix !</button>
-            <button type="button" className="btn btn--soft" onClick={() => { close(); go({ page: "reglages" }); }}>Réglages avancés de la voix (code parent)</button>
+            <button type="button" className="btn btn--soft" onClick={() => { close(); go({ page: "parents" }); }}>Réglages avancés de la voix (Coin des parents)</button>
             <p className="mm__label">Dis-moi tout ce qui se passe</p>
             <div className="chips">
               <button type="button" className={cx("chip", m.s.narrate && "chip--on")} aria-pressed={m.s.narrate} onClick={() => update({ narrate: true })}>Oui</button>
               <button type="button" className={cx("chip", !m.s.narrate && "chip--on")} aria-pressed={!m.s.narrate} onClick={() => update({ narrate: false })}>Non</button>
             </div>
             <p className="mm__note">Avec « Oui », il lit à voix haute chaque bouton que tu touches et explique chaque nouvelle page.</p>
+            <p className="mm__label">Afficher ce qu'il dit (les bulles)</p>
+            <div className="chips">
+              <button type="button" className={cx("chip", m.s.bubbles && "chip--on")} aria-pressed={m.s.bubbles} onClick={() => update({ bubbles: true })}>Oui</button>
+              <button type="button" className={cx("chip", !m.s.bubbles && "chip--on")} aria-pressed={!m.s.bubbles} onClick={() => update({ bubbles: false })}>Non</button>
+            </div>
             <p className="mm__label">Des copains à l'écran (deux au maximum)</p>
             <BuddyPicker />
             <p className="mm__label">Son caractère</p>

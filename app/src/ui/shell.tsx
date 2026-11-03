@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { LuHouse, LuLibrary, LuMenu, LuPackageOpen, LuSearch, LuStar, LuUsers, LuVolume2, LuVolumeX, LuSettings } from "react-icons/lu";
+import { LuCompass, LuHouse, LuLibrary, LuPackageOpen, LuSearch, LuStar, LuUserRound, LuVolume2, LuVolumeX, LuSettings } from "react-icons/lu";
 import { openBinderTab } from "../pages/binder";
 import { go, type Route } from "../router";
 import { click, onSoundChange, setSound, soundOn, unlockAudio } from "../sound";
@@ -14,15 +14,15 @@ import { Signal } from "./signal";
 
 const TABS: { to: Route; label: string; icon: typeof LuHouse; match: string[] }[] = [
   { to: { page: "accueil" }, label: "Accueil", icon: LuHouse, match: ["accueil"] },
-  { to: { page: "joueurs" }, label: "Joueurs", icon: LuUsers, match: ["joueurs", "fiche", "jeu"] },
+  {
+    to: { page: "decouvrir" },
+    label: "Découvrir",
+    icon: LuCompass,
+    match: ["decouvrir", "plus", "joueurs", "fiche", "jeu", "matchs", "match", "scores", "coupes", "coupe", "clubs", "club", "saison", "lexique", "defi", "grand-defi", "histoires", "videos", "sources", "carte", "coffre", "jeux"],
+  },
   { to: { page: "paquets" }, label: "Paquets", icon: LuPackageOpen, match: ["paquets"] },
   { to: { page: "collection" }, label: "Collection", icon: LuLibrary, match: ["collection", "classeur"] },
-  {
-    to: { page: "plus" },
-    label: "Plus",
-    icon: LuMenu,
-    match: ["plus", "matchs", "match", "scores", "coupes", "coupe", "clubs", "club", "saison", "lexique", "defi", "grand-defi", "histoires", "videos", "sources", "carte", "coffre", "jeux", "parents", "reglages"],
-  },
+  { to: { page: "moi" }, label: "Moi", icon: LuUserRound, match: ["moi", "reglages", "personnage", "parents"] },
 ];
 
 export function Shell({ page, pageKey, album, children }: { page: string; pageKey: string; album: Album; children: ReactNode }) {
@@ -100,7 +100,7 @@ export function Shell({ page, pageKey, album, children }: { page: string; pageKe
             >
               {sound ? <LuVolume2 aria-hidden="true" /> : <LuVolumeX aria-hidden="true" />}
             </button>
-            <button type="button" className="iconbtn topbar__gear" onClick={() => go({ page: "reglages" })} aria-label="Paramètres de l'appli"><LuSettings aria-hidden="true" /></button>
+            <button type="button" className="iconbtn topbar__gear" onClick={() => go({ page: "moi" })} aria-label="Moi et paramètres"><LuSettings aria-hidden="true" /></button>
             <button type="button" className="iconbtn topbar__search" onClick={() => go({ page: "joueurs" })} aria-label="Chercher un joueur">
               <LuSearch aria-hidden="true" />
             </button>

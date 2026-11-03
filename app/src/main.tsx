@@ -6,7 +6,7 @@ import { Coffre } from "./pages/coffre";
 import { Collection } from "./pages/collection";
 import { Jeux } from "./pages/jeux";
 import { Parents } from "./pages/parents";
-import { Reglages } from "./pages/reglages";
+import { Decouvrir, Moi, Personnage } from "./pages/rubriques";
 import { demarrerHorsLigne } from "./maj/hors-ligne";
 import { demarrerMajApk } from "./maj/maj-apk";
 import { demarrerTempsEcran } from "./maj/temps-ecran";
@@ -17,7 +17,7 @@ import { Fiche } from "./pages/fiche";
 import { Home } from "./pages/home";
 import { Jeu } from "./pages/jeu";
 import { MatchPage, Matchs } from "./pages/matchs";
-import { ClubPage, Clubs, CoupePage, Coupes, Histoires, Lexique, Plus, Saison, Sources, Videos } from "./pages/misc";
+import { ClubPage, Clubs, CoupePage, Coupes, Histoires, Lexique,  Saison, Sources, Videos } from "./pages/misc";
 import { Packs } from "./pages/packs";
 import { Players } from "./pages/players";
 import { Scores } from "./pages/scores";
@@ -53,15 +53,18 @@ function Page({ route, album }: { route: Route; album: Album }) {
     case "collection": return <Collection />;
     case "jeux": return <Jeux />;
     case "parents": return <Parents />;
-    case "reglages": return <Reglages />;
-    case "plus": return <Plus album={album} />;
+    case "reglages": return <Moi />;
+    case "moi": return <Moi />;
+    case "personnage": return <Personnage />;
+    case "plus": return <Decouvrir album={album} />;
+    case "decouvrir": return <Decouvrir album={album} />;
   }
 }
 
 const TITLES: Record<string, string> = {
   accueil: "Footdex", joueurs: "Joueurs", paquets: "Paquets", classeur: "Classeur", matchs: "Matchs", scores: "Scores", coupes: "Coupes",
   clubs: "Clubs", saison: "Saison 2026-2027", lexique: "Lexique", defi: "Défi du jour", "grand-defi": "Grand défi", histoires: "Histoires",
-  videos: "Vidéos", sources: "Sources", carte: "La carte", coffre: "Le coffre", collection: "Ma collection", jeux: "Les jeux", parents: "Coin des parents", reglages: "Paramètres", plus: "Plus",
+  videos: "Vidéos", sources: "Sources", carte: "La carte", coffre: "Le coffre", collection: "Ma collection", jeux: "Les jeux", parents: "Coin des parents", reglages: "Moi", plus: "Découvrir", decouvrir: "Découvrir", moi: "Moi", personnage: "Mon personnage",
 };
 
 function App() {

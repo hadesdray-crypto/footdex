@@ -3,6 +3,20 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    date: "2026-11-03",
+    titre: "Version 33 : des menus plus simples, pour explorer",
+    type: "appli",
+    points: [
+      "Nouveaux onglets en bas : Accueil, Découvrir, Paquets, Collection et Moi. Le menu « Plus » est remplacé par « Découvrir », rangé en grandes rubriques.",
+      "Découvrir : les matchs racontés, les anecdotes, les vidéos et la carte des stades, puis les jeux, les défis et le coffre, puis les scores, les clubs et le lexique.",
+      "Nouveau bouton « Surprends-moi » : il ouvre au hasard un match ou une carte.",
+      "Moi : une seule porte vers « Mon personnage », les sons de l'appli, la version et le Coin des parents.",
+      "Mon personnage : tous les réglages du personnage sont au même endroit (vestiaire, voix, copains, Zombie, bruitages).",
+      "Le menu du personnage est rangé en deux : « Il me raconte » et « Mon personnage ». Plus de doublons.",
+      "Les réglages réservés aux grands (atelier des personnages, voix avancée) sont maintenant dans le Coin des parents.",
+    ],
+  },
+  {
     date: "2026-11-02",
     titre: "Version 32 : les boutons du bas sont toujours visibles",
     type: "appli",

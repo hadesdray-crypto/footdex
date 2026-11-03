@@ -9,6 +9,8 @@ import { useMajApk, verifierApk } from "../maj/maj-apk";
 import { useNouveautes } from "../maj/nouveautes";
 import { permettreInternet, useInternetPermis } from "../maj/parents";
 import { CodeParent } from "../maj/code";
+import { Atelier } from "../mascot/Atelier";
+import { VoicePanel } from "../mascot/Mascot";
 import { creerCode, restaurerCode } from "../maj/sauvegarde";
 import { LIMITES, choisirLimiteEcran, limiteEcran, useTempsEcran } from "../maj/temps-ecran";
 
@@ -17,8 +19,18 @@ export function Parents() {
     <div>
       <PageTitle kicker="Pour les grands" title="Coin des parents" />
       <Journal />
-      <Version />
       <Sauvegarde />
+      <Section title="L'atelier des personnages" kicker="Code parent">
+        <CodeParent titre="Caractère et interactions">
+          <p className="note">Combien chaque personnage parle et bouge, s'il peut être lancé, les blessures, le Médecin et l'Arbitre.</p>
+          <Atelier />
+        </CodeParent>
+      </Section>
+      <Section title="Réglages avancés de la voix" kicker="Code parent">
+        <CodeParent titre="Réglages avancés de la voix">
+          <VoicePanel />
+        </CodeParent>
+      </Section>
       <Verrou>
         <TempsParJour />
         <Internet />

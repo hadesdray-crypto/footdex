@@ -223,8 +223,11 @@ export const PAGES: Record<string, string> = {
   videos: "Des vidéos pour revivre de grands moments du football.",
   sources: "Ici, on dit d'où viennent les informations. Chez Footdex, on dit toujours d'où vient ce qu'on écrit.",
   parents: "Le coin des parents : les nouveautés, la sauvegarde de ta progression, et les réglages des grands avec le code parent.",
-  reglages: "Les paramètres : choisis ton personnage, change sa voix, ses habits, et les bruitages.",
-  plus: "Le menu Plus : matchs, scores, coupes, clubs, saison, lexique, défis, histoires, vidéos et sources.",
+  reglages: "Ici, c'est ton coin : ton personnage, les sons de l'appli, et l'entrée pour les grands.",
+  plus: "Découvrir : les matchs, la carte des stades, les histoires, les vidéos, les scores, les jeux et plein d'autres choses à explorer !",
+  decouvrir: "Découvrir : les matchs, la carte des stades, les histoires, les vidéos, les scores, les jeux et plein d'autres choses à explorer !",
+  moi: "Ici, c'est ton coin : ton personnage, les sons de l'appli, et l'entrée pour les grands.",
+  personnage: "Ici, tu règles ton personnage : ses habits, sa voix, ses copains et ses bruitages.",
 };
 
 export function pick<T>(items: T[]): T {
