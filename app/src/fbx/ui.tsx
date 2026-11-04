@@ -7,6 +7,7 @@ import { chestStars, freeChestToday, openChest, useCollec, type Loot } from "./s
 import { spendStars, useStore } from "../store";
 import { Chest } from "../pages/coffre";
 import { Fig } from "../mascot/Fig";
+import { Viewer3D, has3d } from "./Viewer3D";
 import { getMascot, say, update } from "../mascot/state";
 import { PERSOS } from "../mascot/lines";
 import { playFx } from "../mascot/bruits";
@@ -113,10 +114,21 @@ export function Figurine({ id, count = 1, owned = true, size = 150 }: { id: stri
   const f = fbx(id);
   const r = RARITY[f.rar];
   const [noRot, setNoRot] = useState(absent.has(`rot/${id}`));
+  // first choice: the real 3D model; then the picture turntable; then the drawing
+  const [gl, setGl] = useState<"ask" | "yes" | "no">("ask");
+  useEffect(() => {
+    let live = true;
+    void has3d(id).then((ok) => live && setGl(ok ? "yes" : "no"));
+    return () => { live = false; };
+  }, [id]);
   return (
     <div className={cx("fig3", !owned && "fig3--locked", f.rar === 4 && "fig3--vide")} style={{ "--rc": r.color, width: `${size}px` } as Record<string, string>}>
       <div className="fig3__stage">
-        {!noRot ? (
+        {gl === "yes" ? (
+          <Viewer3D id={id} size={size * 0.9} onMissing={() => setGl("no")} />
+        ) : gl === "ask" ? (
+          <span style={{ display: "block", width: size * 0.9, height: size * 0.9 }} />
+        ) : !noRot ? (
           <Turntable id={id} size={size * 0.9} onMissing={() => { absent.add(`rot/${id}`); setNoRot(true); }} />
         ) : (
           <div className="fig3__spin">
