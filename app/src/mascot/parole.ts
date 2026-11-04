@@ -5,7 +5,7 @@
 // - chiffres, parenthèses, guillemets, majuscules criées sont rendus lisibles.
 // Le texte de la bulle, lui, ne change pas. Dans les options développeur, « toutes les phrases » les lit telles quelles.
 
-const KEEP_CAPS = /^(PSG|VAR|UEFA|FIFA|OM|OL|RC|USA|TV|CAF|LOSC|ASSE|PSV|MVP|GPS|DVD|SMS|LED)$/;
+const KEEP_CAPS = /^(PSG|VAR|UEFA|FIFA|OM|OL|RC|USA|TV|CAF|LOSC|ASSE|PSV|MVP|GPS|DVD|SMS|LED|CAN)$/;
 /** Words made of noise only: the voice would spell them letter by letter, so they are not read. */
 const NOISE = /^(?:t+u+t+|cr?o+n+c?h+|tch?o+u+m?|b+r+|g+r+h*|r+h*|p+f+h*|z+|m+h*|h+m+h*|n+h+|b+z+|b+o+u+m+|p+a+f+|b+a+m+|c+l+a+c+)$/i;
 /** Noises replaced by a word the voice can say. */
@@ -69,6 +69,7 @@ export function pourVoix(text: string): string {
     .replace(/\s*…\s*/g, ", ")
     .replace(/([,;:])\s*([.!?])/g, "$2")
     .replace(/([.!?])\s*[,;:]+/g, "$1")
+    .replace(/([!?])\s*[,;:.]+/g, "$1")
     .replace(/^[\s,;:.!?]+/, "")
     .replace(/(?:,\s*){2,}/g, ", ")
     .replace(/([!?.])\1+/g, "$1")

@@ -52,10 +52,12 @@ export async function thiefRaid(r: Raid): Promise<boolean> {
   const shade = q(".thief__shade"), shadow = q(".thief__shadow"), hole = q(".thief__hole:not(.thief__hole--top)"), top = q(".thief__hole--top"), boss = q(".thief__boss"), arm = q(".thief__arm"), hand = q(".thief__hand"), hint = q(".thief__hint");
   // the other hole (where he shows up) is well away from what he takes: low enough to be seen, never on top of it
   const vh = window.innerHeight, vw = window.innerWidth;
-  const above = r.y - 250 >= 140;
-  const topY = above ? Math.max(140, Math.min(vh * 0.36, r.y - 250)) : Math.min(vh - 190, r.y + 260);
+  const clampY = (y: number) => Math.max(140, Math.min(vh - 190, y));
+  const ys = [clampY(r.y - 250), clampY(r.y + 250)];
+  const topY = Math.abs(ys[0] - r.y) >= Math.abs(ys[1] - r.y) ? ys[0] : ys[1];
   const side = r.x > vw / 2 ? -1 : 1;
-  const topX = Math.max(70, Math.min(vw - 70, r.x + side * Math.min(120, vw * 0.3)));
+  const far = Math.abs(topY - r.y) < 230 ? Math.min(170, vw * 0.5) : Math.min(120, vw * 0.3); // too close in height: far apart sideways
+  const topX = Math.max(70, Math.min(vw - 70, r.x + side * far));
   for (const el of [shadow, hole, arm]) { el.style.left = `${r.x}px`; el.style.top = `${r.y}px`; }
   for (const el of [top, boss]) { el.style.left = `${topX}px`; el.style.top = `${topY}px`; }
   document.body.appendChild(root);
