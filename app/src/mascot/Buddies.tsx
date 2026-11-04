@@ -12,7 +12,7 @@ import { LORE_HINTS, OLD_STORIES, PERSOS, pick, type Mode } from "./lines";
 import { doctorHeadBack, refereeStops, refereeMovesOver } from "./terrain";
 import { DOCTOR_LOOK, getMascot, play, say, sayFx, speakAs, takeTurn, turnsBusy, update, useMascot, zopt, type Buddy } from "./state";
 import { fallApart } from "./zombie";
-import { ballPlaymates, kickBallTo, looseBall, returnBall } from "./player";
+import { ballPlaymates, ensureBall, hasBallEl, kickBallTo, looseBall, putLooseBall, removeBall, returnBall } from "./player";
 import { figSvg, type Look } from "./look";
 import { hasFx, playFx, fxAudio, type Slot } from "./bruits";
 import { loudness, mouthOff, mouthOn, mouthPlan } from "./mouth";
@@ -656,7 +656,7 @@ const thiefScene = () =>
     if (caught) {
       for (const o of [victim, ...bystanders]) o?.say(pick(["Bravo ! On l'a eu !", "Il est tombé dans son piège !", "Hourra !"]), true);
     } else {
-      for (const o of bystanders.slice(0, 1)) o.say("Il a pris " + (victim ? "notre copain" : "la pièce") + " ! Il faut le piéger : touche 2 fois son trou noir !", true);
+      for (const o of bystanders.slice(0, 1)) o.say("Il a pris " + (victim ? "notre copain" : "la pièce") + x, true);
       if (victim) window.setTimeout(() => { if (loot.includes(victim)) { comeBack(victim, true); victim.say("Aïe ! Il m'a lâché !", true); } }, 45000);
     }
   });
@@ -878,33 +878,28 @@ const chatScene = () =>
     if (aff(a.key, b.key) >= 2.5 && Math.random() < 0.6) await kickabout(a, b);
   });
 
-let kball: HTMLElement | null = null;
-const putBall = (x: number, y: number, z = 0) => {
-  if (!kball) {
-    kball = document.createElement("div");
-    kball.className = "kball";
-    kball.textContent = "⚽";
-    document.body.appendChild(kball);
-  }
-  kball.style.transform = `translate(${x - 11}px, ${y - 22 - z}px)`;
-};
-async function flyBall(from: Pos, to: Pos, ms: number) {
+/** A friend runs to the ball and keeps going after it while it rolls away (a missed pass is not lost: he fetches it). */
+async function fetchBall(p: Body, giveUp = 9000): Promise<boolean> {
   const t0 = performance.now();
-  await new Promise<void>((done) => {
-    const step = (t: number) => {
-      const k = Math.min(1, (t - t0) / ms);
-      putBall(from.x + (to.x - from.x) * k, from.y + (to.y - from.y) * k, Math.sin(k * Math.PI) * 38);
-      if (k < 1) requestAnimationFrame(step);
-      else done();
-    };
-    requestAnimationFrame(step);
-  });
+  while (performance.now() - t0 < giveUp) {
+    const b = looseBall();
+    if (!b || p.hidden || p.mode !== "free") return false;
+    if (Math.hypot(p.x - b.x, p.y - b.y) < 30 && !b.moving) return true;
+    if (Math.hypot(p.x - b.x, p.y - b.y) < 22) return true;
+    await goTo(p, b.x, b.y, 260, { stop: 12, timeout: 1400 });
+  }
+  return !!looseBall();
 }
-/** A few passes between friends, then a shot at the side of the screen: « BUT ! » */
+/** A few passes between friends with THE ball (the one the Jongleur plays with: same weight, same bounces), then a shot at the side: « BUT ! » */
 async function kickabout(a: Body, b: Body) {
+  const had = hasBallEl();
+  if (!had) ensureBall(a.x + a.dir * 16, a.y);
+  if (!putLooseBall(a.x + a.dir * 16, a.y)) {
+    if (!had) removeBall();
+    return; // the Jongleur is out playing with it, or somebody is holding it
+  }
   try {
-    const at = (x: Body, off: number): Pos => ({ x: x.x + x.dir * off, y: x.y });
-    putBall(a.x + 16, a.y);
+    ballPlaymates([a.el, b.el]);
     a.say("Allez, on s'fait une petite partie !", true);
     b.say("Oui ! Passe !", true);
     let from = a;
@@ -912,23 +907,34 @@ async function kickabout(a: Body, b: Body) {
     const passes = 3 + Math.floor(Math.random() * 3);
     for (let i = 0; i < passes; i += 1) {
       if (from.hidden || to.hidden || from.mode !== "free" || to.mode !== "free") break;
+      if (!(await fetchBall(from))) break;
       from.act("kick", 500);
-      await flyBall({ x: from.x + from.dir * 18, y: from.y }, at(to, to.x < from.x ? 18 : -18), 700);
-      to.act("cheer", 500);
-      await goTo(to, to.x + (Math.random() - 0.5) * 120, to.y + (Math.random() - 0.5) * 60, 150, { stop: 8, timeout: 1500 });
+      await wait(180);
+      // the pass goes just before his friend; a pass that goes wrong is simply fetched
+      kickBallTo(to.x + (from.x < to.x ? -80 : 80), to.y + (Math.random() - 0.5) * 24, 0.85);
+      void goTo(to, to.x + (Math.random() - 0.5) * 80, to.y + (Math.random() - 0.5) * 40, 150, { stop: 8, timeout: 900 });
+      await wait(1100);
       [from, to] = [to, from];
     }
     // the shot
-    const side = from.x < window.innerWidth / 2 ? window.innerWidth - 20 : 20;
-    from.say("Tir… et c'est le BUT !", true, "ola");
-    from.act("kick", 600);
-    await flyBall({ x: from.x, y: from.y }, { x: side, y: from.y - 10 }, 800);
-    from.act("cheer", 1500);
-    to.say(pick(["Bien joué !", "Pfff, j'étais le gardien !", "Joli tir !"]), true);
-    await wait(1600);
+    if (await fetchBall(from)) {
+      const side = from.x < window.innerWidth / 2 ? window.innerWidth - 20 : 20;
+      from.say("Tir… et c'est le BUT !", true, "ola");
+      from.act("kick", 600);
+      await wait(180);
+      kickBallTo(side, from.y - 10, 1.35);
+      await wait(1100);
+      from.act("cheer", 1500);
+      to.say(pick(["Bien joué !", "Pfff, j'étais le gardien !", "Joli tir !"]), true);
+      await wait(900);
+      // the ball has gone far: the goalkeeper fetches it
+      await fetchBall(to, 8000);
+    }
+    await wait(500);
   } finally {
-    kball?.remove();
-    kball = null;
+    ballPlaymates([]);
+    if (had) returnBall();
+    else removeBall();
   }
 }
 const kickScene = () =>

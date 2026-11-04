@@ -692,7 +692,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
   const bw = Math.min(260, size.w - 24);
   const bx = right ? Math.max(8, pos.x + W - bw) : Math.min(size.w - bw - 8, pos.x);
   const bubble = m.bubble;
-  const showAside = bubble && !bubble.top && !m.busy;
+  const showAside = bubble && !bubble.top && !m.busy && !bubble.silent;
 
   // He is resting (like Plume): only a small sleeping badge stays; a tap wakes him up.
   if (m.s.rest) {

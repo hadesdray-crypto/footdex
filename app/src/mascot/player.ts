@@ -823,6 +823,18 @@ export function kickBallTo(tx: number, ty: number, power = 1): boolean {
   wake();
   return true;
 }
+/** Puts the loose ball (the same one the Jongleur juggles with) at a place, at rest. */
+export function putLooseBall(x: number, y: number) {
+  if (!ball || ball.held || pl) return false;
+  ball.vx = ball.vy = ball.vz = 0;
+  ball.x = x;
+  ball.y = y;
+  ball.z = 0;
+  drawBall();
+  wake();
+  return true;
+}
+export const hasBallEl = () => !!ball;
 /** Back to its place, at the Jongleur's feet in his corner. */
 export function returnBall() {
   if (!ball || !park || ball.held || pl) return;

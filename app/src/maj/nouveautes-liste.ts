@@ -4,6 +4,17 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-04",
+    titre: "Version 49 : chapardeur à attraper, ballon partagé, voix synchronisées",
+    type: "appli",
+    points: [
+      "Chapardeur : il est penché à l'horizontale et se décale. Touche 2 fois le trou noir du bas : le bras monte, et l'attrape si tu es bien synchronisé.",
+      "Le Jongleur parle toujours, mais ce qu'il dit ne s'écrit plus en haut.",
+      "Les parties à plusieurs utilisent le ballon du Jongleur ; celui qui le rate va le chercher.",
+      "La voix démarre au moment où la bouche bouge.",
+    ],
+  },
+  {
+    date: "2026-11-04",
     titre: "Version 48 : figurines imprimées des deux côtés",
     type: "appli",
     points: [

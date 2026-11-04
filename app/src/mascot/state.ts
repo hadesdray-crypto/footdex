@@ -4,7 +4,7 @@ import { loudness, mouthLevel, mouthOff, mouthOn, mouthPlan, mouthSync } from ".
 import { useSyncExternalStore } from "react";
 import { babble as babbleSound, robot as robotSound } from "../sound";
 import { piperWav } from "../piper";
-import { appeler, moduleDisponible } from "../natif";
+import { appeler, ecouter, moduleDisponible } from "../natif";
 import { storageGet, storageSet } from "../util";
 import { AFTER_2000, IDOLS, IDOL_LINES, LORE, LORE_HINTS, OLD_STORIES, OUPS, OUPS_BACK, PAGES, PERSOS, pick, type Kind, type Mode } from "./lines";
 import { DEFAULT_LOOK, sanitizeLook, type Look } from "./look";
@@ -96,7 +96,7 @@ export function setVoiceOf(mode: VoiceKey, patch: Partial<PVoice>) {
 /** For a moment, a voice to try (in the voice picker): used by the next sentence instead of the chosen one. */
 let trying: PVoice | null = null;
 export type Settings = { look: Look; perso: number; speed: number; auto: boolean; engine: "auto" | Engine; heard: Partial<Record<Engine, boolean>>; piper: boolean; nativeVoice: number; voiceType: VoiceType; pvoice: Partial<Record<VoiceKey, PVoice>>; inter: Inter; zopt: ZOpt; bubbles: boolean; buddies: Buddy[]; buddyPos: Record<string, { fx: number; fy: number }>; looks: Record<string, Look>; rest: boolean; narrate: boolean; toutes: boolean; fx: number; fy: number; day: string };
-export type Bubble = { id: number; text: string; top: boolean } | null;
+export type Bubble = { id: number; text: string; top: boolean; silent?: boolean } | null;
 type Snap = { reading: boolean; s: Settings; eng: Partial<Record<Engine, "ok" | "ko">>; using: Engine | null; bubble: Bubble; talking: boolean; busy: boolean; anim: string | null; animId: number; vx: number; vy: number; hurt: number };
 
 function loadSettings(): Settings {
@@ -432,20 +432,39 @@ function runEngine(e: Engine, text: string, my: number, done: () => void, fail: 
       return fail();
     }
     window.clearTimeout(talkTimer);
-    set({ talking: true });
     mark(e, "ok");
-    // no second « stop » here (stopTalking has just done it): the voice starts at once
+    // the mouth opens when the voice REALLY starts (the phone says which word it reaches); if it says nothing, a short delay later
+    let begun = false;
+    let stopListen: () => void = () => undefined;
+    const begin = (ci?: number) => {
+      if (!alive()) return;
+      if (!begun) {
+        begun = true;
+        window.clearTimeout(talkTimer);
+        set({ talking: true });
+      }
+      if (ci !== undefined) mouthSync(ci);
+    };
+    const cleanup = () => {
+      window.clearTimeout(fallback);
+      stopListen();
+    };
+    const fallback = window.setTimeout(() => begin(), 1100);
     const opts: Record<string, unknown> = { text, lang: "fr-FR", rate: softRate, pitch: softPitch, volume: 1, category: "playback" };
     if (pv.native >= 0) opts.voice = pv.native;
     else if (snap.s.nativeVoice >= 0) opts.voice = snap.s.nativeVoice;
-    appeler("TextToSpeech", "speak", opts)
+    ecouter("TextToSpeech", "onRangeStart", (d: { start?: number }) => begin(typeof d?.start === "number" ? d.start : 0))
+      .then((off) => { stopListen = off; }, () => undefined)
+      .then(() => appeler("TextToSpeech", "speak", opts))
       .then(
         () => {
+          cleanup();
           if (!alive()) return;
           set({ talking: false });
           done();
         },
         () => {
+          cleanup();
           if (!alive()) return;
           set({ talking: false });
           mark(e, "ko");
@@ -720,7 +739,7 @@ export function say(text: string, opts: { top?: boolean; quiet?: boolean; keepQu
   if (!opts.keepQueue) queue = [];
   window.clearTimeout(hideTimer);
   bubbleId += 1;
-  set({ bubble: { id: bubbleId, text, top: !!opts.top } });
+  set({ bubble: { id: bubbleId, text, top: !!opts.top, silent: P().mode === "joueur" && !opts.top } });
   const release = claimTurn(Math.max(2400, text.length * 68));
   if (!opts.quiet) voice(text, release);
   const wait = Math.max(4200, text.length * 70);

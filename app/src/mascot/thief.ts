@@ -40,39 +40,59 @@ async function tween(ms: number, f: (k: number) => void) {
 const HAND_OPEN = `<svg viewBox="0 0 44 52" width="44" height="52" aria-hidden="true"><rect x="9" y="30" width="26" height="14" rx="4" fill="#f2f2f7" stroke="#8b8aa5" stroke-width="2"/><path d="M12 32 Q10 14 6 6 M19 30 Q19 10 18 0 M27 30 Q28 10 30 1 M34 32 Q37 16 41 8" stroke="#2a1a4d" stroke-width="6" stroke-linecap="round" fill="none"/><ellipse cx="22" cy="34" rx="14" ry="9" fill="#2a1a4d"/></svg>`;
 const HAND_SHUT = `<svg viewBox="0 0 44 52" width="44" height="52" aria-hidden="true"><rect x="9" y="30" width="26" height="14" rx="4" fill="#f2f2f7" stroke="#8b8aa5" stroke-width="2"/><ellipse cx="22" cy="24" rx="15" ry="15" fill="#2a1a4d"/><path d="M12 20 Q22 14 32 20 M12 26 Q22 20 32 26" stroke="#4a3a7d" stroke-width="2" fill="none"/></svg>`;
 
-const THIEF = `<svg viewBox="0 0 70 80" width="70" height="80" aria-hidden="true"><path d="M8 80 Q6 36 35 30 Q64 36 62 80Z" fill="#3b1d7a"/><circle cx="35" cy="26" r="20" fill="#2a1a4d"/><ellipse cx="35" cy="30" rx="13" ry="10" fill="#0d0620"/><circle cx="29" cy="29" r="3.2" fill="#ffe58a"/><circle cx="41" cy="29" r="3.2" fill="#ffe58a"/><path d="M27 37 Q35 43 43 37" stroke="#ffe58a" stroke-width="2" fill="none"/></svg>`;
+// His own design: a hooded purple creature bent right over, horizontal, shuffling sideways above his hole; one long thin sleeve hangs down into it.
+const THIEF = `<svg viewBox="0 0 150 100" width="150" height="100" aria-hidden="true"><path d="M26 86 l4 10 h8 l-2 -10Z M52 86 l4 10 h8 l-2 -10Z" fill="#1d0f3d"/><rect x="31" y="58" width="6" height="30" rx="3" fill="#1d0f3d"/><rect x="57" y="58" width="6" height="30" rx="3" fill="#1d0f3d"/><path d="M8 40 Q6 26 34 24 L112 24 Q128 26 128 44 L126 64 Q80 74 20 62 Q6 56 8 40Z" fill="#3b1d7a"/><path d="M20 34 Q60 30 108 32 M16 46 Q64 42 120 46 M18 56 Q64 56 118 58" stroke="#5b3aa8" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M8 52 l-8 8 l10 -2 l-2 10 l12 -8Z" fill="#3b1d7a"/><circle cx="124" cy="52" r="24" fill="#2a1a4d"/><ellipse cx="126" cy="58" rx="15" ry="13" fill="#0d0620"/><circle cx="121" cy="60" r="3.4" fill="#ffe58a"/><circle cx="132" cy="60" r="3.4" fill="#ffe58a"/><path d="M118 67 Q126 72 134 67" stroke="#ffe58a" stroke-width="2.2" fill="none" stroke-linecap="round"/><path class="thief__sleeve" d="M121 72 H131 V100 H121Z" fill="#9b84c9"/></svg>`;
 
-/** Runs the whole raid. Resolves true if the player caught the thief (double tap on the black hole), false if he got away. */
+/**
+ * The whole raid. A black hole opens under what he takes: his long arm comes up, takes it, and pulls it down.
+ * Then the hole stays open: DOUBLE TAP it and the arm shoots up again, to catch HIM. He shuffles from side to side above
+ * his own hole and tries to dodge: the arm only catches him if it arrives right when he is above it.
+ * Resolves true if he was caught, false if he got away.
+ */
 export async function thiefRaid(r: Raid): Promise<boolean> {
   const root = document.createElement("div");
   root.className = "thief";
   root.setAttribute("aria-hidden", "true");
-  root.innerHTML = `<i class="thief__shade"></i><i class="thief__shadow"></i><i class="thief__hole thief__hole--top"></i><b class="thief__boss">${THIEF}</b><i class="thief__hole"></i><b class="thief__arm"><span class="thief__hand">${HAND_OPEN}</span></b><u class="thief__hint">Touche 2 fois le trou noir pour l'attraper !</u>`;
+  root.innerHTML = `<i class="thief__shade"></i><i class="thief__shadow"></i><i class="thief__hole thief__hole--top"></i><b class="thief__boss">${THIEF}</b><i class="thief__hole"></i><b class="thief__arm"><span class="thief__hand">${HAND_OPEN}</span></b><u class="thief__hint">Touche 2 fois le trou noir : le bras monte. Attrape-le quand il passe au-dessus !</u>`;
   const q = (c: string) => root.querySelector<HTMLElement>(c)!;
   const shade = q(".thief__shade"), shadow = q(".thief__shadow"), hole = q(".thief__hole:not(.thief__hole--top)"), top = q(".thief__hole--top"), boss = q(".thief__boss"), arm = q(".thief__arm"), hand = q(".thief__hand"), hint = q(".thief__hint");
-  // the other hole (where he shows up) is well away from what he takes: low enough to be seen, never on top of it
   const vh = window.innerHeight, vw = window.innerWidth;
-  const clampY = (y: number) => Math.max(140, Math.min(vh - 190, y));
-  const ys = [clampY(r.y - 250), clampY(r.y + 250)];
-  const topY = Math.abs(ys[0] - r.y) >= Math.abs(ys[1] - r.y) ? ys[0] : ys[1];
-  const side = r.x > vw / 2 ? -1 : 1;
-  const far = Math.abs(topY - r.y) < 230 ? Math.min(170, vw * 0.5) : Math.min(120, vw * 0.3); // too close in height: far apart sideways
-  const topX = Math.max(70, Math.min(vw - 70, r.x + side * far));
+  // his hole is well above what he takes (the arm has to reach it), never on top of the top bar
+  const topY = Math.max(110, Math.min(vh * 0.4, r.y - 230, r.y - 110));
+  const reachH = Math.max(80, r.y - topY + 24); // how high the arm goes to catch him
+  const amp = Math.max(70, Math.min(vw * 0.32, 130));
+  let phase = Math.random() * 6;
+  let speed = 1;
+  let react = 1;
+  const bxOf = (ph: number) => Math.max(60, Math.min(vw - 60, r.x + (amp * (Math.sin(ph) + 0.25 * Math.sin(2.3 * ph + 1))) / 1.25));
+  let bx = bxOf(phase);
+  const place = () => { boss.style.left = `${bx}px`; top.style.left = `${bx}px`; };
   for (const el of [shadow, hole, arm]) { el.style.left = `${r.x}px`; el.style.top = `${r.y}px`; }
-  for (const el of [top, boss]) { el.style.left = `${topX}px`; el.style.top = `${topY}px`; }
+  for (const el of [top, boss]) el.style.top = `${topY}px`;
+  place();
   document.body.appendChild(root);
   let caught = false;
+  let wantReach = false;
+  let ready = false;
+  let patrol = true;
   let armH = 0;
-  // double tap on the black hole = the hole turns round and swallows the thief himself
+  // double tap on the black hole = the arm shoots up
   let lastTap = 0;
   const tap = () => {
     const t = performance.now();
-    if (t - lastTap < 500) caught = true;
+    if (ready && t - lastTap < 500) { wantReach = true; lastTap = 0; return; }
     lastTap = t;
   };
   hole.addEventListener("pointerdown", tap);
-  const live = () => !caught;
-  const tw = async (ms: number, f: (k: number) => void) => { if (live()) await tween(ms, (k) => { if (live()) f(k); }); };
+  // he shuffles from side to side, a little faster each time he is missed; faster still when the arm comes up
+  let raf = 0;
+  let last = performance.now();
+  const loop = (t: number) => {
+    const dt = Math.min(0.05, (t - last) / 1000);
+    last = t;
+    if (patrol) { phase += dt * ((Math.PI * 2) / 2.7) * speed * react; bx = bxOf(phase); place(); }
+    raf = requestAnimationFrame(loop);
+  };
   try {
     growl(0.7);
     requestAnimationFrame(() => { shade.classList.add("is-on"); shadow.classList.add("is-on"); });
@@ -80,35 +100,73 @@ export async function thiefRaid(r: Raid): Promise<boolean> {
     thud();
     hole.classList.add("is-on");
     top.classList.add("is-on");
-    boss.classList.add("is-on"); // he shows up at the top of the screen, his arm goes into the first hole…
+    boss.classList.add("is-on"); // he shows up above, bent over his own hole…
+    raf = requestAnimationFrame(loop);
     await wait(550);
-    hole.style.pointerEvents = "auto"; // …and the second hole opens where the arm comes out
-    hint.classList.add("is-on");
+    // …and the arm comes out of the second hole, takes what is there, and pulls it down
     const h = Math.max(50, r.reach);
-    await tw(850, (k) => { armH = k * h; arm.style.height = `${armH}px`; });
-    if (live()) await wait(150);
-    if (live()) { hand.innerHTML = HAND_SHUT; r.grab?.(); await wait(1300); }
-    await tw(350, (k) => { armH = h + k * 14; arm.style.height = `${armH}px`; r.lift?.(k * 14); });
-    await tw(1050, (k) => { armH = (h + 14) * (1 - k); arm.style.height = `${armH}px`; r.sink?.(k); });
+    await tween(850, (k) => { armH = k * h; arm.style.height = `${armH}px`; });
+    await wait(150);
+    hand.innerHTML = HAND_SHUT;
+    r.grab?.();
+    await wait(1300);
+    await tween(350, (k) => { armH = h + k * 14; arm.style.height = `${armH}px`; r.lift?.(k * 14); });
+    await tween(1050, (k) => { armH = (h + 14) * (1 - k); arm.style.height = `${armH}px`; r.sink?.(k); });
+    r.gone?.();
+    // the hole stays open for a while: now it is the player's turn
+    hand.innerHTML = HAND_OPEN;
+    hint.classList.add("is-on");
+    hole.style.pointerEvents = "auto";
+    hole.classList.add("is-ready");
+    ready = true;
+    const until = performance.now() + 12000;
+    let tries = 0;
+    while (!caught && performance.now() < until && tries < 6) {
+      await wait(40);
+      if (!wantReach) continue;
+      wantReach = false;
+      tries += 1;
+      hand.innerHTML = HAND_OPEN;
+      react = 1.5; // he sees the arm coming and runs
+      await tween(520, (k) => { armH = k * reachH; arm.style.height = `${armH}px`; });
+      react = 1;
+      if (Math.abs(bx - r.x) < 58) {
+        caught = true;
+        break;
+      }
+      // missed: the arm comes back down, he laughs and goes a little faster
+      hand.innerHTML = HAND_SHUT;
+      await tween(380, (k) => { armH = reachH * (1 - k); arm.style.height = `${armH}px`; });
+      hand.innerHTML = HAND_OPEN;
+      speed *= 1.1;
+      laugh(r.x, r.y);
+    }
+    ready = false;
     hint.classList.remove("is-on");
     hole.style.pointerEvents = "none";
+    hole.classList.remove("is-ready");
     if (!caught) {
-      r.gone?.();
+      patrol = false;
       hole.classList.remove("is-on"); top.classList.remove("is-on"); boss.classList.remove("is-on");
       shadow.classList.remove("is-on"); shade.classList.remove("is-on");
       laugh(r.x, r.y);
       await wait(2200);
       return false;
     }
-    // caught: the thief is pulled down through his own arm, right to the hole
-    hint.classList.remove("is-on");
+    // caught: the hand closes on him and pulls him down into the hole
+    patrol = false;
+    hand.innerHTML = HAND_SHUT;
     thud();
-    r.release?.();
-    arm.style.height = `${armH}px`;
-    const y0 = topY;
-    boss.style.zIndex = "3";
-    await tween(900, (k) => { boss.style.top = `${y0 + (r.y - y0 - 6) * k}px`; boss.style.left = `${topX + (r.x - topX) * k}px`; arm.style.height = `${armH * (1 - k)}px`; });
+    boss.classList.add("is-caught");
     top.classList.remove("is-on");
+    boss.style.zIndex = "3";
+    const x0 = bx;
+    await tween(900, (k) => {
+      armH = reachH * (1 - k);
+      arm.style.height = `${armH}px`;
+      boss.style.left = `${x0 + (r.x - x0) * k}px`;
+      boss.style.top = `${r.y - armH + 10}px`;
+    });
     await speakCaught();
     r.caught?.();
     await wait(1600);
@@ -117,6 +175,7 @@ export async function thiefRaid(r: Raid): Promise<boolean> {
     await wait(700);
     return true;
   } finally {
+    cancelAnimationFrame(raf);
     hole.removeEventListener("pointerdown", tap);
     root.remove();
   }
