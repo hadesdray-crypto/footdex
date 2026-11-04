@@ -694,6 +694,9 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
   const bubble = m.bubble;
   const showAside = bubble && !bubble.top && !m.busy && !bubble.silent;
 
+  // Red card: nobody on the screen
+  if (m.evac === 2) return null;
+
   // He is resting (like Plume): only a small sleeping badge stays; a tap wakes him up.
   if (m.s.rest) {
     return (
@@ -704,8 +707,9 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
   }
 
   const thrown = m.anim === "thrown";
+  const leaving = m.evac === 1;
   const fabStyle = {
-    left: `${pos.x}px`,
+    left: `${leaving ? (pos.x + W / 2 > size.w / 2 ? size.w + 120 : -W - 120) : pos.x}px`,
     top: `${pos.y}px`,
     "--tx": `${m.vx * 1300}px`,
     "--ty": `${m.vy * 1300}px`,
@@ -719,7 +723,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
           ref={fabRef}
           data-who="main"
           type="button"
-          className={cx("mascot__fab", dragging && "is-drag", thrown && "is-thrown", m.anim === "shake" && "is-shake", m.anim === "jump" && "is-jump", m.talking && "is-talk")}
+          className={cx("mascot__fab", dragging && "is-drag", thrown && "is-thrown", leaving && "is-exit", m.anim === "shake" && "is-shake", m.anim === "jump" && "is-jump", m.talking && "is-talk")}
           style={fabStyle}
           aria-label={`${perso.name} : ouvrir son menu`}
           onPointerDown={down}

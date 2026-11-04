@@ -2,7 +2,7 @@
 // the Square Referee asks for a substitute, and sometimes turns up for no reason… and shows a card if you misbehave.
 import { pick, PERSOS } from "./lines";
 import { CARAC } from "./caractere";
-import { emit, getMascot, inter } from "./state";
+import { emit, getMascot, inter, setEvac } from "./state";
 import { enter, sackFor, type Visitor } from "./visitor";
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
@@ -487,4 +487,49 @@ if (typeof window !== "undefined") {
 // For checking the scenes in a browser: open the app with « ?essai-terrain » in the address.
 if (typeof location !== "undefined" && location.search.includes("essai-terrain")) {
   (window as unknown as { __terrain?: unknown }).__terrain = { doctorVisit, refereeVisit, refereeSurprise, refereeSendOff, faute };
+}
+
+/** THE RED CARD (the button at the top): the Referee comes, raises the red card high, and EVERYBODY leaves the screen. */
+let sendingOff = false;
+export async function refereeRedCard() {
+  if (sendingOff || getMascot().evac !== 0) return;
+  sendingOff = true;
+  if (referee) {
+    referee.destroy();
+    referee = null;
+  }
+  const m = document.querySelector(".mascot__fab")?.getBoundingClientRect();
+  const y = m ? Math.min(window.innerHeight - 90, m.bottom - 2) : window.innerHeight * 0.7;
+  const mx = m ? m.left + m.width / 2 : window.innerWidth / 2;
+  const r = enter("arbitre", mx < window.innerWidth / 2 ? window.innerWidth + 40 : -40, y);
+  referee = r;
+  try {
+    const tx = clampX(mx + (mx < window.innerWidth / 2 ? 110 : -110));
+    await r.walk({ x: tx, y }, 300);
+    r.face(mx - r.x);
+    r.front(true);
+    await r.pose("whistle", 800);
+    r.say("TUUUT !", 900);
+    await r.wait(450);
+    r.card("rouge");
+    r.say("CARTON ROUGE ! Tout le monde dehors !", 3200);
+    emit("card");
+    const held = r.pose("card", 3200);
+    await r.wait(900);
+    setEvac(1);
+    emit("evac");
+    await held;
+    r.hold("");
+    await r.wait(1200);
+  } finally {
+    setEvac(2);
+    r.destroy();
+    referee = null;
+    sendingOff = false;
+  }
+}
+
+/** The button again: everybody comes back. */
+export function recallEveryone() {
+  setEvac(0);
 }

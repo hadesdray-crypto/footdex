@@ -148,3 +148,16 @@
 .reg .doors--list .door__kicker { display: none; }
 .reg .doors--list .door__title { font-size: 20px; line-height: 1.1; }
 .reg .doors--list .door__figure { font-size: 12.5px; }
+
+.wd__who { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px; -webkit-overflow-scrolling: touch; }
+.wd__whoitem { flex: 0 0 auto; display: grid; justify-items: center; gap: 2px; min-width: 66px; padding: 6px 6px 4px; border-radius: 14px; border: 1.5px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.05); color: inherit; font: 700 11px/1.1 var(--f-body); }
+.wd__whoitem.is-on { border-color: #f6c453; background: rgba(246, 196, 83, 0.16); }
+.wd__all { display: flex; align-items: center; gap: 8px; padding: 6px 2px; font: 700 13px/1.2 var(--f-body); }
+
+.reg__hero { display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px 14px; border-radius: 20px; border: 1.5px solid rgba(246, 196, 83, 0.55); background: linear-gradient(135deg, rgba(246, 196, 83, 0.16), rgba(255, 255, 255, 0.05)); color: inherit; text-align: left; }
+.reg__heroText { display: grid; gap: 4px; font: 600 13px/1.25 var(--f-body); }
+.reg__heroText strong { font: 800 22px/1 var(--f-display); text-transform: uppercase; }
+.wd:has(.wd__who) .booth__room { height: clamp(150px, 21dvh, 230px); min-height: 150px; }
+.wd:has(.wd__who) .wd__choices { max-height: 26dvh; }
+.wd__all { cursor: pointer; }
+@media (max-width: 360px) { .brand__word { font-size: 15px; letter-spacing: 0; } .brand__sub { display: none; } .topbar__tools { gap: 4px; } .topbar__tools .iconbtn { width: 34px; height: 34px; } }

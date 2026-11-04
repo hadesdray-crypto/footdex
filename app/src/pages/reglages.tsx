@@ -10,6 +10,7 @@ import { CodeParent } from "../maj/code";
 import { voirBienvenue } from "../maj/Bienvenue";
 import { EST_APK, VERSION_APK } from "../maj/env";
 import { Atelier, ZombieOptions } from "../mascot/Atelier";
+import { Fig } from "../mascot/Fig";
 import { Bruitages } from "../mascot/Bruitages";
 import { BuddyPicker } from "../mascot/Buddies";
 import { CaracList } from "../mascot/Carac";
@@ -45,9 +46,19 @@ export function Reglages() {
   const m = useMascot();
   const sound = useSyncExternalStore(onSoundChange, soundOn);
   const perso = PERSOS[m.s.perso];
+  const [vestiaire, setVestiaire] = useState(false);
   return (
     <div className="reg">
       <PageTitle kicker="Tout se règle ici" title="Paramètres" />
+
+      <button type="button" className="reg__hero" onClick={() => setVestiaire(true)} aria-label={`Ouvrir le vestiaire de ${perso.name} et de ses copains`}>
+        <Fig look={m.s.look} size={96} mouth={perso.mouth} />
+        <span className="reg__heroText">
+          <strong>{perso.name}</strong>
+          <span>Touche pour l'habiller, lui et ses copains</span>
+        </span>
+      </button>
+      {vestiaire ? <Wardrobe onClose={() => setVestiaire(false)} start="tenue" /> : null}
 
       <Section title="Mon personnage" kicker={perso.name}>
         <div className="doors doors--list">

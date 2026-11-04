@@ -506,3 +506,9 @@
 @keyframes catHiss { 0%, 100% { transform: scale(1.08, 1.15) translateY(-2px); } 50% { transform: scale(1.12, 1.2) translateY(-3px); } }
 
 .kball { position: fixed; left: 0; top: 0; z-index: 74; width: 22px; font-size: 20px; line-height: 22px; pointer-events: none; filter: drop-shadow(0 3px 3px #0008); }
+
+.mascot__fab.is-exit { transition: left 2.2s ease-in; pointer-events: none; }
+.redcard { display: grid; place-items: center; }
+.redcard__card { display: block; width: 14px; height: 20px; border-radius: 3px; background: #e5282d; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.85), 0 2px 6px rgba(0, 0, 0, 0.5); transform: rotate(-8deg); }
+.redcard.is-back .redcard__card { background: transparent; box-shadow: 0 0 0 2px #e5282d, 0 0 10px rgba(229, 40, 45, 0.7); animation: redcard-pulse 1.2s ease-in-out infinite alternate; }
+@keyframes redcard-pulse { to { transform: rotate(-8deg) scale(1.2); } }

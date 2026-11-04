@@ -1020,6 +1020,21 @@ async function teams() {
 }
 
 /** 7. The Referee whistles the end of playtime: everybody back to his place. */
+/** Red card: they all gather and walk off the screen, each to the nearest side. */
+async function evacuate() {
+  const list = [...bodies.values()].filter((b) => !b.hidden);
+  await Promise.all(
+    list.map(async (b, i) => {
+      await wait(i * 200);
+      b.say(pick(["Oh non !", "Pas de chance…", "On y va, on y va !", "C'est injuste !"]), i === 0);
+      const right = b.x > window.innerWidth / 2;
+      await goTo(b, right ? window.innerWidth - 18 : 18, b.y, 200, { stop: 8, timeout: 5000 });
+      b.el.style.transition = "translate .9s ease-in";
+      b.el.style.translate = `${right ? 220 : -220}px 0`;
+    }),
+  );
+}
+
 async function recre() {
   const list = [...bodies.values()].filter((b) => !b.hidden);
   await Promise.all(
@@ -1444,7 +1459,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
     update({ buddyPos: { ...getMascot().s.buddyPos, [b]: { fx: Math.max(0, Math.min(1, (body.x - W / 2) / Math.max(1, window.innerWidth - W))), fy: Math.max(0, Math.min(1, (body.y - H - 60) / Math.max(1, window.innerHeight - H - 80))) } } });
   };
 
-  if (m.s.rest) return null;
+  if (m.s.rest || m.evac === 2) return null;
   const mode = b === "medecin" ? "poli" : b;
   return (
     <>
@@ -1561,6 +1576,7 @@ export function Buddies() {
       if (ev === "doctor-out") window.setTimeout(() => playFx(mode, "merci"), 300);
       if (ev === "goal") void ola();
       if (ev === "recre") void recre();
+      if (ev === "evac") void evacuate();
       if (ev === "teams") void scene(async () => { await teams(); await wait(2500); await recre(); });
     };
     window.addEventListener("footdex:terrain", onEv);

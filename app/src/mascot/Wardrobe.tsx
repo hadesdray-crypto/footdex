@@ -23,8 +23,23 @@ const TABS: { id: Tab; label: string }[] = [
 /** The changing room: he walks into the booth, the curtain closes, you choose, the curtain opens on the surprise. */
 export function Wardrobe({ onClose, start = "tenue" }: { onClose: () => void; start?: Tab }) {
   const m = useMascot();
+  const mainMode = PERSOS[m.s.perso].mode as string;
+  const [who, setWho] = useState<string>(mainMode); // whose clothes: the main character or one of his friends
   const [draft, setDraft] = useState<Look>(m.s.look);
+  const [saved, setSaved] = useState<Look>(m.s.look);
+  const [all, setAll] = useState(false);
   const [perso, setPerso] = useState(m.s.perso);
+  const friends = m.s.buddies.filter((b) => b !== "medecin" && (b as string) !== mainMode);
+  const strip = [mainMode, ...friends] as string[];
+  const isMain = who === mainMode;
+  const lookOfWho = (k: string): Look => (k === mainMode ? m.s.look : m.s.looks[k] ?? CARAC[k as keyof typeof CARAC].tenue);
+  function pickWho(k: string) {
+    if (k === who) return;
+    setWho(k);
+    setDraft(lookOfWho(k));
+    setSaved(lookOfWho(k));
+    if (k !== mainMode && (tab === "perso" || tab === "carac")) setTab("tenue");
+  }
   const [phase, setPhase] = useState<"enter" | "closed" | "swap" | "open">("enter");
   const [inside, setInside] = useState(false);
   const [tab, setTab] = useState<Tab>(start);
@@ -42,7 +57,11 @@ export function Wardrobe({ onClose, start = "tenue" }: { onClose: () => void; st
   function validate() {
     if (phase !== "closed") return;
     setPhase("swap");
-    update({ look: draft, perso });
+    setSaved(draft);
+    const looks = { ...m.s.looks };
+    if (all) for (const k of strip) looks[k] = { ...(k === who ? draft : lookOfWho(k)), outfit: draft.outfit };
+    if (isMain || all) update({ look: all && !isMain ? { ...m.s.look, outfit: draft.outfit } : draft, perso: isMain ? perso : m.s.perso, looks: { ...looks, ...(isMain ? {} : { [who]: draft }) } });
+    else update({ looks: { ...looks, [who]: draft } });
     later(1100, () => {
       setPhase("open");
       const r = room.current?.getBoundingClientRect();
@@ -53,7 +72,7 @@ export function Wardrobe({ onClose, start = "tenue" }: { onClose: () => void; st
   function again() {
     setPhase("closed");
   }
-  const mouth = PERSOS[perso].mouth;
+  const mouth = (PERSOS.find((p) => p.mode === who) ?? PERSOS[perso]).mouth;
   const toggleAcc = (id: string) => change({ acc: draft.acc.includes(id) ? draft.acc.filter((a: string) => a !== id) : [...draft.acc, id] });
 
   return createPortal(
@@ -69,7 +88,7 @@ export function Wardrobe({ onClose, start = "tenue" }: { onClose: () => void; st
           <div className="booth__sign">CABINE</div>
           <div className="booth__room">
             <div className={cx("booth__fig", inside && "is-in")}>
-              <Fig look={phase === "open" || phase === "swap" ? m.s.look : draft} size={150} mouth={mouth} talk={phase === "open" && m.talking} cheer={phase === "open"} />
+              <Fig look={phase === "open" || phase === "swap" ? saved : draft} size={150} mouth={mouth} talk={phase === "open" && m.talking} cheer={phase === "open"} />
             </div>
             <div className={cx("booth__curtain booth__curtain--l", phase === "swap" && "is-shake")} />
             <div className={cx("booth__curtain booth__curtain--r", phase === "swap" && "is-shake")} />
@@ -99,8 +118,18 @@ export function Wardrobe({ onClose, start = "tenue" }: { onClose: () => void; st
         ) : null}
         {phase === "closed" ? (
           <>
+            {strip.length > 1 ? (
+              <div className="wd__who" role="tablist" aria-label="Qui habiller ?">
+                {strip.map((k) => (
+                  <button key={k} type="button" role="tab" aria-selected={who === k} className={cx("wd__whoitem", who === k && "is-on")} onClick={() => pickWho(k)}>
+                    <Fig look={k === who ? draft : lookOfWho(k)} size={52} crop="bust" />
+                    <span>{PERSOS.find((p) => p.mode === k)?.name ?? k}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <div className="chips chips--scroll" role="tablist" aria-label="Catégories">
-              {TABS.map((t) => (
+              {TABS.filter((t) => isMain || (t.id !== "perso" && t.id !== "carac")).map((t) => (
                 <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={cx("chip", tab === t.id && "chip--on")} onClick={() => setTab(t.id)}>
                   {t.label}
                 </button>
@@ -169,6 +198,12 @@ export function Wardrobe({ onClose, start = "tenue" }: { onClose: () => void; st
                 <CaracList current={perso} onPick={(i) => { setPerso(i); setDraft(m.s.looks[PERSOS[i].mode] ?? CARAC[PERSOS[i].mode].tenue); }} />
               ) : null}
             </div>
+            {strip.length > 1 ? (
+              <label className="wd__all">
+                <input type="checkbox" checked={all} onChange={(e: { target: { checked: boolean } }) => setAll(e.target.checked)} />
+                <span>Même tenue pour tout le monde</span>
+              </label>
+            ) : null}
             <div className="wd__actions">
               <button type="button" className="btn btn--ghost" onClick={onClose}>Annuler</button>
               <button type="button" className="btn btn--gold btn--glow" onClick={validate}>

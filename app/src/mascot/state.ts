@@ -97,7 +97,7 @@ export function setVoiceOf(mode: VoiceKey, patch: Partial<PVoice>) {
 let trying: PVoice | null = null;
 export type Settings = { look: Look; perso: number; speed: number; auto: boolean; engine: "auto" | Engine; heard: Partial<Record<Engine, boolean>>; piper: boolean; nativeVoice: number; voiceType: VoiceType; pvoice: Partial<Record<VoiceKey, PVoice>>; inter: Inter; zopt: ZOpt; bubbles: boolean; buddies: Buddy[]; buddyPos: Record<string, { fx: number; fy: number }>; looks: Record<string, Look>; rest: boolean; narrate: boolean; toutes: boolean; fx: number; fy: number; day: string };
 export type Bubble = { id: number; text: string; top: boolean; silent?: boolean } | null;
-type Snap = { reading: boolean; s: Settings; eng: Partial<Record<Engine, "ok" | "ko">>; using: Engine | null; bubble: Bubble; talking: boolean; busy: boolean; anim: string | null; animId: number; vx: number; vy: number; hurt: number };
+type Snap = { reading: boolean; s: Settings; eng: Partial<Record<Engine, "ok" | "ko">>; using: Engine | null; bubble: Bubble; talking: boolean; busy: boolean; anim: string | null; animId: number; vx: number; vy: number; hurt: number; evac: 0 | 1 | 2 };
 
 function loadSettings(): Settings {
   const d: Settings = { look: DEFAULT_LOOK, perso: 0, speed: 1, auto: true, engine: "auto", heard: {}, piper: false, nativeVoice: -1, voiceType: "garcon", pvoice: {}, inter: INTER_DEFAULT, zopt: ZOPT_DEFAULT, bubbles: true, buddies: [], buddyPos: {}, looks: {}, rest: false, narrate: false, toutes: false, fx: 1, fy: 1, day: "" };
@@ -140,7 +140,7 @@ function loadSettings(): Settings {
   }
 }
 
-let snap: Snap = { reading: false, s: loadSettings(), eng: {}, using: null, bubble: null, talking: false, busy: false, anim: null, animId: 0, vx: 0, vy: 0, hurt: 0 };
+let snap: Snap = { reading: false, s: loadSettings(), eng: {}, using: null, bubble: null, talking: false, busy: false, anim: null, animId: 0, vx: 0, vy: 0, hurt: 0, evac: 0 };
 const listeners = new Set<() => void>();
 /** While a visitor (doctor, referee) speaks, the character's mouth stays still: it is not him talking. */
 let visitorTalking = false;
@@ -1032,8 +1032,12 @@ export function speakAs(text: string, who: VoiceKey, onEnd?: () => void) {
   speechWho = who;
   voice(text, onEnd);
 }
+/** Red card: 0 = everybody is here, 1 = they are leaving the screen, 2 = nobody on the screen. */
+export function setEvac(n: 0 | 1 | 2) {
+  set({ evac: n });
+}
 /** Something happened to the character: the friends on the screen react. */
-export function emit(ev: "thrown" | "doctor-in" | "doctor-out" | "card" | "lore" | "goal" | "recre" | "teams") {
+export function emit(ev: "thrown" | "doctor-in" | "doctor-out" | "card" | "lore" | "goal" | "recre" | "teams" | "evac") {
   window.dispatchEvent(new CustomEvent("footdex:terrain", { detail: ev }));
 }
 export function visitorSpeak(text: string, who: "medecin" | "arbitre", onEnd?: () => void) {
