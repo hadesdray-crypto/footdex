@@ -513,3 +513,13 @@
 .redcard.is-back .redcard__card { background: transparent; box-shadow: 0 0 0 2px #e5282d, 0 0 10px rgba(229, 40, 45, 0.7); animation: redcard-pulse 1.2s ease-in-out infinite alternate; }
 @keyframes redcard-pulse { to { transform: rotate(-8deg) scale(1.2); } }
 .redcard--y .redcard__card { background: #f6d33a; transform: rotate(8deg); }
+
+/* Les histoires secrètes */
+.hs { position: fixed; inset: 0; z-index: 90; display: grid; align-content: center; justify-items: center; gap: 18px; padding: 16px 16px calc(18px + var(--bas)); background: radial-gradient(70% 50% at 50% 30%, #1d2d66e6, #05070ff2 80%); animation: fadein 0.3s ease both; overflow-y: auto; }
+.hs__stage { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 6px; max-width: 560px; }
+.hs__who { display: grid; justify-items: center; gap: 2px; opacity: 0.72; transform: scale(0.94); transition: transform 0.25s, opacity 0.25s; font: 700 12px/1.1 var(--f-body); color: var(--fg-2); }
+.hs__who.is-on { opacity: 1; transform: scale(1.08); color: var(--fg); }
+.hs__sub { margin: 0; max-width: 480px; text-align: center; font: 700 17px/1.3 var(--f-body); color: var(--fg); }
+.hs__actions { display: grid; justify-items: center; gap: 10px; text-align: center; }
+.hs__bravo { margin: 0; font: 700 16px/1.3 var(--f-body); }
+.hs__bravo--s { font-size: 13px; color: var(--fg-2); }

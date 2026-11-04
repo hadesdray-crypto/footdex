@@ -162,3 +162,4 @@
 .wd__all { cursor: pointer; }
 @media (max-width: 440px) { .brand__word { font-size: 15px; letter-spacing: 0; } .brand__sub { display: none; } .topbar__tools { gap: 3px; } .topbar__tools .iconbtn { width: 32px; height: 32px; } .topbar__tools .redcard { width: 28px; } }
 @media (max-width: 340px) { .topbar__flag { display: none; } }
+.spec__art--duo { display: flex; justify-content: center; align-items: center; gap: 2px; min-height: 64px; }

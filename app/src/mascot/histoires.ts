@@ -1,0 +1,192 @@
+// Les histoires secrètes : des petites scènes que l'on débloque en laissant certains personnages ensemble.
+// Chaque histoire a plusieurs versions ; on peut la revoir depuis le coffre (avec d'autres personnages pour les témoins).
+import { useSyncExternalStore } from "react";
+
+export type Ligne = { who: string; text: string };
+export type Histoire = {
+  id: string;
+  titre: string;
+  teaser: string;
+  indice: string; // ce qu'il faut faire pour la débloquer (affiché avec un « ? »)
+  fixes: string[]; // les personnages obligatoires
+  temoins: number; // combien de personnages « au hasard » écoutent (w1, w2)
+  versions: Ligne[][];
+};
+
+const w1 = "w1", w2 = "w2";
+const L = (who: string, text: string): Ligne => ({ who, text });
+
+export const HISTOIRES: Histoire[] = [
+  {
+    id: "philippe",
+    titre: "Philippe et la bouteille",
+    teaser: "Pourquoi Philippe n'est jamais devenu un grand joueur.",
+    indice: "Le Papy + 2 copains, côte à côte, un petit moment.",
+    fixes: ["statue"],
+    temoins: 2,
+    versions: [
+      [
+        L(w1, "Papy, tu connais l'histoire de Philippe ?"),
+        L("statue", "Hm. Oui, je connais l'histoire de Philippe."),
+        L(w2, "Il aurait pu être un grand joueur, mais personne ne sait ce qui s'est passé !"),
+        L("statue", "Moi, je sais. Un jour de grand match, il y avait un recruteur dans les tribunes."),
+        L("statue", "Et Philippe a glissé sur une bouteille d'eau. La bouteille est partie… en pleine figure du recruteur !"),
+        L(w1, "Oh non !"),
+        L(w2, "Aïe, aïe, aïe…"),
+        L("statue", "Il n'a jamais été repris. Chut… personne ne doit le savoir."),
+      ],
+      [
+        L("statue", "Hm. Approchez, les enfants. Je vais vous parler de Philippe."),
+        L(w1, "Philippe ? Le sérieux ? Il joue super bien !"),
+        L("statue", "Oui. Il aurait pu être un très grand joueur. Un recruteur était venu le voir jouer."),
+        L(w2, "Et alors ?"),
+        L("statue", "Alors il a glissé sur une bouteille d'eau, en plein match. Elle a volé droit sur le recruteur."),
+        L(w1, "Pas possible !"),
+        L("statue", "Si. Depuis ce jour-là, on ne l'a plus jamais appelé."),
+        L(w2, "On ne dira rien, papy. Promis."),
+      ],
+      [
+        L(w2, "Papy, pourquoi Philippe n'est pas devenu célèbre ?"),
+        L("statue", "Hm. C'est une longue histoire… Il y avait un grand match, et un recruteur."),
+        L(w1, "Un vrai recruteur ?"),
+        L("statue", "Un vrai. Philippe court, il glisse sur une bouteille d'eau… et pan ! Elle atterrit sur le nez du recruteur."),
+        L(w1, "Ouille !"),
+        L(w2, "Le pauvre Philippe…"),
+        L("statue", "Voilà pourquoi il ne joue pas dans un grand club. Mais ça, c'est un secret entre nous."),
+      ],
+    ],
+  },
+  {
+    id: "lacet",
+    titre: "Le lacet du Jongleur",
+    teaser: "Pourquoi le Jongleur tombe tout le temps.",
+    indice: "Le Papy et le Jongleur, ensemble.",
+    fixes: ["statue", "joueur"],
+    temoins: 0,
+    versions: [
+      [
+        L("joueur", "Papy, je suis encore tombé en jouant !"),
+        L("statue", "Hm. Tes lacets étaient défaits ?"),
+        L("joueur", "Je n'ai pas de lacets : j'ai des scratchs. Mes parents voulaient m'acheter des chaussures à lacets, j'ai toujours refusé."),
+        L("statue", "Un footballeur qui ne sait pas faire ses lacets ! Il y a un temps pour tout."),
+        L("joueur", "Moi, je préfère jouer avec mon ballon."),
+        L("statue", "Bon… viens ici. J'ai bien mal au dos, mais je vais te le faire, ton lacet."),
+        L("joueur", "Merci, papy !"),
+      ],
+      [
+        L("statue", "Hm. Regarde-moi ça. Tu es encore tombé."),
+        L("joueur", "Ce n'est pas ma faute, ma chaussure est bizarre !"),
+        L("statue", "Elle a des lacets, ta chaussure. Et tu ne sais pas les faire."),
+        L("joueur", "J'ai toujours porté des scratchs. Et puis, le football, c'est différent !"),
+        L("statue", "Différent, différent… Tu perds du temps avec ton ballon, jeune homme."),
+        L("joueur", "Aïe, mon nez…"),
+        L("statue", "Allez, je me mets à quatre pattes. Aïe, mon dos. Voilà, c'est fait."),
+      ],
+    ],
+  },
+  {
+    id: "medecin",
+    titre: "Le secret du Médecin",
+    teaser: "D'où vient vraiment le Zombie ?",
+    indice: "Le Médecin et le Pointu, ensemble, après deux soins pour une fracture.",
+    fixes: ["medecin", "pointu"],
+    temoins: 0,
+    versions: [
+      [
+        L("medecin", "Encore une fracture… Vous me fatiguez, vous savez. Je vais vous dire quelque chose."),
+        L("medecin", "Il y a longtemps, dans mon pays, j'ai inventé un produit pour booster les footballeurs."),
+        L("pointu", "D'après les chiffres… c'est une très mauvaise idée."),
+        L("medecin", "Le premier à l'essayer a couru comme un cheval au galop. Mais il n'a jamais su s'arrêter. Il s'est écrasé contre un mur."),
+        L("medecin", "J'ai gardé le corps pour mes recherches. Et pendant l'analyse… il s'est relevé. Il lui manquait un œil."),
+        L("pointu", "Je… je préfère ne pas faire le calcul."),
+      ],
+      [
+        L("pointu", "Docteur, vous avez l'air très fatigué."),
+        L("medecin", "Je vous ai soigné deux fois de suite. Cela m'a donné envie de parler."),
+        L("medecin", "J'ai fabriqué un jour un stéroïde, quand personne ne savait que c'était interdit."),
+        L("medecin", "Le footballeur a couru plus vite que tout le monde. Et plus vite qu'un cheval. Puis le mur est arrivé."),
+        L("pointu", "Précisément… ça fait beaucoup de kilomètres par heure."),
+        L("medecin", "Il est mort. Puis il s'est relevé, pendant l'examen. Voilà."),
+      ],
+    ],
+  },
+  {
+    id: "mere",
+    titre: "La mère du Zombie",
+    teaser: "Ce que disait sa maman, quand il était footballeur.",
+    indice: "Le Médecin et le Zombie, ensemble, après le secret du Médecin.",
+    fixes: ["medecin", "zombie"],
+    temoins: 0,
+    versions: [
+      [
+        L("medecin", "Tu sais, sa mère ne voulait pas qu'il joue au football."),
+        L("zombie", "Maman…"),
+        L("medecin", "Elle disait que c'était trop dangereux. Qu'il valait mieux faire des études."),
+        L("medecin", "Je n'ai jamais compris ce que ça avait à voir avec mon produit. Vraiment pas."),
+        L("zombie", "Grouu… Ouille."),
+      ],
+      [
+        L("zombie", "Ma… man…"),
+        L("medecin", "Oui, oui, sa maman. Elle voulait qu'il étudie, pas qu'il joue au foot."),
+        L("medecin", "Moi, je trouve que le football est un très bon sport. Il n'y a aucun danger."),
+        L("zombie", "Hmm… Hmm…"),
+      ],
+    ],
+  },
+];
+
+export const histoire = (id: string) => HISTOIRES.find((h) => h.id === id);
+
+// ------------------------------------------------------------------ what has been discovered
+const KEY = "footdex.histoires.v1";
+const SOINS = "footdex.soins.v1";
+const EVT = "footdex:histoires";
+type Vues = Record<string, number>;
+const lire = (): Vues => {
+  try {
+    const v = JSON.parse(localStorage.getItem(KEY) ?? "{}");
+    return v && typeof v === "object" ? v : {};
+  } catch {
+    return {};
+  }
+};
+let cache = JSON.stringify(lire());
+export function vues(): Vues {
+  return lire();
+}
+export function marquerVue(id: string) {
+  const v = lire();
+  v[id] = (v[id] ?? 0) + 1;
+  try { localStorage.setItem(KEY, JSON.stringify(v)); } catch { /* nothing */ }
+  cache = JSON.stringify(v);
+  window.dispatchEvent(new Event(EVT));
+}
+export function useVues(): Vues {
+  const raw = useSyncExternalStore(
+    (fn: () => void) => { window.addEventListener(EVT, fn); return () => window.removeEventListener(EVT, fn); },
+    () => cache,
+  );
+  try { return JSON.parse(raw); } catch { return {}; }
+}
+/** The Doctor treated a fracture (cast): two in a row unlock his secret. */
+export function compterSoin() {
+  try { localStorage.setItem(SOINS, String(soins() + 1)); } catch { /* nothing */ }
+}
+export function soins(): number {
+  try { return Number(localStorage.getItem(SOINS) ?? 0) || 0; } catch { return 0; }
+}
+
+/** Does this story unlock now? `present` = who is on the screen. */
+export function conditionRemplie(id: string, present: string[]): boolean {
+  const h = histoire(id);
+  if (!h) return false;
+  if (!h.fixes.every((k) => present.includes(k))) return false;
+  if (present.length < h.fixes.length + h.temoins) return false;
+  if (id === "medecin") return soins() >= 2;
+  if (id === "mere") return (vues().medecin ?? 0) > 0;
+  return true;
+}
+
+export function lancerHistoire(id: string, prefer: string[] = [], version?: number) {
+  window.dispatchEvent(new CustomEvent("footdex:histoire", { detail: { id, prefer, version } }));
+}

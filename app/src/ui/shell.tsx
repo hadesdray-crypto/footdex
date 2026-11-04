@@ -9,6 +9,7 @@ import { cx, fmt } from "../util";
 import type { Album } from "../data";
 import { Mascot } from "../mascot/Mascot";
 import { refereeCard } from "../mascot/terrain";
+import { HistoireScene } from "../mascot/HistoireScene";
 import { Bienvenue } from "../maj/Bienvenue";
 import { MiseAJour } from "../maj/MiseAJour";
 import { TempsEcran } from "../maj/TempsEcran";
@@ -125,6 +126,7 @@ export function Shell({ page, pageKey, album, children }: { page: string; pageKe
       <Mascot album={album} page={page} />
       <MiseAJour />
       <Bienvenue />
+      <HistoireScene />
       <TempsEcran />
       <nav className="tabbar" aria-label="Rubriques">
         <ul>

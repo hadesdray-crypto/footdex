@@ -4,6 +4,9 @@ import { LuGem, LuGift, LuHeart, LuLock, LuSparkles, LuStar, LuTrophy, LuZap, Lu
 import type { Look } from "../mascot/look";
 import { Fig } from "../mascot/Fig";
 import { PERSOS } from "../mascot/lines";
+import { CARAC } from "../mascot/caractere";
+import { DOCTOR_LOOK } from "../mascot/state";
+import { HISTOIRES, lancerHistoire, useVues } from "../mascot/histoires";
 import { say, update, useMascot } from "../mascot/state";
 import { unlockChest, useStore } from "../store";
 import { PageTitle } from "../ui/bits";
@@ -63,7 +66,8 @@ export function Chest({ open }: { open: boolean }) {
 export function Coffre() {
   const s = useStore();
   const m = useMascot();
-  const [tab, setTab] = useState<"perso" | "cartes">("perso");
+  const [tab, setTab] = useState<"perso" | "cartes" | "histoires">("perso");
+  const vues = useVues();
   const [flash, setFlash] = useState("");
   const [opened, setOpened] = useState(0);
 
@@ -106,9 +110,34 @@ export function Coffre() {
       <div className="segmented" role="tablist" aria-label="Le coffre">
         <button type="button" role="tab" aria-selected={tab === "perso"} className={cx("segmented__tab", tab === "perso" && "segmented__tab--on")} onClick={() => setTab("perso")}>Personnages secrets</button>
         <button type="button" role="tab" aria-selected={tab === "cartes"} className={cx("segmented__tab", tab === "cartes" && "segmented__tab--on")} onClick={() => setTab("cartes")}>Cartes spéciales</button>
+        <button type="button" role="tab" aria-selected={tab === "histoires"} className={cx("segmented__tab", tab === "histoires" && "segmented__tab--on")} onClick={() => setTab("histoires")}>Histoires</button>
       </div>
 
-      {tab === "perso" ? (
+      {tab === "histoires" ? (
+        <ul className="specials">
+          {HISTOIRES.map((h) => {
+            const mine = (vues[h.id] ?? 0) > 0;
+            const look = (k: string) => (k === "medecin" ? DOCTOR_LOOK : m.s.looks[k] ?? CARAC[k as keyof typeof CARAC].tenue);
+            return (
+              <li key={h.id} className={cx("spec", !mine && "spec--locked")} style={{ "--h1": "#c58bff", "--h2": "#3d1a6b" }}>
+                <div className="spec__art spec__art--duo">
+                  {mine ? h.fixes.map((k) => <Fig key={k} look={look(k)} size={64} crop="bust" />) : <LuLock aria-hidden="true" />}
+                </div>
+                <h3>{mine ? h.titre : "Histoire secrète ?"}</h3>
+                {mine ? (
+                  <>
+                    <p className="spec__quirk">{h.teaser}</p>
+                    <p className="spec__fact">Vue {vues[h.id]} fois</p>
+                    <button type="button" className="btn btn--gold" onClick={() => lancerHistoire(h.id, [...m.s.buddies, ...[PERSOS[m.s.perso].mode as string]])}>Revoir l'histoire</button>
+                  </>
+                ) : (
+                  <p className="spec__quirk">{h.indice}</p>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      ) : tab === "perso" ? (
         <ul className="secrets">
           {SECRETS.map((c) => {
             const mine = s.chest.includes(c.id);

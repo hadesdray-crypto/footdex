@@ -3,6 +3,7 @@
 import { pick, PERSOS } from "./lines";
 import { CARAC } from "./caractere";
 import { emit, getMascot, inter, setAway, setEvac } from "./state";
+import { compterSoin } from "./histoires";
 import { enter, sackFor, type Visitor } from "./visitor";
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
@@ -39,6 +40,7 @@ const moved = (where: Where, from: Pt) => {
 /** The Doctor runs in with his bag, kneels next to the injured character (wherever he is), treats him, and leaves.
  *  `apply` puts the bandage or the cast on the character at the end of the treatment. */
 export async function doctorVisit(where: Where, opts: { zombie?: boolean; cast?: boolean; nose?: boolean; apply?: () => void } = {}) {
+  if (opts.cast) compterSoin();
   if (doctor) {
     opts.apply?.();
     return;
