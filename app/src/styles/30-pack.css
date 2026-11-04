@@ -235,3 +235,5 @@
 .recap__newpath h3 { font: 900 clamp(30px, 8vw, 44px)/0.95 var(--f-display); text-transform: uppercase; }
 .recap__newpath p:last-child { color: var(--fg-2); }
 .recap__actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; padding-top: 4px; }
+/* the spinning / bobbing parts get their own layer: the shadow is not repainted at every frame */
+.paquet__ball, .paquet--float, .reveal__pack .paquet { will-change: transform; }

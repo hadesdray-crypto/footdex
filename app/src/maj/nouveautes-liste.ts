@@ -4,6 +4,17 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-04",
+    titre: "Version 46 : menus refaits, appli plus fluide",
+    type: "appli",
+    points: [
+      "Un seul menu « Paramètres » (le bouton engrenage ou l'onglet Réglages) : Mon personnage, L'appli, Pour les grands. Chaque sujet a son écran, avec la flèche de retour.",
+      "Mon personnage : Qui est-ce ?, Sa voix (avec des molettes), Ses copains, Ses bruitages.",
+      "Pour les grands (avec le code) : temps d'écran et Internet, réglages du jeu, atelier, et le menu Essais pour lancer à la main le chapardeur, la fête et la figurine à clipser.",
+      "L'appli est plus fluide : moins d'animations inutiles, surtout sur les pages avec beaucoup de personnages.",
+    ],
+  },
+  {
+    date: "2026-11-04",
     titre: "Version 45 : les figurines en plexiglas",
     type: "appli",
     points: [

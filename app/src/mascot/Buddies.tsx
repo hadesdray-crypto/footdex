@@ -92,6 +92,8 @@ type Body = {
   say: (text: string, force?: boolean, slot?: Slot, o?: SayOpts) => Promise<void>;
   act: (name: string, ms: number) => void;
   hidden: boolean;
+  // last values written to the page (see step)
+  ctr?: string; czi?: string; cfl?: string; cw?: boolean; cr?: boolean;
 };
 /** at: where his bubble shows (his head rolled away: the voice comes from there); onStart: at the very moment he starts to talk. */
 type SayOpts = { at?: Pos; onStart?: () => void; /** show the words in a bubble (only to explain something) */ read?: boolean };
@@ -102,7 +104,17 @@ let talkingUntil = 0;
 const now = () => performance.now();
 
 /** The main character's feet, wherever he is (in his corner, or walking about). */
+let spotAt = -1e9;
+let spotVal: Pos | null = null;
 function mainSpot(): Pos | null {
+  // read the layout at most ~11 times a second (not at every frame): it was the main cost of the loop
+  const t0 = performance.now();
+  if (t0 - spotAt < 90) return spotVal;
+  spotAt = t0;
+  spotVal = mainSpotNow();
+  return spotVal;
+}
+function mainSpotNow(): Pos | null {
   const fab = document.querySelector<HTMLElement>(".mascot__fab");
   const el = fab && fab.style.visibility !== "hidden" ? fab : document.querySelector<HTMLElement>(".fbp, .act");
   if (!el) return null;
@@ -305,13 +317,19 @@ function step(t: number) {
     b.y = Math.max(top(), Math.min(bottom(), b.y));
     const sp = Math.hypot(b.vx, b.vy);
     if (Math.abs(b.vx) > 6) b.dir = b.vx > 0 ? 1 : -1;
-    b.el.classList.toggle("is-walk", sp > 8 && b.mode !== "down");
-    b.el.classList.toggle("is-run", sp > 140 && b.mode !== "down");
+    const walk = sp > 8 && b.mode !== "down";
+    const run = sp > 140 && b.mode !== "down";
+    if (walk !== b.cw) { b.cw = walk; b.el.classList.toggle("is-walk", walk); }
+    if (run !== b.cr) { b.cr = run; b.el.classList.toggle("is-run", run); }
   }
+  // write to the page only what changed (a style write that changes nothing still costs a style recalculation)
   for (const b of list) {
-    b.el.style.transform = `translate(${b.x - W / 2}px,${b.y - H - b.z}px)`;
-    b.el.style.zIndex = String(depthZ(b.y));
-    b.flip.style.transform = b.mode === "fly" ? `scaleX(${b.dir}) rotate(${Math.max(-50, Math.min(50, b.vx * 0.09 * (b.vz > 0 ? 1 : 1.4))) * b.dir}deg)` : `scaleX(${b.dir})`;
+    const tr = `translate(${Math.round((b.x - W / 2) * 10) / 10}px,${Math.round((b.y - H - b.z) * 10) / 10}px)`;
+    if (tr !== b.ctr) { b.ctr = tr; b.el.style.transform = tr; }
+    const zi = String(depthZ(b.y));
+    if (zi !== b.czi) { b.czi = zi; b.el.style.zIndex = zi; }
+    const fl = b.mode === "fly" ? `scaleX(${b.dir}) rotate(${Math.max(-50, Math.min(50, b.vx * 0.09 * (b.vz > 0 ? 1 : 1.4))) * b.dir}deg)` : `scaleX(${b.dir})`;
+    if (fl !== b.cfl) { b.cfl = fl; b.flip.style.transform = fl; }
   }
   moveHead(dt);
   running = bodies.size ? requestAnimationFrame(step) : 0;
@@ -1294,7 +1312,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
     };
     const onParty = (e: Event) => { const d = (e as CustomEvent<{ title: string; year: string }>).detail; if (!sceneOn) void partyScene(d?.title, d?.year); };
     window.addEventListener("footdex:party", onParty);
-    const onEssai = (e: Event) => { const d = (e as CustomEvent<{ quoi: string }>).detail; if (d?.quoi === "chapardeur") void thiefScene(); };
+    const onEssai = (e: Event) => { const d = (e as CustomEvent<{ quoi: string }>).detail; if (d?.quoi === "chapardeur") void thiefScene(); if (d?.quoi === "fete") void partyScene(); };
     window.addEventListener("footdex:essai", onEssai);
     window.addEventListener("footdex:terrain", onEv);
     // the ball hits him

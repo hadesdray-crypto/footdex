@@ -1,26 +1,13 @@
-// Les trois grandes pages de menu de l'application :
-//  - Découvrir : tout ce qu'on peut explorer (matchs, cartes, histoires, scores, jeux…)
-//  - Moi : mon coin (mon personnage, sons de l'appli, version, entrée des grands)
-//  - Personnage : tous les réglages du personnage, au même endroit (et seulement là)
-import { useMemo, useState, useSyncExternalStore } from "react";
+// Découvrir : tout ce qu'on peut explorer (matchs, cartes, histoires, scores, jeux…). Les réglages sont dans pages/reglages.tsx.
+import { useMemo } from "react";
 import {
   LuBookMarked, LuCalendarDays, LuDices, LuFilm, LuGem, LuGlobe, LuGraduationCap, LuLibrary, LuMessageSquareQuote, LuPlay, LuShieldCheck,
-  LuShirt, LuTrophy, LuUserRound, LuUsers, LuZap,
+  LuShirt, LuTrophy, LuUsers, LuZap,
 } from "react-icons/lu";
 import type { Album } from "../data";
-import { ZombieOptions } from "../mascot/Atelier";
-import { Bruitages } from "../mascot/Bruitages";
-import { BuddyPicker } from "../mascot/Buddies";
-import { CaracList } from "../mascot/Carac";
-import { PERSOS } from "../mascot/lines";
-import { SPEEDS, choosePerso, hideBubble, sample, stopTalking, update, useMascot } from "../mascot/state";
-import { VoicePicker } from "../mascot/VoicePicker";
-import { Wardrobe } from "../mascot/Wardrobe";
 import { go, type Route } from "../router";
-import { onSoundChange, setSound, soundOn } from "../sound";
-import { BackLink, Door, PageTitle, Section } from "../ui/bits";
-import { cx, fmt } from "../util";
-import { Version } from "./parents";
+import { Door, PageTitle, Section } from "../ui/bits";
+import { fmt } from "../util";
 
 // ------------------------------------------------------------------ Découvrir
 
@@ -76,100 +63,6 @@ export function Decouvrir({ album }: { album: Album }) {
           <Door to={{ page: "sources" }} kicker="Contrôle" title="Sources et certitude" icon={LuShieldCheck} />
         </div>
       </Section>
-    </div>
-  );
-}
-
-// ------------------------------------------------------------------ Moi
-
-export function Moi() {
-  const m = useMascot();
-  const sound = useSyncExternalStore(onSoundChange, soundOn);
-  const perso = PERSOS[m.s.perso];
-  return (
-    <div>
-      <PageTitle kicker="Mon coin" title="Moi" />
-
-      <div className="doors doors--list">
-        <Door to={{ page: "personnage" }} kicker="Mon personnage" title={perso.name} figure="Vestiaire, voix, copains, bruitages" tone="gold" icon={LuUserRound} />
-        <Door to={{ page: "parents" }} kicker="Pour les grands" title="Coin des parents" figure="Code parent : temps d'écran, sauvegarde, voix avancée" icon={LuShieldCheck} />
-      </div>
-
-      <Section title="Sons de l'appli" kicker={sound ? "Allumés" : "Coupés"}>
-        <p className="note">Les sons des boutons, des paquets et du ballon. La voix du personnage ne dépend pas de ce réglage.</p>
-        <div className="chips">
-          <button type="button" className={cx("chip", sound && "chip--on")} aria-pressed={sound} onClick={() => setSound(true)}>Allumés</button>
-          <button type="button" className={cx("chip", !sound && "chip--on")} aria-pressed={!sound} onClick={() => setSound(false)}>Coupés</button>
-        </div>
-      </Section>
-
-      <Version />
-    </div>
-  );
-}
-
-// ------------------------------------------------------------------ Mon personnage
-
-export function Personnage() {
-  const m = useMascot();
-  const [wardrobe, setWardrobe] = useState(false);
-  const perso = PERSOS[m.s.perso];
-  return (
-    <div>
-      <BackLink to={{ page: "moi" }} label="Moi" />
-      <PageTitle kicker={`Aujourd'hui : ${perso.name}`} title="Mon personnage" />
-
-      <Section title="Qui est-ce ?" kicker="Son caractère et ses habits">
-        <p className="note">Chaque caractère a sa tenue, sa voix et sa façon de parler. Seul le Jongleur a un ballon.</p>
-        <CaracList current={m.s.perso} onPick={(i: number) => { choosePerso(i); window.setTimeout(sample, 60); }} />
-        <div className="chips">
-          <button type="button" className="btn btn--gold" onClick={() => setWardrobe(true)}><LuShirt aria-hidden="true" /> Vestiaire</button>
-          {m.s.rest ? (
-            <button type="button" className="btn btn--soft" onClick={() => update({ rest: false })}>Réveiller {perso.name}</button>
-          ) : (
-            <button type="button" className="btn btn--soft" onClick={() => { stopTalking(); hideBubble(); update({ rest: true }); }}>💤 {perso.name} se repose</button>
-          )}
-        </div>
-        <p className="note">Sur le personnage : un toucher ouvre son menu, deux touchers le font jouer (ou continuer son histoire), un appui long permet de le déplacer, un coup de doigt rapide le lance.</p>
-      </Section>
-
-      <Section title="Sa voix" kicker="Comment il parle">
-        <p className="mm__label">Vitesse</p>
-        <div className="chips">
-          {SPEEDS.map((s, i) => (
-            <button key={s.label} type="button" className={cx("chip", m.s.speed === i && "chip--on")} aria-pressed={m.s.speed === i} onClick={() => { update({ speed: i }); sample(); }}>{s.label}</button>
-          ))}
-        </div>
-        <p className="mm__label">Afficher ce qu'il dit (les bulles de texte)</p>
-        <div className="chips">
-          <button type="button" className={cx("chip", m.s.bubbles && "chip--on")} aria-pressed={m.s.bubbles} onClick={() => update({ bubbles: true })}>Oui</button>
-          <button type="button" className={cx("chip", !m.s.bubbles && "chip--on")} aria-pressed={!m.s.bubbles} onClick={() => update({ bubbles: false })}>Non</button>
-        </div>
-        <p className="mm__label">Dis-moi tout ce qui se passe</p>
-        <div className="chips">
-          <button type="button" className={cx("chip", m.s.narrate && "chip--on")} aria-pressed={m.s.narrate} onClick={() => update({ narrate: true })}>Oui</button>
-          <button type="button" className={cx("chip", !m.s.narrate && "chip--on")} aria-pressed={!m.s.narrate} onClick={() => update({ narrate: false })}>Non</button>
-        </div>
-      </Section>
-
-      <Section title="Change ma voix !" kicker="Une voix pour chaque personnage, le Médecin et l'Arbitre">
-        <VoicePicker />
-      </Section>
-
-      <Section title="Ses copains" kicker="Deux au maximum, à côté de lui">
-        <p className="note">Ils parlent avec leur voix, réagissent quand il est lancé… Touche-les pour qu'ils parlent, glisse-les pour les déplacer.</p>
-        <BuddyPicker />
-      </Section>
-
-      <Section title="Le Zombie" kicker="Comment il joue avec les autres">
-        <ZombieOptions />
-      </Section>
-
-      <Section title="Mes bruitages" kicker="Enregistre les bruits des personnages">
-        <Bruitages />
-      </Section>
-
-      {wardrobe ? <Wardrobe onClose={() => setWardrobe(false)} start="tenue" /> : null}
     </div>
   );
 }

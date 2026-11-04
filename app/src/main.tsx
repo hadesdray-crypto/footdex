@@ -6,11 +6,12 @@ import { Binder } from "./pages/binder";
 import { Coffre } from "./pages/coffre";
 import { Collection } from "./pages/collection";
 import { Jeux } from "./pages/jeux";
-import { Parents } from "./pages/parents";
-import { Decouvrir, Moi, Personnage } from "./pages/rubriques";
+import { Reglages, RegAtelier, RegBruitages, RegCopains, RegDev, RegEcran, RegGrands, RegJeu, RegMaj, RegPersonnage, RegSauvegarde, RegSons, RegVoix } from "./pages/reglages";
+import { Decouvrir } from "./pages/rubriques";
 import { demarrerHorsLigne } from "./maj/hors-ligne";
 import { demarrerMajApk } from "./maj/maj-apk";
 import { garderEcranAllume } from "./maj/ecran-allume";
+import { garderLegere } from "./perf";
 import { demarrerTempsEcran } from "./maj/temps-ecran";
 import { garderLesLiensExternes } from "./maj/parents";
 import { Carte } from "./pages/carte";
@@ -54,10 +55,22 @@ function Page({ route, album }: { route: Route; album: Album }) {
     case "coffre": return <Coffre />;
     case "collection": return <Collection />;
     case "jeux": return <Jeux />;
-    case "parents": return <Parents />;
-    case "reglages": return <Moi />;
-    case "moi": return <Moi />;
-    case "personnage": return <Personnage />;
+    case "parents": return <RegGrands />;
+    case "reglages": return <Reglages />;
+    case "moi": return <Reglages />;
+    case "personnage": return <RegPersonnage />;
+    case "reg-personnage": return <RegPersonnage />;
+    case "reg-voix": return <RegVoix />;
+    case "reg-copains": return <RegCopains />;
+    case "reg-bruitages": return <RegBruitages />;
+    case "reg-sons": return <RegSons />;
+    case "reg-maj": return <RegMaj />;
+    case "reg-sauvegarde": return <RegSauvegarde />;
+    case "reg-grands": return <RegGrands />;
+    case "reg-ecran": return <RegEcran />;
+    case "reg-jeu": return <RegJeu />;
+    case "reg-atelier": return <RegAtelier />;
+    case "reg-dev": return <RegDev />;
     case "mission": return <Mission />;
     case "machine": return <Machine album={album} />;
     case "plus": return <Decouvrir album={album} />;
@@ -69,7 +82,7 @@ const TITLES: Record<string, string> = {
   mission: "Mission de Papa", machine: "La machine à secrets",
   accueil: "Footdex", joueurs: "Joueurs", paquets: "Paquets", classeur: "Classeur", matchs: "Matchs", scores: "Scores", coupes: "Coupes",
   clubs: "Clubs", saison: "Saison 2026-2027", lexique: "Lexique", defi: "Défi du jour", "grand-defi": "Grand défi", histoires: "Histoires",
-  videos: "Vidéos", sources: "Sources", carte: "La carte", coffre: "Le coffre", collection: "Ma collection", jeux: "Les jeux", parents: "Coin des parents", reglages: "Moi", plus: "Découvrir", decouvrir: "Découvrir", moi: "Moi", personnage: "Mon personnage",
+  videos: "Vidéos", sources: "Sources", carte: "La carte", coffre: "Le coffre", collection: "Ma collection", jeux: "Les jeux", parents: "Pour les grands", reglages: "Paramètres", plus: "Découvrir", decouvrir: "Découvrir", moi: "Paramètres", personnage: "Mon personnage", "reg-personnage": "Mon personnage", "reg-voix": "Sa voix", "reg-copains": "Ses copains", "reg-bruitages": "Ses bruitages", "reg-sons": "Les sons", "reg-maj": "Mises à jour", "reg-sauvegarde": "Sauvegarde", "reg-grands": "Pour les grands", "reg-ecran": "Temps d'écran", "reg-jeu": "Réglages du jeu", "reg-atelier": "Atelier", "reg-dev": "Essais",
 };
 
 function App() {
@@ -109,6 +122,7 @@ const root = document.getElementById("root");
 if ((window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.()) document.documentElement.classList.add("native");
 
 garderEcranAllume();
+garderLegere();
 collectPacks();
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") collectPacks(); });
 if (root) createRoot(root).render(<App />);

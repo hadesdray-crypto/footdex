@@ -1,13 +1,14 @@
 /* Le personnage : dessin animé, bulle, menu et vestiaire */
 .mfw { display: block; line-height: 0; }
 .mfig { display: block; overflow: visible; }
-.mfw .torso { transform-origin: 90px 160px; animation: m-breathe 3.2s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.mfw .lid { transform-box: fill-box; transform-origin: 50% 0; transform: scaleY(0); }
+[data-who] .mfw .torso { transform-origin: 90px 160px; animation: m-breathe 3.2s ease-in-out infinite; animation-delay: var(--d, 0s); }
 @keyframes m-breathe { 50% { transform: scale(1.012, 1.022); } }
-.mfw .headg { transform-origin: 90px 128px; animation: m-headidle 4.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
+[data-who] .mfw .headg { transform-origin: 90px 128px; animation: m-headidle 4.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
 @keyframes m-headidle { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(1.3deg); } 70% { transform: rotate(-1.1deg); } }
-.mfw .lid { transform-box: fill-box; transform-origin: 50% 0; transform: scaleY(0); animation: m-blink 4.6s infinite; animation-delay: var(--d, 0s); }
+[data-who] .mfw .lid { transform-box: fill-box; transform-origin: 50% 0; transform: scaleY(0); animation: m-blink 4.6s infinite; animation-delay: var(--d, 0s); }
 @keyframes m-blink { 0%, 93%, 100% { transform: scaleY(0); } 96% { transform: scaleY(1); } }
-.mfw .pup { animation: m-look 7s ease-in-out infinite; animation-delay: var(--d, 0s); }
+[data-who] .mfw .pup { animation: m-look 7s ease-in-out infinite; animation-delay: var(--d, 0s); }
 @keyframes m-look { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(3px, 1px); } 55% { transform: translate(-3px, 0); } 80% { transform: translate(1px, -2px); } }
 .mfw .m-open { display: none; transform-box: fill-box; transform-origin: 50% 0; }
 .mfw.talk .m-static { display: none; }

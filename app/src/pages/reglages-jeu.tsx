@@ -102,26 +102,34 @@ function MissionParent() {
   );
 }
 
+/** Le menu développeur : chaque bouton lance l'essai tout de suite. */
+export function Essais() {
+  const [clipTest, setClipTest] = useState(false);
+  const [msg, setMsg] = useState("");
+  const lance = (quoi: string, texte: string) => { window.dispatchEvent(new CustomEvent("footdex:essai", { detail: { quoi } })); setMsg(texte); };
+  return (
+    <div className="rg">
+      <p className="note">Chaque bouton lance l'essai tout de suite. Regarde ensuite les personnages à l'écran (ferme ce menu avec la flèche si besoin).</p>
+      <div className="chips">
+        <button type="button" className="btn btn--gold" onClick={() => lance("chapardeur", "Le chapardeur arrive. Touche 2 fois son trou noir pour l'attraper !")}>Tester le chapardeur</button>
+        <button type="button" className="btn btn--gold" onClick={() => lance("fete", "La fête commence.")}>Tester la fête</button>
+        <button type="button" className="btn btn--gold" onClick={() => setClipTest(true)}>Tester la figurine à clipser</button>
+      </div>
+      {msg ? <p className="note" role="status">{msg}</p> : null}
+      {clipTest ? <ClipTest onClose={() => setClipTest(false)} /> : null}
+    </div>
+  );
+}
+
 export function ReglagesJeu() {
   const r = useReglages();
   const w = r.coffreChances;
   const wt = w.pieces + w.paquet + w.carteFbx + w.figurine + w.style;
   const wp = (n: number) => (wt ? Math.round((n / wt) * 100) : 0);
-  const [clipTest, setClipTest] = useState(false);
-  const [msg, setMsg] = useState("");
   return (
     <div className="rg">
       <p className="note">Tout se règle ici, sans connexion. Chaque réglage s'applique tout de suite. Les valeurs d'origine sont celles qu'on a validées ensemble.</p>
 
-      <Bloc titre="Essais (pour tester à la main)">
-        <p className="note">Chaque bouton lance l'essai tout de suite, pour voir comment ça donne.</p>
-        <div className="chips">
-          <button type="button" className="btn btn--gold" onClick={() => { window.dispatchEvent(new CustomEvent("footdex:essai", { detail: { quoi: "chapardeur" } })); setMsg("Le chapardeur arrive : regarde les personnages à l'écran. Touche 2 fois son trou noir pour l'attraper !"); }}>Tester le chapardeur</button>
-          <button type="button" className="btn btn--gold" onClick={() => setClipTest(true)}>Tester la figurine à clipser</button>
-        </div>
-        {msg ? <p className="note" role="status">{msg}</p> : null}
-      </Bloc>
-      {clipTest ? <ClipTest onClose={() => setClipTest(false)} /> : null}
 
       <Bloc titre="Les paquets">
         <Nombre label="Cartes par paquet" aide="Entre 1 et 12. La dernière carte est toujours la meilleure." value={r.cartesParPaquet} min={1} max={12} onChange={(n) => regler({ cartesParPaquet: Math.round(n) })} />

@@ -874,7 +874,7 @@ function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "go
                 <LuUsers aria-hidden="true" /> <span>Ses copains<small>Qui est à l'écran avec lui</small></span>
               </button>
             </section>
-            <button type="button" className="btn btn--soft" onClick={() => { close(); go({ page: "personnage" }); }}>
+            <button type="button" className="btn btn--soft" onClick={() => { close(); go({ page: "reg-personnage" }); }}>
               <LuSettings aria-hidden="true" /> Tous les réglages du personnage
             </button>
           </>

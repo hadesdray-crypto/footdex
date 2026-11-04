@@ -342,3 +342,6 @@
 .stock__item { flex: none; display: grid; gap: 8px; justify-items: center; width: 118px; scroll-snap-align: start; }
 .stock__art { width: 104px; }
 .stock__item .btn { width: 100%; }
+
+/* off screen → the endless decorations stop (the page stays light on a slow tablet) */
+.is-off, .is-off *, .is-off::before, .is-off::after { animation-play-state: paused !important; }

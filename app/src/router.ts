@@ -33,12 +33,25 @@ export type Route =
   | { page: "moi" }
   | { page: "personnage" }
   | { page: "mission" }
-  | { page: "machine" };
+  | { page: "machine" }
+  | { page: "reg-personnage" }
+  | { page: "reg-voix" }
+  | { page: "reg-copains" }
+  | { page: "reg-bruitages" }
+  | { page: "reg-sons" }
+  | { page: "reg-maj" }
+  | { page: "reg-sauvegarde" }
+  | { page: "reg-grands" }
+  | { page: "reg-ecran" }
+  | { page: "reg-jeu" }
+  | { page: "reg-atelier" }
+  | { page: "reg-dev" };
 
 const SIMPLE = new Set([
   "accueil", "joueurs", "paquets", "classeur", "collection", "matchs", "scores", "coupes", "clubs", "saison",
   "lexique", "defi", "grand-defi", "histoires", "videos", "sources", "carte", "coffre", "jeux", "parents", "reglages", "plus",
   "decouvrir", "moi", "personnage", "mission", "machine",
+  "reg-personnage", "reg-voix", "reg-copains", "reg-bruitages", "reg-sons", "reg-maj", "reg-sauvegarde", "reg-grands", "reg-ecran", "reg-jeu", "reg-atelier", "reg-dev",
 ]);
 
 export function parse(hash: string): Route {

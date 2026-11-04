@@ -1,7 +1,7 @@
 // The parents' corner (from the Encyclopédie de la vie) and the one journal of what's new.
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { LuCopy, LuDownload, LuRefreshCw, LuUpload } from "react-icons/lu";
-import { PageTitle, Section } from "../ui/bits";
+import { Section } from "../ui/bits";
 import { cx } from "../util";
 import { EST_APK, HORS_LIGNE, LIEN_APK, VERSION_APK, VERSION_APP } from "../maj/env";
 import { useHorsLigne, verifierMiseAJour } from "../maj/hors-ligne";
@@ -9,43 +9,10 @@ import { useMajApk, verifierApk } from "../maj/maj-apk";
 import { useNouveautes } from "../maj/nouveautes";
 import { permettreInternet, useInternetPermis } from "../maj/parents";
 import { CodeParent } from "../maj/code";
-import { Atelier } from "../mascot/Atelier";
-import { ReglagesJeu } from "./reglages-jeu";
-import { VoicePanel } from "../mascot/Mascot";
 import { creerCode, restaurerCode } from "../maj/sauvegarde";
 import { LIMITES, choisirLimiteEcran, limiteEcran, useTempsEcran } from "../maj/temps-ecran";
 
-export function Parents() {
-  return (
-    <div>
-      <PageTitle kicker="Pour les grands" title="Coin des parents" />
-      <Journal />
-      <Sauvegarde />
-      <Section title="Réglages du jeu" kicker="Code parent">
-        <CodeParent titre="Réglages du jeu">
-          <ReglagesJeu />
-        </CodeParent>
-      </Section>
-      <Section title="L'atelier des personnages" kicker="Code parent">
-        <CodeParent titre="Caractère et interactions">
-          <p className="note">Combien chaque personnage parle et bouge, s'il peut être lancé, les blessures, le Médecin et l'Arbitre.</p>
-          <Atelier />
-        </CodeParent>
-      </Section>
-      <Section title="Réglages avancés de la voix" kicker="Code parent">
-        <CodeParent titre="Réglages avancés de la voix">
-          <VoicePanel />
-        </CodeParent>
-      </Section>
-      <Verrou>
-        <TempsParJour />
-        <Internet />
-      </Verrou>
-    </div>
-  );
-}
-
-function Journal() {
+export function Journal() {
   const liste = useNouveautes(true);
   return (
     <Section title="Nouveautés" kicker="Le journal">
@@ -81,7 +48,7 @@ export function Version() {
   );
 }
 
-function Sauvegarde() {
+export function Sauvegarde() {
   const [code, setCode] = useState("");
   const [colle, setColle] = useState("");
   const [msg, setMsg] = useState("");
@@ -119,16 +86,7 @@ function Sauvegarde() {
   );
 }
 
-/** The settings below need the parents' code. */
-function Verrou({ children }: { children: ReactNode }) {
-  return (
-    <Section title="Réglages des parents" kicker="Code parent">
-      <CodeParent titre="Réglages des parents">{children}</CodeParent>
-    </Section>
-  );
-}
-
-function TempsParJour() {
+export function TempsParJour() {
   const [limite, setLimite] = useState(limiteEcran);
   const e = useTempsEcran();
   return (
@@ -145,7 +103,7 @@ function TempsParJour() {
   );
 }
 
-function Internet() {
+export function Internet() {
   const permis = useInternetPermis();
   return (
     <Section title="Options Internet" kicker={permis ? "Allumées" : "Éteintes"}>

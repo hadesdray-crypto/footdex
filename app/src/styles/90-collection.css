@@ -142,3 +142,9 @@
   .chm { padding-top: 64px; padding-bottom: 84px; }
   .chm__box { max-height: calc(100dvh - 150px); }
 }
+
+/* Paramètres : portes plus compactes pour voir tout le menu sans chercher */
+.reg .doors--list .door { padding-block: 10px; row-gap: 2px; }
+.reg .doors--list .door__kicker { display: none; }
+.reg .doors--list .door__title { font-size: 20px; line-height: 1.1; }
+.reg .doors--list .door__figure { font-size: 12.5px; }

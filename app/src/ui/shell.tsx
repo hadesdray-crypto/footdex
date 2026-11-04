@@ -23,7 +23,7 @@ const TABS: { to: Route; label: string; icon: typeof LuHouse; match: string[] }[
   },
   { to: { page: "paquets" }, label: "Paquets", icon: LuPackageOpen, match: ["paquets"] },
   { to: { page: "collection" }, label: "Collection", icon: LuLibrary, match: ["collection", "classeur"] },
-  { to: { page: "moi" }, label: "Moi", icon: LuUserRound, match: ["moi", "reglages", "personnage", "parents"] },
+  { to: { page: "moi" }, label: "Réglages", icon: LuUserRound, match: ["moi", "reglages", "personnage", "parents", "reg-personnage", "reg-voix", "reg-copains", "reg-bruitages", "reg-sons", "reg-maj", "reg-sauvegarde", "reg-grands", "reg-ecran", "reg-jeu", "reg-atelier", "reg-dev"] },
 ];
 
 export function Shell({ page, pageKey, album, children }: { page: string; pageKey: string; album: Album; children: ReactNode }) {
@@ -101,7 +101,7 @@ export function Shell({ page, pageKey, album, children }: { page: string; pageKe
             >
               {sound ? <LuVolume2 aria-hidden="true" /> : <LuVolumeX aria-hidden="true" />}
             </button>
-            <button type="button" className="iconbtn topbar__gear" onClick={() => go({ page: "moi" })} aria-label="Moi et paramètres"><LuSettings aria-hidden="true" /></button>
+            <button type="button" className="iconbtn topbar__gear" onClick={() => go({ page: "moi" })} aria-label="Paramètres"><LuSettings aria-hidden="true" /></button>
             <button type="button" className="iconbtn topbar__search" onClick={() => go({ page: "joueurs" })} aria-label="Chercher un joueur">
               <LuSearch aria-hidden="true" />
             </button>
