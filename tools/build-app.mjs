@@ -60,7 +60,10 @@ const FONTS = [
 ];
 const fontLinks = FONTS.map((href) => `<link rel="stylesheet" href="${href}">`).join("\n");
 
-const boot = `<div id="root"><div class="boot" role="status"><p class="boot__word">FOOTDEX</p><p class="boot__sub">Ouverture de l'album…</p></div></div>`;
+// Si l'album ne s'ouvre pas au bout de 25 s (navigateur Android trop ancien, chargement bloqué), on le dit clairement
+// au lieu de laisser l'écran d'ouverture figé. Petit script volontairement très simple (compris par les vieux navigateurs).
+const BOOT_GARDE = `(function(){setTimeout(function(){var r=document.getElementById("root");if(!r||!r.querySelector(".boot"))return;var s=r.querySelector(".boot__sub");if(s){s.textContent="L'album met du temps à s'ouvrir";}var m=document.createElement("p");m.className="boot__aide";m.textContent="Si rien ne change : mets à jour « Android System WebView » dans le Play Store, puis réessaie.";var b=document.createElement("button");b.type="button";b.className="boot__bouton";b.textContent="Réessayer";b.onclick=function(){location.reload();};var c=r.querySelector(".boot");c.appendChild(m);c.appendChild(b);},25000);})();`;
+const boot = `<div id="root"><div class="boot" role="status"><p class="boot__word">FOOTDEX</p><p class="boot__sub">Ouverture de l'album…</p></div></div><script>${BOOT_GARDE}</script>`;
 
 const artifactPage = `<title>Footdex</title>
 <meta name="claude:viewport-fit-sides" content="cover">
