@@ -8,6 +8,7 @@ import { packStatus, useStore } from "../store";
 import { cx, fmt } from "../util";
 import type { Album } from "../data";
 import { Mascot } from "../mascot/Mascot";
+import { Bienvenue } from "../maj/Bienvenue";
 import { MiseAJour } from "../maj/MiseAJour";
 import { TempsEcran } from "../maj/TempsEcran";
 import { Link } from "./bits";
@@ -116,6 +117,7 @@ export function Shell({ page, pageKey, album, children }: { page: string; pageKe
       </main>
       <Mascot album={album} page={page} />
       <MiseAJour />
+      <Bienvenue />
       <TempsEcran />
       <nav className="tabbar" aria-label="Rubriques">
         <ul>

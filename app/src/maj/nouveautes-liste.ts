@@ -4,6 +4,12 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-04",
+    titre: "Version 50 : visite de bienvenue",
+    type: "appli",
+    points: ["Au premier lancement, 4 petits écrans expliquent l'appli. On peut les revoir dans Paramètres."],
+  },
+  {
+    date: "2026-11-04",
     titre: "Version 49 : chapardeur à attraper, ballon partagé, voix synchronisées",
     type: "appli",
     points: [

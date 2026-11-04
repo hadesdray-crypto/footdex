@@ -7,6 +7,7 @@
 import { type ReactNode, useState, useSyncExternalStore } from "react";
 import { LuLock, LuCopy, LuMic, LuRefreshCw, LuSettings, LuShieldCheck, LuShirt, LuUserRound, LuUsers, LuVolume2, LuZap } from "react-icons/lu";
 import { CodeParent } from "../maj/code";
+import { voirBienvenue } from "../maj/Bienvenue";
 import { EST_APK, VERSION_APK } from "../maj/env";
 import { Atelier, ZombieOptions } from "../mascot/Atelier";
 import { Bruitages } from "../mascot/Bruitages";
@@ -62,6 +63,9 @@ export function Reglages() {
           <Door to={{ page: "reg-sons" }} kicker="L'appli" title="Les sons" figure={sound ? "Allumés" : "Coupés"} icon={LuVolume2} />
           <Door to={{ page: "reg-maj" }} kicker="L'appli" title="Mises à jour et nouveautés" figure={EST_APK ? `Version 1.${VERSION_APK}` : "Chercher une mise à jour"} icon={LuRefreshCw} />
           <Door to={{ page: "reg-sauvegarde" }} kicker="L'appli" title="Sauvegarder ma progression" figure="Pour changer de téléphone sans rien perdre" icon={LuCopy} />
+        </div>
+        <div className="chips">
+          <button type="button" className="btn btn--soft" onClick={voirBienvenue}>Revoir la visite de l'appli</button>
         </div>
       </Section>
 
