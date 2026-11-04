@@ -3,6 +3,14 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    date: "2026-11-04",
+    titre: "Version 43 : les premières figurines 3D",
+    type: "appli",
+    points: [
+      "Le Mouton Saucisse et la Banana Bomba ont leur vraie figurine 3D, qui tourne sur son socle (les autres arrivent avec leurs images).",
+    ],
+  },
+  {
     date: "2026-11-03",
     titre: "Version 42 : bouche synchronisée, écran allumé, paquets qui s'accumulent",
     type: "appli",
