@@ -4,6 +4,16 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-04",
+    titre: "Version 52 : deux cartons, plus de texte écrit",
+    type: "appli",
+    points: [
+      "Carton jaune : tout le monde sort puis revient un par un, les plus excités d'abord.",
+      "Carton rouge : tout le monde sort, seul le personnage de base reste. Le carton jaune ramène les copains.",
+      "Les personnages ne montrent plus ce qu'ils disent par écrit.",
+    ],
+  },
+  {
+    date: "2026-11-04",
     titre: "Version 51 : carton rouge et vestiaire pour tous",
     type: "appli",
     points: [

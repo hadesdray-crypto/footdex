@@ -1459,7 +1459,9 @@ function One({ b, index }: { b: Buddy; index: number }) {
     update({ buddyPos: { ...getMascot().s.buddyPos, [b]: { fx: Math.max(0, Math.min(1, (body.x - W / 2) / Math.max(1, window.innerWidth - W))), fy: Math.max(0, Math.min(1, (body.y - H - 60) / Math.max(1, window.innerHeight - H - 80))) } } });
   };
 
-  if (m.s.rest || m.evac === 2) return null;
+  const away = m.evac === 2 || m.away.includes(b);
+  useEffect(() => { const bd = bodies.get(b); if (bd) bd.hidden = away; }, [away]);
+  if (m.s.rest || away) return null;
   const mode = b === "medecin" ? "poli" : b;
   return (
     <>

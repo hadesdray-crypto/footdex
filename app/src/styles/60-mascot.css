@@ -512,3 +512,4 @@
 .redcard__card { display: block; width: 14px; height: 20px; border-radius: 3px; background: #e5282d; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.85), 0 2px 6px rgba(0, 0, 0, 0.5); transform: rotate(-8deg); }
 .redcard.is-back .redcard__card { background: transparent; box-shadow: 0 0 0 2px #e5282d, 0 0 10px rgba(229, 40, 45, 0.7); animation: redcard-pulse 1.2s ease-in-out infinite alternate; }
 @keyframes redcard-pulse { to { transform: rotate(-8deg) scale(1.2); } }
+.redcard--y .redcard__card { background: #f6d33a; transform: rotate(8deg); }

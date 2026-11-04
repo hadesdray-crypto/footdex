@@ -2,7 +2,7 @@
 // the Square Referee asks for a substitute, and sometimes turns up for no reason… and shows a card if you misbehave.
 import { pick, PERSOS } from "./lines";
 import { CARAC } from "./caractere";
-import { emit, getMascot, inter, setEvac } from "./state";
+import { emit, getMascot, inter, setAway, setEvac } from "./state";
 import { enter, sackFor, type Visitor } from "./visitor";
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
@@ -491,8 +491,8 @@ if (typeof location !== "undefined" && location.search.includes("essai-terrain")
 
 /** THE RED CARD (the button at the top): the Referee comes, raises the red card high, and EVERYBODY leaves the screen. */
 let sendingOff = false;
-export async function refereeRedCard() {
-  if (sendingOff || getMascot().evac !== 0) return;
+export async function refereeCard(color: "jaune" | "rouge") {
+  if (sendingOff) return;
   sendingOff = true;
   if (referee) {
     referee.destroy();
@@ -511,8 +511,8 @@ export async function refereeRedCard() {
     await r.pose("whistle", 800);
     r.say("TUUUT !", 900);
     await r.wait(450);
-    r.card("rouge");
-    r.say("CARTON ROUGE ! Tout le monde dehors !", 3200);
+    r.card(color);
+    r.say(color === "rouge" ? "CARTON ROUGE ! Tout le monde dehors !" : "Carton jaune ! Tout le monde sort un moment !", 3200);
     emit("card");
     const held = r.pose("card", 3200);
     await r.wait(900);
@@ -527,9 +527,18 @@ export async function refereeRedCard() {
     referee = null;
     sendingOff = false;
   }
+  await new Promise((ok) => window.setTimeout(ok, 1500));
+  const friends = [...getMascot().s.buddies] as string[];
+  setAway(friends);
+  setEvac(0); // the main character is back
+  if (color === "rouge") return; // red: only the base character stays; the others have to be found again (yellow card brings them back)
+  // yellow: they come back one after the other, the most excited first
+  const order = ["excite", "joueur", "zombie", "poli", "pointu", "statue", "medecin"];
+  const queue = friends.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  for (const k of queue) {
+    await new Promise((ok) => window.setTimeout(ok, 2200));
+    setAway(getMascot().away.filter((x) => x !== k));
+    emit("recre");
+  }
 }
 
-/** The button again: everybody comes back. */
-export function recallEveryone() {
-  setEvac(0);
-}

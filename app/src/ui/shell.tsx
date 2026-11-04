@@ -8,8 +8,7 @@ import { packStatus, useStore } from "../store";
 import { cx, fmt } from "../util";
 import type { Album } from "../data";
 import { Mascot } from "../mascot/Mascot";
-import { emit, useMascot } from "../mascot/state";
-import { recallEveryone, refereeRedCard } from "../mascot/terrain";
+import { refereeCard } from "../mascot/terrain";
 import { Bienvenue } from "../maj/Bienvenue";
 import { MiseAJour } from "../maj/MiseAJour";
 import { TempsEcran } from "../maj/TempsEcran";
@@ -64,7 +63,6 @@ export function Shell({ page, pageKey, album, children }: { page: string; pageKe
     window.clearTimeout(toastTimer.current);
     toastTimer.current = window.setTimeout(() => setToast(null), next ? 4200 : 1800);
   }
-  const evac = useMascot().evac;
   return (
     <div className="app">
       <div className="aurora" aria-hidden="true">
@@ -95,13 +93,10 @@ export function Shell({ page, pageKey, album, children }: { page: string; pageKe
               <span>{fmt(state.stars)}</span>
             </button>
             <Signal />
-            <button
-              type="button"
-              className={"iconbtn redcard" + (evac === 2 ? " is-back" : "")}
-              onClick={() => (evac === 0 ? void refereeRedCard() : evac === 2 ? (recallEveryone(), window.setTimeout(() => emit("recre"), 400)) : undefined)}
-              aria-label={evac === 2 ? "Rappeler les personnages à l'écran" : "Carton rouge : tous les personnages sortent de l'écran"}
-              title={evac === 2 ? "Rappeler les personnages" : "Carton rouge"}
-            >
+            <button type="button" className="iconbtn redcard redcard--y" onClick={() => void refereeCard("jaune")} aria-label="Carton jaune : tout le monde sort puis revient un par un" title="Carton jaune">
+              <i className="redcard__card" aria-hidden="true" />
+            </button>
+            <button type="button" className="iconbtn redcard" onClick={() => void refereeCard("rouge")} aria-label="Carton rouge : tout le monde sort, il ne reste que le personnage de base" title="Carton rouge">
               <i className="redcard__card" aria-hidden="true" />
             </button>
             <button

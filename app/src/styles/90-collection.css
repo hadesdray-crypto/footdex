@@ -160,4 +160,5 @@
 .wd:has(.wd__who) .booth__room { height: clamp(150px, 21dvh, 230px); min-height: 150px; }
 .wd:has(.wd__who) .wd__choices { max-height: 26dvh; }
 .wd__all { cursor: pointer; }
-@media (max-width: 360px) { .brand__word { font-size: 15px; letter-spacing: 0; } .brand__sub { display: none; } .topbar__tools { gap: 4px; } .topbar__tools .iconbtn { width: 34px; height: 34px; } }
+@media (max-width: 440px) { .brand__word { font-size: 15px; letter-spacing: 0; } .brand__sub { display: none; } .topbar__tools { gap: 3px; } .topbar__tools .iconbtn { width: 32px; height: 32px; } .topbar__tools .redcard { width: 28px; } }
+@media (max-width: 340px) { .topbar__flag { display: none; } }
