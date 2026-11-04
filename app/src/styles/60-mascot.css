@@ -515,7 +515,7 @@
 .redcard--y .redcard__card { background: #f6d33a; transform: rotate(8deg); }
 
 /* Les histoires secrètes */
-.hs { position: fixed; inset: 0; z-index: 90; display: grid; align-content: center; justify-items: center; gap: 18px; padding: 16px 16px calc(18px + var(--bas)); background: radial-gradient(70% 50% at 50% 30%, #1d2d66e6, #05070ff2 80%); animation: fadein 0.3s ease both; overflow-y: auto; }
+.hs { position: fixed; inset: 0; z-index: 90; display: grid; align-content: center; justify-items: center; gap: 18px; padding: 16px 16px calc(18px + var(--bas)); background: radial-gradient(70% 50% at 50% 30%, #1d2d66, #05070f 80%); animation: fadein 0.3s ease both; overflow-y: auto; }
 .hs__stage { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 6px; max-width: 560px; }
 .hs__who { display: grid; justify-items: center; gap: 2px; opacity: 0.72; transform: scale(0.94); transition: transform 0.25s, opacity 0.25s; font: 700 12px/1.1 var(--f-body); color: var(--fg-2); }
 .hs__who.is-on { opacity: 1; transform: scale(1.08); color: var(--fg); }

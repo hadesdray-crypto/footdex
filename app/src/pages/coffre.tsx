@@ -108,8 +108,8 @@ export function Coffre() {
       {flash ? <p className="coffre__flash" role="status">Nouveau dans ton coffre : {flash} !</p> : null}
 
       <div className="segmented" role="tablist" aria-label="Le coffre">
-        <button type="button" role="tab" aria-selected={tab === "perso"} className={cx("segmented__tab", tab === "perso" && "segmented__tab--on")} onClick={() => setTab("perso")}>Personnages secrets</button>
-        <button type="button" role="tab" aria-selected={tab === "cartes"} className={cx("segmented__tab", tab === "cartes" && "segmented__tab--on")} onClick={() => setTab("cartes")}>Cartes spéciales</button>
+        <button type="button" role="tab" aria-selected={tab === "perso"} className={cx("segmented__tab", tab === "perso" && "segmented__tab--on")} onClick={() => setTab("perso")}>Personnages</button>
+        <button type="button" role="tab" aria-selected={tab === "cartes"} className={cx("segmented__tab", tab === "cartes" && "segmented__tab--on")} onClick={() => setTab("cartes")}>Cartes</button>
         <button type="button" role="tab" aria-selected={tab === "histoires"} className={cx("segmented__tab", tab === "histoires" && "segmented__tab--on")} onClick={() => setTab("histoires")}>Histoires</button>
       </div>
 
@@ -121,7 +121,7 @@ export function Coffre() {
             return (
               <li key={h.id} className={cx("spec", !mine && "spec--locked")} style={{ "--h1": "#c58bff", "--h2": "#3d1a6b" }}>
                 <div className="spec__art spec__art--duo">
-                  {mine ? h.fixes.map((k) => <Fig key={k} look={look(k)} size={64} crop="bust" />) : <LuLock aria-hidden="true" />}
+                  {mine ? h.fixes.map((k) => <Fig key={k} look={look(k)} size={52} crop="bust" />) : <LuLock aria-hidden="true" />}
                 </div>
                 <h3>{mine ? h.titre : "Histoire secrète ?"}</h3>
                 {mine ? (
