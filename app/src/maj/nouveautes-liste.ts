@@ -4,6 +4,14 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-04",
+    titre: "Version 48 : figurines imprimées des deux côtés",
+    type: "appli",
+    points: [
+      "Quand on retourne une figurine, on voit maintenant l'image de l'autre côté, au lieu d'une forme bleue.",
+    ],
+  },
+  {
+    date: "2026-11-04",
     titre: "Version 47 : chapardeur plus visible, voix et bouches mieux réglées",
     type: "appli",
     points: [

@@ -137,6 +137,8 @@ export function Standee({ id, edition = "s", size = 190, free = false, clip = fa
   const SLICES = size < 200 ? 4 : 7;
   const slices = useMemo(() => Array.from({ length: SLICES }, (_, k) => k), [SLICES]);
   const liftPx = lift * S * 0.3;
+  // seen from behind, the printed back must show: the stacked silhouettes (thickness) are kept for the sides only
+  const behind = Math.cos((ry * Math.PI) / 180) < -0.3;
 
   return (
     <div
@@ -166,11 +168,11 @@ export function Standee({ id, edition = "s", size = 190, free = false, clip = fa
           onPointerCancel={clip && !clipped ? gUp : undefined}
         >
           {slices.map((k) => (
-            <img key={k} className="sd__slice" src={slice} alt="" draggable={false} style={{ transform: `translateZ(${((k / (SLICES - 1)) * 2 - 1) * half}px)` }} />
+            <img key={k} className="sd__slice" src={slice} alt="" draggable={false} style={{ transform: `translateZ(${((k / (SLICES - 1)) * 2 - 1) * half}px)`, visibility: behind ? "hidden" : "visible" }} />
           ))}
-          <img className="sd__face" src={front} alt="" draggable={false} style={{ transform: `translateZ(${half + 0.6}px)` }} />
-          <span className="sd__gloss" aria-hidden="true" style={{ WebkitMaskImage: `url(${front})`, maskImage: `url(${front})`, transform: `translateZ(${half + 1.2}px)` }} />
-          <img className="sd__face sd__face--back" src={front} alt="" draggable={false} style={{ transform: `translateZ(${-half - 0.6}px) rotateY(180deg)` }} />
+          <img className="sd__face" src={front} alt="" draggable={false} style={{ transform: `translateZ(${half + 2.4}px)` }} />
+          <span className="sd__gloss" aria-hidden="true" style={{ WebkitMaskImage: `url(${front})`, maskImage: `url(${front})`, transform: `translateZ(${half + 3}px)` }} />
+          <img className="sd__face sd__face--back" src={front} alt="" draggable={false} style={{ transform: `translateZ(${-half - 2.4}px) rotateY(180deg)` }} />
         </div>
       </div>
       {burst ? <span key={burst} className="sd__burst" aria-hidden="true" style={{ top: baseY - S * 0.05 }} /> : null}
