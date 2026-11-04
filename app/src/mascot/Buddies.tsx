@@ -25,7 +25,7 @@ export const BUDDY_NAME = (b: Buddy) => (b === "medecin" ? "Le Médecin" : PERSO
 
 /** What each friend says when you touch him, or by himself. */
 const TALK: Record<Buddy, string[]> = {
-  statue: ["Hm. De mon temps, les ballons étaient en cuir. Et lourds !", "Hm… Tu sais qui a gagné la Coupe du monde en 1958 ? Pelé. À 17 ans.", "Ma canne et moi, on a vu Platini jouer. Hm."],
+  statue: ["Hm. De mon temps, les ballons étaient en cuir. Et lourds !", "Hm… En 1958, le Brésil a gagné la Coupe du monde avec Pelé. Il avait 17 ans.", "Ma canne et moi, on a vu Platini jouer. Hm."],
   excite: ["Oh là là, on est plusieurs à l'écran ! C'est la fête !", "Tu veux que je te raconte un truc ? Dis oui !", "ALLEZ ! ALLEZ ! On va gagner !"],
   poli: ["Bonjour ! Je reste à côté, si tu as besoin.", "Si je peux me permettre : les doublons s'échangent contre des pièces.", "Belle journée pour le football, n'est-ce pas ?"],
   joueur: ["Tu me fais une passe ?", "Regarde mes jongles… enfin, imagine-les !", "Un petit match après ?"],
