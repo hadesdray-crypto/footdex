@@ -68,6 +68,7 @@ export function HistoireScene() {
     })();
   }
   function fermer() {
+    if (run && !fin) marquerVue(run.h.id); // skipped: it is in the chest anyway, and it will not start again by itself
     token.current += 1;
     stopTalking();
     setRun(null);

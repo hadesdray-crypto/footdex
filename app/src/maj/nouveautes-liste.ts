@@ -4,6 +4,15 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-04",
+    titre: "Version 53 : les histoires secrètes",
+    type: "appli",
+    points: [
+      "Laisse certains personnages ensemble : une histoire secrète se déclenche (Philippe, le lacet du Jongleur, le secret du Médecin…).",
+      "Chaque histoire a plusieurs versions. Elles sont dans le coffre, onglet Histoires : touche « Revoir l'histoire ».",
+    ],
+  },
+  {
+    date: "2026-11-04",
     titre: "Version 52 : deux cartons, plus de texte écrit",
     type: "appli",
     points: [
