@@ -1294,6 +1294,8 @@ function One({ b, index }: { b: Buddy; index: number }) {
     };
     const onParty = (e: Event) => { const d = (e as CustomEvent<{ title: string; year: string }>).detail; if (!sceneOn) void partyScene(d?.title, d?.year); };
     window.addEventListener("footdex:party", onParty);
+    const onEssai = (e: Event) => { const d = (e as CustomEvent<{ quoi: string }>).detail; if (d?.quoi === "chapardeur") void thiefScene(); };
+    window.addEventListener("footdex:essai", onEssai);
     window.addEventListener("footdex:terrain", onEv);
     // the ball hits him
     const onBall = (e: Event) => {
@@ -1334,6 +1336,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
     window.addEventListener("footdex:zombiehead", onHead);
     return () => {
       window.removeEventListener("footdex:party", onParty);
+      window.removeEventListener("footdex:essai", onEssai);
       window.removeEventListener("footdex:terrain", onEv);
       window.removeEventListener("footdex:ballhit", onBall);
       window.removeEventListener("footdex:knock", onKnock);

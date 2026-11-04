@@ -1,5 +1,6 @@
 // The Footballinis on screen: the card, the figurine on its turning pedestal, and the treasure chest that opens.
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Piece } from "../ui/Piece";
 import { cx } from "../util";
 import { FBX, RARITY, fbx, fbxSvg } from "./art";
@@ -8,6 +9,7 @@ import { spendStars, useStore } from "../store";
 import { Chest } from "../pages/coffre";
 import { Fig } from "../mascot/Fig";
 import { Viewer3D, has3d } from "./Viewer3D";
+import { Standee, type Edition } from "./Standee";
 import { getMascot, say, update } from "../mascot/state";
 import { PERSOS } from "../mascot/lines";
 import { playFx } from "../mascot/bruits";
@@ -109,36 +111,125 @@ export function FbxCard({ id, count = 1, owned = true, big = false, onClick }: {
   );
 }
 
-/** A figurine: the Footballini in shiny plastic, turning slowly on its pedestal. */
-export function Figurine({ id, count = 1, owned = true, size = 150 }: { id: string; count?: number; owned?: boolean; size?: number }) {
+/** A figurine: the Footballini cut out on thick clear plastic, standing on its pedestal. Cascade: real 3D model → plastic figurine → 8 views → the drawing. */
+export function Figurine({ id, count = 1, owned = true, size = 150, edition = "s", free = false, clip = false, onClip, roundKey, tag = true, spin = true }: { id: string; count?: number; owned?: boolean; size?: number; edition?: Edition; free?: boolean; clip?: boolean; onClip?: () => void; roundKey?: string | number; tag?: boolean; spin?: boolean }) {
   const f = fbx(id);
   const r = RARITY[f.rar];
-  const [noRot, setNoRot] = useState(absent.has(`rot/${id}`));
-  // first choice: the real 3D model; then the picture turntable; then the drawing
-  const [gl, setGl] = useState<"ask" | "yes" | "no">("ask");
+  const [mode, setMode] = useState<"ask" | "gl" | "sd" | "tt" | "art">("ask");
   useEffect(() => {
     let live = true;
-    void has3d(id).then((ok) => live && setGl(ok ? "yes" : "no"));
+    void has3d(id).then((ok) => live && setMode(ok ? "gl" : "sd"));
     return () => { live = false; };
   }, [id]);
   return (
     <div className={cx("fig3", !owned && "fig3--locked", f.rar === 4 && "fig3--vide")} style={{ "--rc": r.color, width: `${size}px` } as Record<string, string>}>
       <div className="fig3__stage">
-        {gl === "yes" ? (
-          <Viewer3D id={id} size={size * 0.9} onMissing={() => setGl("no")} />
-        ) : gl === "ask" ? (
-          <span style={{ display: "block", width: size * 0.9, height: size * 0.9 }} />
-        ) : !noRot ? (
-          <Turntable id={id} size={size * 0.9} onMissing={() => { absent.add(`rot/${id}`); setNoRot(true); }} />
+        {mode === "gl" ? (
+          <Viewer3D id={id} size={size * 0.9} onMissing={() => setMode("sd")} />
+        ) : mode === "ask" ? (
+          <span style={{ display: "block", width: size, height: size }} />
+        ) : mode === "sd" ? (
+          <Standee id={id} edition={edition} size={size} free={free} clip={clip} onClip={onClip} roundKey={roundKey} spin={spin} locked={!owned} color={r.color} onMissing={() => setMode("tt")} />
+        ) : mode === "tt" ? (
+          <Turntable id={id} size={size * 0.9} onMissing={() => setMode("art")} />
         ) : (
           <div className="fig3__spin">
             <Art id={id} size={size * 0.86} />
           </div>
         )}
-        <div className="fig3__base" aria-hidden="true"><span>{owned ? (f.rar === 4 ? "???" : f.name) : "?"}</span></div>
+        {mode === "sd" ? (tag ? <span className="sd__tag">{owned ? (f.rar === 4 ? "???" : f.name) : "?"}</span> : null) : <div className="fig3__base" aria-hidden="true"><span>{owned ? (f.rar === 4 ? "???" : f.name) : "?"}</span></div>}
       </div>
       {count > 1 ? <span className="fbc__dup">×{count}</span> : null}
     </div>
+  );
+}
+
+const EDITION = { s: "Édition Studio", c: "Édition Classique" } as const;
+export const editionName = (v: Edition) => EDITION[v];
+
+/** A figurine comes out of a pack in two parts, the figure and the pedestal: push the figure down into the pedestal to clip it. */
+export function FigReveal({ id, v, fresh, onDone, title }: { id: string; v: Edition; fresh: boolean; onDone: () => void; title?: string }) {
+  const f = fbx(id);
+  const r = RARITY[f.rar];
+  const [step, setStep] = useState<"pack" | "clip" | "done">("pack");
+  const [key, setKey] = useState(0);
+  useEffect(() => {
+    if (step === "clip") say("Voilà la figurine, et son socle ! Pousse la figurine vers le bas pour la clipser dessus.");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+  if (step === "pack")
+    return (
+      <div className="chm__item">
+        <button type="button" className="fbpack fbpack--1" onClick={() => { tear(); setStep("clip"); }} aria-label="Ouvrir le paquet">
+          <b>1</b>
+          <span>FIGURINE</span>
+          <em>{v === "c" ? "CLASSIQUE" : "STUDIO"}</em>
+        </button>
+        <p>Touche le paquet pour le déchirer !</p>
+      </div>
+    );
+  return (
+    <div className="chm__item sdbox" style={{ "--rc": r.color } as Record<string, string>}>
+      {step === "done" ? <h3>{title ?? (fresh ? "Nouvelle figurine !" : "Figurine en double")}</h3> : <h3>Clipse la figurine !</h3>}
+      <Figurine id={id} edition={v} size={Math.max(150, Math.min(230, Math.round(window.innerHeight * 0.26)))} free clip roundKey={key} tag={false} onClip={() => { click("button"); thump(); fanfare(f.rar >= 2 ? "eclat" : "base"); setStep("done"); say(f.rar === 4 ? "Un socle… vide ? C'est Ultime Vide." : `Clic ! Tu as découvert ${f.name} !`); }} />
+      <span className="sdbox__ed">{EDITION[v]}</span>
+      {step === "done" ? (
+        <>
+          <p>{f.rar === 4 ? "Un socle… vide ? C'est Ultime Vide. Personne ne l'a jamais vu." : `${f.name} — tourne-la avec ton doigt, dans tous les sens !`}</p>
+          <div className="chips">
+            <button type="button" className="btn btn--soft" onClick={() => { setKey((n) => n + 1); setStep("clip"); }}>Déclipser</button>
+            <button type="button" className="btn btn--gold btn--big" onClick={onDone}>Super !</button>
+          </div>
+        </>
+      ) : (
+        <>
+          <p>Glisse la figurine vers le bas, ou touche le bouton.</p>
+          <button type="button" className="btn btn--gold btn--big" onClick={() => window.dispatchEvent(new Event("footdex:clip"))}>Clipser</button>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** The figurine in big, to turn in every direction. */
+export function FigZoom({ id, v, count, onClose }: { id: string; v: Edition; count: number; onClose: () => void }) {
+  const f = fbx(id);
+  const r = RARITY[f.rar];
+  return (
+    <div className="colx__zoomfig" role="dialog" aria-modal="true" aria-label={f.name}>
+      <div className="box" style={{ "--rc": r.color } as Record<string, string>}>
+        <h3>{f.rar === 4 ? "???" : f.name}</h3>
+        <Figurine id={id} edition={v} size={300} free tag={false} />
+        <span className="sdbox__ed">{EDITION[v]} · {r.name}{count > 1 ? ` · ×${count}` : ""}</span>
+        <p className="note">Tourne-la avec ton doigt : autour, par-dessus, par-dessous.</p>
+        <button type="button" className="btn btn--gold btn--big" onClick={onClose}>Fermer</button>
+      </div>
+    </div>
+  );
+}
+
+/** For the developer menu: try the clip scene with any figurine. */
+export function ClipTest({ onClose }: { onClose: () => void }) {
+  const [id, setId] = useState("mouton");
+  const [v, setV] = useState<Edition>("s");
+  const [run, setRun] = useState(0);
+  return createPortal(
+    <div className="chm" role="dialog" aria-modal="true" aria-label="Test de la figurine à clipser">
+      <div className="chm__box">
+        <div className="chips">
+          <select aria-label="Personnage" value={id} onChange={(e: { target: { value: string } }) => { setId(e.target.value); setRun((n) => n + 1); }}>
+            {FBX.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+          </select>
+          <select aria-label="Édition" value={v} onChange={(e: { target: { value: string } }) => { setV(e.target.value as Edition); setRun((n) => n + 1); }}>
+            <option value="s">Studio</option>
+            <option value="c">Classique</option>
+          </select>
+        </div>
+        <FigReveal key={`${id}${v}${run}`} id={id} v={v} fresh onDone={() => setRun((n) => n + 1)} title="Test terminé" />
+        <button type="button" className="btn btn--ghost" onClick={onClose}>Fermer le test</button>
+      </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -229,10 +320,7 @@ export function ChestModal({ onClose }: { onClose: () => void }) {
               </div>
             ) : cur.loot.k === "fig" ? (
               <div className="chm__item">
-                <Figurine id={cur.loot.id} size={190} />
-                <h3>{cur.loot.fresh ? "Nouvelle figurine !" : "Figurine en double"}</h3>
-                <p>{fbx(cur.loot.id).rar === 4 ? "Un socle… vide ? C'est Ultime Vide. Personne ne l'a jamais vu." : fbx(cur.loot.id).name}</p>
-                <button type="button" className="btn btn--gold btn--big" onClick={next}>Super !</button>
+                <FigReveal id={cur.loot.id} v={cur.loot.v} fresh={cur.loot.fresh} onDone={next} />
               </div>
             ) : cur.loot.k === "style" ? (
               <div className="chm__item">

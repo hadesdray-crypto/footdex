@@ -4,6 +4,7 @@ import { useSyncExternalStore } from "react";
 import { storageGet, storageSet } from "../util";
 import { ACCESSORIES, BODIES, HAIR_COLORS, HAIRS, OUTFITS, SKINS, SPECIAL_OUTFITS, type Look } from "../mascot/look";
 import { FBX, type Rarity } from "./art";
+import type { Edition } from "./Standee";
 import { addGift, gagnerEtoiles } from "../store";
 import { brainRotTombe, ecrireCompteurs, lireCompteurs, reglages } from "../reglages-jeu";
 
@@ -11,20 +12,21 @@ export type Loot =
   | { k: "coins"; n: number }
   | { k: "pack"; cards: string[] }
   | { k: "gift" }
-  | { k: "fig"; id: string; fresh: boolean }
+  | { k: "fig"; id: string; v: Edition; fresh: boolean }
   | { k: "style"; look: Look; name: string };
 
 export type Collec = {
   coins: number;
   cards: Record<string, number>; // how many of each Footballini card
-  figs: Record<string, number>; // how many of each figurine
+  figs: Record<string, number>; // how many of each figurine, Studio edition (the image-AI drawing)
+  figsC: Record<string, number>; // … and Classique edition (the game's own drawing)
   styles: { look: Look; name: string }[]; // characters won in a chest (a style, no character of their own yet)
   freeDay: string; // the day the free chest was opened
   chests: number; // chests opened, ever
 };
 
 const KEY = "footdex.collection";
-const blank = (): Collec => ({ coins: 0, cards: {}, figs: {}, styles: [], freeDay: "", chests: 0 });
+const blank = (): Collec => ({ coins: 0, cards: {}, figs: {}, figsC: {}, styles: [], freeDay: "", chests: 0 });
 function load(): Collec {
   try {
     const raw = JSON.parse(storageGet(KEY) ?? "null") as Partial<Collec> | null;
@@ -34,6 +36,7 @@ function load(): Collec {
       coins: typeof raw.coins === "number" && raw.coins >= 0 ? Math.floor(raw.coins) : 0,
       cards: nums(raw.cards),
       figs: nums(raw.figs),
+      figsC: nums(raw.figsC),
       styles: Array.isArray(raw.styles) ? raw.styles.filter((x) => x && typeof x === "object" && "look" in x).slice(0, 60) : [],
       freeDay: typeof raw.freeDay === "string" ? raw.freeDay : "",
       chests: typeof raw.chests === "number" ? raw.chests : 0,
@@ -122,7 +125,8 @@ function chestLoot(): Loot[] {
     if (k === "coins") return { k: "coins", n: roll([[5, 4], [10, 4], [15, 2], [25, 1], [50, 0.3]]) };
     if (k === "fig") {
       const id = drawFig();
-      return { k: "fig", id, fresh: !state.figs[id] };
+      const v: Edition = roll<Edition>([["s", 40], ["c", 60]]);
+      return { k: "fig", id, v, fresh: !(v === "c" ? state.figsC : state.figs)[id] };
     }
     if (k === "style") return { k: "style", look: randomLook(), name: `${NAMES_A[Math.floor(Math.random() * NAMES_A.length)]} ${NAMES_B[Math.floor(Math.random() * NAMES_B.length)]}` };
     if (k === "fbx") return { k: "pack", cards: [drawCard()] };
@@ -148,13 +152,13 @@ export function brainRotDuPaquet(): string | null {
 export function openChest(pay: "free" | "paid"): Loot[] | null {
   if (pay === "free" && !freeChestToday()) return null;
   const loot = chestLoot();
-  let next: Collec = { ...state, cards: { ...state.cards }, figs: { ...state.figs }, styles: [...state.styles], chests: state.chests + 1 };
+  let next: Collec = { ...state, cards: { ...state.cards }, figs: { ...state.figs }, figsC: { ...state.figsC }, styles: [...state.styles], chests: state.chests + 1 };
   if (pay === "free") next.freeDay = today();
   for (const l of loot) {
     if (l.k === "gift") addGift("cadeau", "Le coffre au trésor");
     if (l.k === "coins") gagnerEtoiles(l.n);
     if (l.k === "pack") for (const id of l.cards) next.cards[id] = (next.cards[id] ?? 0) + 1;
-    if (l.k === "fig") next.figs[l.id] = (next.figs[l.id] ?? 0) + 1;
+    if (l.k === "fig") { const t = l.v === "c" ? next.figsC : next.figs; t[l.id] = (t[l.id] ?? 0) + 1; }
     if (l.k === "style") next.styles = [{ look: l.look, name: l.name }, ...next.styles].slice(0, 60);
   }
   commit(next);
@@ -173,12 +177,12 @@ export function tradeDuplicates(id: string): number {
   gagnerEtoiles(gain);
   return gain;
 }
-export function tradeFigDuplicates(id: string): number {
-  const n = state.figs[id] ?? 0;
+export function tradeFigDuplicates(id: string, v: Edition = "s"): number {
+  const n = (v === "c" ? state.figsC : state.figs)[id] ?? 0;
   if (n < 2) return 0;
   const f = FBX.find((x) => x.id === id);
   const gain = (n - 1) * dupValue(f?.rar ?? 0) * 2;
-  commit({ ...state, figs: { ...state.figs, [id]: 1 } });
+  commit(v === "c" ? { ...state, figsC: { ...state.figsC, [id]: 1 } } : { ...state, figs: { ...state.figs, [id]: 1 } });
   gagnerEtoiles(gain);
   return gain;
 }

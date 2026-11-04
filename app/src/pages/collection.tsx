@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Piece } from "../ui/Piece";
 import { LuLibrary, LuLock } from "react-icons/lu";
 import { FBX, RARITY } from "../fbx/art";
-import { ChestModal, FbxCard, Figurine } from "../fbx/ui";
+import { ChestModal, FbxCard, FigZoom, Figurine } from "../fbx/ui";
+import type { Edition } from "../fbx/Standee";
 import { dupValue, freeChestToday, tradeDuplicates, tradeFigDuplicates, useCollec } from "../fbx/store";
 import { Fig } from "../mascot/Fig";
 import { say, update } from "../mascot/state";
@@ -22,8 +23,11 @@ export function Collection() {
   const [tab, setTab] = useState<Tab>("cartes");
   const [chest, setChest] = useState(false);
   const [zoom, setZoom] = useState<string | null>(null);
+  const [ed, setEd] = useState<Edition>("s");
+  const [figZoom, setFigZoom] = useState<string | null>(null);
   const cardsOwned = FBX.filter((f) => c.cards[f.id]).length;
-  const figsOwned = FBX.filter((f) => c.figs[f.id]).length;
+  const figsOwned = FBX.filter((f) => c.figs[f.id]).length + FBX.filter((f) => c.figsC[f.id]).length;
+  const figs = ed === "c" ? c.figsC : c.figs;
   const free = freeChestToday();
   const dupCards = FBX.reduce((a, f) => a + Math.max(0, (c.cards[f.id] ?? 0) - 1) * dupValue(f.rar), 0);
 
@@ -63,7 +67,7 @@ export function Collection() {
       <div className="segmented" role="tablist" aria-label="Ma collection">
         {([
           ["cartes", `Cartes ${cardsOwned}/20`],
-          ["figurines", `Figurines ${figsOwned}/20`],
+          ["figurines", `Figurines ${figsOwned}/40`],
           ["styles", `Stylés ${c.styles.length}`],
           ["bientot", "Bientôt"],
         ] as [Tab, string][]).map(([t, l]) => (
@@ -84,15 +88,23 @@ export function Collection() {
         </>
       ) : tab === "figurines" ? (
         <>
-          <p className="note">Les figurines se gagnent dans le coffre au trésor. Elles tournent sur leur socle !</p>
+          <p className="note">Les figurines se gagnent dans le coffre au trésor, en deux éditions. Touche-en une pour la tourner dans tous les sens.</p>
+          <div className="colx__eds" role="tablist" aria-label="Édition des figurines">
+            {([["s", `Studio ${FBX.filter((f) => c.figs[f.id]).length}/20`], ["c", `Classique ${FBX.filter((f) => c.figsC[f.id]).length}/20`]] as [Edition, string][]).map(([k, l]) => (
+              <button key={k} type="button" role="tab" aria-selected={ed === k} className={cx("btn btn--small", ed === k ? "btn--gold" : "btn--soft")} onClick={() => setEd(k)}>{l}</button>
+            ))}
+          </div>
           <div className="colx__shelf">
             {FBX.map((f) => (
               <div key={f.id} className="colx__figslot">
-                <Figurine id={f.id} owned={!!c.figs[f.id]} count={c.figs[f.id] ?? 0} size={140} />
-                {(c.figs[f.id] ?? 0) > 1 ? <button type="button" className="btn btn--ghost btn--small" onClick={() => { const g = tradeFigDuplicates(f.id); if (g) { coinSound(4); say(`${g} pièces d'or !`); } }}>Échanger le doublon</button> : null}
+                <button type="button" className="colx__figbtn" disabled={!figs[f.id]} aria-label={figs[f.id] ? `${f.name} : voir en grand` : `Figurine n° ${f.n} pas encore trouvée`} onClick={() => setFigZoom(f.id)}>
+                  <Figurine id={f.id} edition={ed} owned={!!figs[f.id]} count={figs[f.id] ?? 0} size={140} spin={false} />
+                </button>
+                {(figs[f.id] ?? 0) > 1 ? <button type="button" className="btn btn--ghost btn--small" onClick={() => { const g = tradeFigDuplicates(f.id, ed); if (g) { coinSound(4); say(`${g} pièces d'or !`); } }}>Échanger le doublon</button> : null}
               </div>
             ))}
           </div>
+          {figZoom ? <FigZoom id={figZoom} v={ed} count={figs[figZoom] ?? 1} onClose={() => setFigZoom(null)} /> : null}
         </>
       ) : tab === "styles" ? (
         <>

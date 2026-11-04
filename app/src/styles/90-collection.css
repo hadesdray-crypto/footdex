@@ -100,3 +100,45 @@
 .colx__soonitem span { grid-row: span 2; font-size: 1.8rem; }
 .colx__soonitem em { font-style: normal; font-size: 0.85rem; color: #9fb0d0; grid-column: 2; }
 .colx__soonitem svg { grid-row: 1 / span 2; grid-column: 3; }
+
+/* ---- the acrylic figurine (Standee): thick clear plastic on a round clear pedestal ---- */
+.sd { position: relative; display: block; margin: 0 auto; perspective: 760px; cursor: grab; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+.sd--wait { opacity: 0; }
+.sd__rot { position: absolute; inset: 0; transform-style: preserve-3d; }
+.sd__shadow { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, #000a, #0000); transform: rotateX(78deg); pointer-events: none; }
+.sd__disc { position: absolute; border-radius: 50%; transform: rotateX(90deg); background: radial-gradient(circle at 50% 50%, #ffffff30, #9fc4f040 70%, #ffffff55 100%); border: 1px solid #ffffff55; pointer-events: none; backface-visibility: visible; }
+.sd__disc--top { background: radial-gradient(circle at 36% 30%, #ffffffb0 0 8%, #cfe4ff66 32%, #7fb0ee55 74%, #ffffff77 100%); border: 2px solid #ffffffaa; box-shadow: 0 0 14px color-mix(in srgb, var(--rc) 70%, transparent), inset 0 0 12px #ffffff66; }
+.sd__disc--bot { background: radial-gradient(circle at 60% 60%, #ffffff55, #7fa4d855 80%, #ffffff66 100%); border: 2px solid #ffffff77; }
+.sd__slot { position: absolute; transform: rotateX(90deg); border-radius: 4px; background: linear-gradient(#10203a, #3a5a90); box-shadow: 0 0 0 1px #ffffff88, inset 0 0 4px #000a; pointer-events: none; }
+.sd__fig { position: absolute; transform-style: preserve-3d; }
+.sd__fig img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; backface-visibility: hidden; -webkit-user-drag: none; }
+.sd__face--back { filter: brightness(0.82) saturate(0.9); }
+.sd__slice { backface-visibility: visible !important; }
+.sd__gloss { position: absolute; inset: 0; pointer-events: none; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; background: linear-gradient(105deg, #fff0 34%, #ffffffa8 48%, #fff0 62%); background-size: 300% 100%; background-position: var(--sh, 0 0); mix-blend-mode: screen; backface-visibility: hidden; }
+.sd--locked .sd__fig img { filter: brightness(0) opacity(0.32); }
+.sd--locked .sd__gloss { display: none; }
+.sd__burst { position: absolute; left: 50%; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 18px 6px var(--rc, #58a6ff), 0 0 40px 12px #ffffff88; animation: sdBurst .7s ease-out forwards; pointer-events: none; }
+@keyframes sdBurst { from { transform: scale(0.4); opacity: 1; } to { transform: scale(14); opacity: 0; } }
+.sdbox { display: grid; gap: 10px; justify-items: center; }
+.sdbox__ed { font: 800 0.72rem var(--f-display, inherit); padding: 2px 10px; border-radius: 99px; border: 1px solid var(--rc); color: #fff; background: #0b1022cc; }
+.sd__tag { font: 800 0.68rem var(--f-display, inherit); color: #fff; background: #0b1022cc; border: 1px solid var(--rc); border-radius: 6px; padding: 1px 6px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.colx__eds { display: flex; gap: 6px; justify-content: center; margin: 4px 0 8px; }
+.colx__zoomfig { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: #05081ae8; padding: 16px; }
+.colx__zoomfig .box { width: min(92vw, 420px); max-height: 92dvh; overflow: auto; display: grid; gap: 10px; justify-items: center; text-align: center; }
+.colx__figbtn { display: block; background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+.colx__figbtn:disabled { cursor: default; }
+
+/* narrow phones (360 px and below): the top bar must fit, the gear button included */
+@media (max-width: 380px) {
+  .topbar__inner { gap: 6px; }
+  .brand { min-width: 0; }
+  .brand__word { font-size: 22px; }
+  .brand__sub { font-size: 8.5px; letter-spacing: 0.1em; white-space: nowrap; }
+  .topbar__tools { gap: 4px; flex-shrink: 0; }
+  .topbar__tools .iconbtn { width: 34px; height: 34px; }
+  .topbar__tools .starpill { padding-inline: 8px; }
+}
+@media (max-height: 640px) {
+  .chm { padding-top: 64px; padding-bottom: 84px; }
+  .chm__box { max-height: calc(100dvh - 150px); }
+}

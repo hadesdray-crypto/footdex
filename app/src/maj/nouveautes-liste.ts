@@ -4,6 +4,19 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-04",
+    titre: "Version 45 : les figurines en plexiglas",
+    type: "appli",
+    points: [
+      "Les 20 personnages ont leur figurine en plexiglas épais, posée sur un socle rond transparent. Tourne-la avec le doigt dans tous les sens : autour, par-dessus, par-dessous.",
+      "Dans le coffre, la figurine sort en deux morceaux : pousse-la vers le bas (ou touche « Clipser ») pour la clipser sur son socle.",
+      "Deux éditions : Studio (images détaillées) et Classique (dessins du jeu). On ne sait pas laquelle sort ! Elles sont rangées dans Ma collection, onglet Figurines.",
+      "Les cartes Footballinis ont leurs vraies images.",
+      "Coin des parents, Réglages du jeu : un bloc « Essais » pour lancer à la main le chapardeur et la figurine à clipser.",
+      "Le haut de l'écran ne coupe plus le bouton des réglages sur les petits téléphones.",
+    ],
+  },
+  {
+    date: "2026-11-04",
     titre: "Version 44 : le visionneur 3D est prêt",
     type: "appli",
     points: [
