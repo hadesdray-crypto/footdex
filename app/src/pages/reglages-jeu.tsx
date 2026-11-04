@@ -4,6 +4,7 @@ import { annulerMission, lancerMission, useMission } from "../mission";
 import { RARITY } from "../cards";
 import { FBX, RARITY as FRAR } from "../fbx/art";
 import { ClipTest } from "../fbx/ui";
+import { update, useMascot } from "../mascot/state";
 import { DEFAUT, type Odds, regler, remettreOrigine, totalOdds, useReglages } from "../reglages-jeu";
 
 function Nombre({ label, aide, value, min, max, step = 1, suffixe, onChange }: { label: string; aide?: string; value: number; min: number; max: number; step?: number; suffixe?: string; onChange: (n: number) => void }) {
@@ -106,6 +107,7 @@ function MissionParent() {
 export function Essais() {
   const [clipTest, setClipTest] = useState(false);
   const [msg, setMsg] = useState("");
+  const m = useMascot();
   const lance = (quoi: string, texte: string) => { window.dispatchEvent(new CustomEvent("footdex:essai", { detail: { quoi } })); setMsg(texte); };
   return (
     <div className="rg">
@@ -116,6 +118,12 @@ export function Essais() {
         <button type="button" className="btn btn--gold" onClick={() => setClipTest(true)}>Tester la figurine à clipser</button>
       </div>
       {msg ? <p className="note" role="status">{msg}</p> : null}
+      <p className="mm__label">Phrases des personnages</p>
+      <div className="chips">
+        <button type="button" className={"chip" + (!m.s.toutes ? " chip--on" : "")} aria-pressed={!m.s.toutes} onClick={() => update({ toutes: false })}>Seulement les bien audibles</button>
+        <button type="button" className={"chip" + (m.s.toutes ? " chip--on" : "")} aria-pressed={m.s.toutes} onClick={() => update({ toutes: true })}>Toutes, telles qu'écrites</button>
+      </div>
+      <p className="note">Par défaut, la voix lit les phrases mises en forme pour la synthèse vocale (cris étirés, points de suspension, chiffres), et ne lit pas les simples bruitages. « Toutes » lit tout, tel quel.</p>
       {clipTest ? <ClipTest onClose={() => setClipTest(false)} /> : null}
     </div>
   );

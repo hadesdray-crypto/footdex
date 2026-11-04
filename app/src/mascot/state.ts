@@ -1,5 +1,6 @@
 // The character's memory (look, character, voice speed, place on screen), its voice and its bubble.
-import { mouthOff, mouthOn, mouthPlan } from "./mouth";
+import { pourVoix } from "./parole";
+import { loudness, mouthLevel, mouthOff, mouthOn, mouthPlan, mouthSync } from "./mouth";
 import { useSyncExternalStore } from "react";
 import { babble as babbleSound, robot as robotSound } from "../sound";
 import { piperWav } from "../piper";
@@ -94,12 +95,12 @@ export function setVoiceOf(mode: VoiceKey, patch: Partial<PVoice>) {
 }
 /** For a moment, a voice to try (in the voice picker): used by the next sentence instead of the chosen one. */
 let trying: PVoice | null = null;
-export type Settings = { look: Look; perso: number; speed: number; auto: boolean; engine: "auto" | Engine; heard: Partial<Record<Engine, boolean>>; piper: boolean; nativeVoice: number; voiceType: VoiceType; pvoice: Partial<Record<VoiceKey, PVoice>>; inter: Inter; zopt: ZOpt; bubbles: boolean; buddies: Buddy[]; buddyPos: Record<string, { fx: number; fy: number }>; looks: Record<string, Look>; rest: boolean; narrate: boolean; fx: number; fy: number; day: string };
+export type Settings = { look: Look; perso: number; speed: number; auto: boolean; engine: "auto" | Engine; heard: Partial<Record<Engine, boolean>>; piper: boolean; nativeVoice: number; voiceType: VoiceType; pvoice: Partial<Record<VoiceKey, PVoice>>; inter: Inter; zopt: ZOpt; bubbles: boolean; buddies: Buddy[]; buddyPos: Record<string, { fx: number; fy: number }>; looks: Record<string, Look>; rest: boolean; narrate: boolean; toutes: boolean; fx: number; fy: number; day: string };
 export type Bubble = { id: number; text: string; top: boolean } | null;
 type Snap = { reading: boolean; s: Settings; eng: Partial<Record<Engine, "ok" | "ko">>; using: Engine | null; bubble: Bubble; talking: boolean; busy: boolean; anim: string | null; animId: number; vx: number; vy: number; hurt: number };
 
 function loadSettings(): Settings {
-  const d: Settings = { look: DEFAULT_LOOK, perso: 0, speed: 1, auto: true, engine: "auto", heard: {}, piper: false, nativeVoice: -1, voiceType: "garcon", pvoice: {}, inter: INTER_DEFAULT, zopt: ZOPT_DEFAULT, bubbles: true, buddies: [], buddyPos: {}, looks: {}, rest: false, narrate: false, fx: 1, fy: 1, day: "" };
+  const d: Settings = { look: DEFAULT_LOOK, perso: 0, speed: 1, auto: true, engine: "auto", heard: {}, piper: false, nativeVoice: -1, voiceType: "garcon", pvoice: {}, inter: INTER_DEFAULT, zopt: ZOPT_DEFAULT, bubbles: true, buddies: [], buddyPos: {}, looks: {}, rest: false, narrate: false, toutes: false, fx: 1, fy: 1, day: "" };
   try {
     const raw = JSON.parse(storageGet(KEY) ?? "null") as Partial<Settings> | null;
     if (!raw) return d;
@@ -125,6 +126,7 @@ function loadSettings(): Settings {
       voiceType: raw.voiceType === "perso" || raw.voiceType === "homme" || raw.voiceType === "grave" ? raw.voiceType : "garcon",
       nativeVoice: typeof raw.nativeVoice === "number" && raw.nativeVoice >= 0 ? Math.floor(raw.nativeVoice) : -1,
       narrate: raw.narrate === true,
+      toutes: raw.toutes === true,
       bubbles: raw.bubbles !== false,
       zopt: raw.zopt && typeof raw.zopt === "object" ? { ...ZOPT_DEFAULT, ...raw.zopt } : ZOPT_DEFAULT,
       buddies: Array.isArray(raw.buddies) ? (raw.buddies.filter((b) => BUDDIES.includes(b as Buddy)) as Buddy[]).slice(0, 3) : [],
@@ -409,6 +411,7 @@ function runEngine(e: Engine, text: string, my: number, done: () => void, fail: 
             window.clearTimeout(talkTimer);
             mark(e, "ok");
             set({ talking: true });
+            mouthLevel(loudness(a)); // the mouth follows the real sound of the voice
           };
           a.onended = () => {
             URL.revokeObjectURL(url);
@@ -493,6 +496,8 @@ function runEngine(e: Engine, text: string, my: number, done: () => void, fail: 
             mark(e, "ok");
             set({ talking: true });
           };
+          const off = Math.max(0, text.indexOf(part));
+          u.onboundary = (ev) => { if (alive() && !over) mouthSync(off + (ev.charIndex || 0)); };
           u.onend = u.onerror = () => {
             if (!alive() || over) return;
             if (!started) return bad();
@@ -555,6 +560,16 @@ function voice(text: string, onEnd?: () => void) {
   const base = snap.s.engine === "auto" ? order() : [snap.s.engine];
   const forced: "auto" | Engine = pv.fun === "robot" ? "robot" : pv.fun === "charabia" ? "babble" : pv.engine;
   const list = forced !== "auto" ? [forced, ...base.filter((e) => e !== forced)] : base;
+  // only the phrases the voice can say well, put in a form it reads right (developer option: all of them, as written)
+  if (!snap.s.toutes) {
+    const spoken = pourVoix(text);
+    if (!spoken) {
+      // only a noise (« TUUUT ! »): nothing for the voice to say
+      window.setTimeout(() => onEnd?.(), 500);
+      return;
+    }
+    text = spoken;
+  }
   text = funText(text, pv.fun);
   mouthPlan(visitorTalking ? speechWho : "main", text, Math.max(0.6, Math.min(1.5, 1 + (PERSOS[snap.s.perso].rate - 1) * 0.45)) * SPEEDS[snap.s.speed].factor);
   const my = wake;

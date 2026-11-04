@@ -4,6 +4,17 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-04",
+    titre: "Version 47 : chapardeur plus visible, voix et bouches mieux réglées",
+    type: "appli",
+    points: [
+      "Le chapardeur apparaît plus bas sur l'écran, plus grand, et loin de ce qu'il va attraper.",
+      "Les phrases sont mises en forme pour la voix : cris étirés, points de suspension, chiffres et bruitages sont adaptés pour que ce soit toujours bien entendu. Le sens ne change pas.",
+      "La bouche se recale sur la voix mot par mot, et apprend la vitesse de chaque voix.",
+      "Menu Essais (Paramètres, Pour les grands) : choisir « Seulement les bien audibles » ou « Toutes, telles qu'écrites ».",
+    ],
+  },
+  {
+    date: "2026-11-04",
     titre: "Version 46 : menus refaits, appli plus fluide",
     type: "appli",
     points: [

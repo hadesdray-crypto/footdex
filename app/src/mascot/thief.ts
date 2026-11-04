@@ -50,9 +50,14 @@ export async function thiefRaid(r: Raid): Promise<boolean> {
   root.innerHTML = `<i class="thief__shade"></i><i class="thief__shadow"></i><i class="thief__hole thief__hole--top"></i><b class="thief__boss">${THIEF}</b><i class="thief__hole"></i><b class="thief__arm"><span class="thief__hand">${HAND_OPEN}</span></b><u class="thief__hint">Touche 2 fois le trou noir pour l'attraper !</u>`;
   const q = (c: string) => root.querySelector<HTMLElement>(c)!;
   const shade = q(".thief__shade"), shadow = q(".thief__shadow"), hole = q(".thief__hole:not(.thief__hole--top)"), top = q(".thief__hole--top"), boss = q(".thief__boss"), arm = q(".thief__arm"), hand = q(".thief__hand"), hint = q(".thief__hint");
-  const topY = 74;
+  // the other hole (where he shows up) is well away from what he takes: low enough to be seen, never on top of it
+  const vh = window.innerHeight, vw = window.innerWidth;
+  const above = r.y - 250 >= 140;
+  const topY = above ? Math.max(140, Math.min(vh * 0.36, r.y - 250)) : Math.min(vh - 190, r.y + 260);
+  const side = r.x > vw / 2 ? -1 : 1;
+  const topX = Math.max(70, Math.min(vw - 70, r.x + side * Math.min(120, vw * 0.3)));
   for (const el of [shadow, hole, arm]) { el.style.left = `${r.x}px`; el.style.top = `${r.y}px`; }
-  for (const el of [top, boss]) { el.style.left = `${r.x}px`; el.style.top = `${topY}px`; }
+  for (const el of [top, boss]) { el.style.left = `${topX}px`; el.style.top = `${topY}px`; }
   document.body.appendChild(root);
   let caught = false;
   let armH = 0;
@@ -100,7 +105,7 @@ export async function thiefRaid(r: Raid): Promise<boolean> {
     arm.style.height = `${armH}px`;
     const y0 = topY;
     boss.style.zIndex = "3";
-    await tween(900, (k) => { boss.style.top = `${y0 + (r.y - y0 - 6) * k}px`; arm.style.height = `${armH * (1 - k)}px`; });
+    await tween(900, (k) => { boss.style.top = `${y0 + (r.y - y0 - 6) * k}px`; boss.style.left = `${topX + (r.x - topX) * k}px`; arm.style.height = `${armH * (1 - k)}px`; });
     top.classList.remove("is-on");
     await speakCaught();
     r.caught?.();
