@@ -33,7 +33,13 @@ export function Bienvenue() {
     window.addEventListener(EVT_BIENVENUE, rouvre);
     return () => window.removeEventListener(EVT_BIENVENUE, rouvre);
   }, []);
-  if (i === null) return null;
+  // si la fenêtre de mise à jour est ouverte, on attend qu'elle soit fermée
+  const [autre, setAutre] = useState(false);
+  useEffect(() => {
+    const t = window.setInterval(() => setAutre(!!document.querySelector('.majfull:not([aria-label="Bienvenue"])')), 300);
+    return () => window.clearInterval(t);
+  }, []);
+  if (i === null || autre) return null;
   const fin = () => {
     try { localStorage.setItem(CLE, "1"); } catch { /* nothing */ }
     setI(null);
