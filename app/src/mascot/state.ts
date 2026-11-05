@@ -7,7 +7,7 @@ import { piperWav } from "../piper";
 import { appeler, ecouter, moduleDisponible } from "../natif";
 import { storageGet, storageSet } from "../util";
 import { AFTER_2000, IDOLS, IDOL_LINES, LORE, LORE_HINTS, OLD_STORIES, OUPS, OUPS_BACK, PAGES, PERSOS, pick, type Kind, type Mode } from "./lines";
-import { DEFAULT_LOOK, sanitizeLook, type Look } from "./look";
+import { sanitizeLook, type Look } from "./look";
 import { CARAC } from "./caractere";
 import { playFx, type Slot } from "./bruits";
 
@@ -67,7 +67,7 @@ export function setZopt(patch: Partial<ZOpt>) {
 
 /** Friends on the screen next to the character: the other characters, and the Doctor. */
 export type Buddy = Mode | "medecin";
-export const BUDDIES: Buddy[] = ["statue", "excite", "poli", "joueur", "pointu", "zombie", "medecin"];
+export const BUDDIES: Buddy[] = ["statue", "excite", "poli", "joueur", "pointu", "zombie", "philippe", "medecin"];
 /** The Doctor as a character of his own (front view). */
 export const DOCTOR_LOOK: Look = { body: 2, skin: 3, hair: 3, hairColor: 4, outfit: 10, acc: ["glasses", "stetho"] };
 
@@ -84,7 +84,7 @@ export function setInter(patch: Partial<Inter>) {
   update({ inter: { ...snap.s.inter, ...patch } });
 }
 /** A boy's voice by default, each character a little different (Footdex is Raphaël's). */
-export const DEFAULT_PITCH: Record<VoiceKey, number> = { statue: 0.74, excite: 1.22, poli: 1.05, joueur: 1.3, pointu: 1.12, zombie: 0.72, medecin: 0.92, arbitre: 0.78 };
+export const DEFAULT_PITCH: Record<VoiceKey, number> = { statue: 0.74, excite: 1.22, poli: 1.05, joueur: 1.3, pointu: 1.12, zombie: 0.72, philippe: 0.98, medecin: 0.92, arbitre: 0.78 };
 export function voiceOf(mode: VoiceKey): PVoice {
   const v = snap.s.pvoice[mode];
   return { engine: v?.engine ?? "auto", native: typeof v?.native === "number" ? v.native : -1, phone: v?.phone ?? "", pitch: typeof v?.pitch === "number" ? Math.max(0.6, Math.min(1.6, v.pitch)) : DEFAULT_PITCH[mode], fun: FUNS.some((f) => f.id === v?.fun) ? v?.fun : "" };
@@ -100,7 +100,7 @@ export type Bubble = { id: number; text: string; top: boolean; silent?: boolean 
 type Snap = { reading: boolean; s: Settings; eng: Partial<Record<Engine, "ok" | "ko">>; using: Engine | null; bubble: Bubble; talking: boolean; busy: boolean; anim: string | null; animId: number; vx: number; vy: number; hurt: number; evac: 0 | 1 | 2; away: string[] };
 
 function loadSettings(): Settings {
-  const d: Settings = { look: DEFAULT_LOOK, perso: 0, speed: 1, auto: true, engine: "auto", heard: {}, piper: false, nativeVoice: -1, voiceType: "garcon", pvoice: {}, inter: INTER_DEFAULT, zopt: ZOPT_DEFAULT, bubbles: false, buddies: [], buddyPos: {}, looks: {}, rest: false, narrate: false, toutes: false, bubV: 2, fx: 1, fy: 1, day: "" };
+  const d: Settings = { look: CARAC.philippe.tenue, perso: 6, speed: 1, auto: true, engine: "auto", heard: {}, piper: false, nativeVoice: -1, voiceType: "garcon", pvoice: {}, inter: INTER_DEFAULT, zopt: ZOPT_DEFAULT, bubbles: false, buddies: [], buddyPos: {}, looks: {}, rest: false, narrate: false, toutes: false, bubV: 2, fx: 1, fy: 1, day: "" };
   try {
     const raw = JSON.parse(storageGet(KEY) ?? "null") as Partial<Settings> | null;
     if (!raw) return d;

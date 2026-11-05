@@ -101,7 +101,7 @@ function prepare(k: string, blob: Blob) {
 /** At start: loads every recording (and moves the old ones of version 30, kept in localStorage). */
 async function init() {
   if (typeof window === "undefined" || typeof indexedDB === "undefined") return;
-  for (const who of ["statue", "excite", "poli", "joueur", "pointu", "zombie", "medecin", "arbitre"])
+  for (const who of ["statue", "excite", "poli", "joueur", "pointu", "zombie", "philippe", "medecin", "arbitre"])
     for (const slot of ["peur", "aie", "joie", "bruit"] as Slot[]) {
       const old = storageGet(`footdex.bruit.${who}.${slot}`);
       if (!old) continue;

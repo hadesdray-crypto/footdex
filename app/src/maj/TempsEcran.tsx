@@ -13,6 +13,7 @@ const FIN: Record<Mode, string> = {
   pointu: "D'après les chiffres, un joueur progresse surtout en jouant. On éteint l'écran et on va s'entraîner dehors ? À demain, Raphaël !",
   joueur: "Coup de sifflet final pour l'écran ! Allez, on va jongler dehors avec un vrai ballon ! À demain !",
   excite: "C'EST LA MI-TEMPS DE L'ÉCRAN, Raphaël ! Le vrai match se joue dehors ! On y va ? À demain !",
+  philippe: "L'écran, c'est fini pour aujourd'hui. Un vrai ballon t'attend dehors. Lace bien tes chaussures. À demain.",
   zombie: "Grrr… même les zombies… vont dormir… Éteins l'écran, Raphaël… et va jouer dehors. À demain… grrr.",
 };
 const BIENTOT: Record<Mode, string> = {
@@ -21,6 +22,7 @@ const BIENTOT: Record<Mode, string> = {
   pointu: "Il reste environ dix minutes d'écran aujourd'hui.",
   joueur: "Encore dix minutes, et on ira jouer dehors !",
   excite: "Plus que dix minutes ! Après, on fonce dehors !",
+  philippe: "Encore dix minutes d'écran. Ensuite, on va s'entraîner dehors.",
   zombie: "Grrr… encore dix minutes… et après… dodo.",
 };
 const enPartie = () => document.body.hasAttribute("data-jeu");

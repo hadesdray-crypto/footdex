@@ -2,7 +2,7 @@
 
 export type Kind = "base" | "rare" | "eclat" | "legende" | "moment" | "shiny";
 
-export type Mode = "statue" | "excite" | "poli" | "joueur" | "pointu" | "zombie";
+export type Mode = "statue" | "excite" | "poli" | "joueur" | "pointu" | "zombie" | "philippe";
 
 export type Perso = {
   mode: Mode;
@@ -194,6 +194,34 @@ export const PERSOS: Perso[] = [
     thrown: ["GRRR ! Ma tête !", "Aïe… pas trop fort… je me décolle !", "Grrr… ramasse mes morceaux, s'il te plaît."],
     wardrobe: ["Grrr… très chic… pour un zombie.", "Mmmh… ça cache mes coutures."],
     done: ["Grrr… fini… je retourne… dormir… sous le terrain.", "C'est tout… grrr."],
+  },
+  {
+    mode: "philippe",
+    ask: [],
+    more: [],
+    extra: [],
+    name: "Philippe",
+    tag: "Grand, fin, sérieux. Le foot, c'est sa vie",
+    sample: "Bonjour. Je suis Philippe. Le foot, c'est du sérieux. On y va ?",
+    pitch: 0.98,
+    rate: 0.96,
+    voice: { gender: "m", slot: 3, formant: 1, vib: 0 },
+    mouth: "flat",
+    greet: ["Bonjour. Philippe, numéro zéro. Prêt quand tu veux.", "Salut. On va parler football, et sérieusement.", "Te voilà. Allons-y, concentré."],
+    open: ["Écoute bien. ", "Voilà. ", "Concentré. "],
+    story: ["Je vais te raconter ça. Sérieusement.", "Écoute. C'est important.", "Bon. Voici ce qui s'est passé."],
+    card: {
+      base: ["{n}. Un joueur de plus. Bien.", "{n}. Je note, et je continue."],
+      rare: ["{n}, en rare. Du sérieux. Bravo.", "Belle prise : {n}."],
+      eclat: ["{n} en Éclat. Là, je reconnais le talent.", "Éclat. {n}. Respect."],
+      legende: ["{n}. Une Légende. J'aurais aimé jouer comme ça.", "Une Légende : {n}. Je m'incline."],
+      moment: ["Un Moment. Je m'en souviens, c'était énorme.", "Ce match-là… il est dans les livres."],
+      shiny: ["Arc-en-ciel. Même moi, je souris.", "{n} en arc-en-ciel. Incroyable."],
+    },
+    shake: ["Hé. Concentre-toi, on ne secoue pas.", "Doucement. Je suis en pleine réflexion."],
+    thrown: ["Ça, c'est une faute grave.", "Aïe. Je reste debout, quand même.", "On ne lance pas un numéro zéro."],
+    wardrobe: ["Le bleu, c'est ma couleur. Le zéro aussi.", "Propre. Sérieux. Parfait."],
+    done: ["Voilà. J'ai tout dit.", "C'est tout pour cette page."],
   },
 ];
 

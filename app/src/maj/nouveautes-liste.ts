@@ -4,6 +4,16 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-05",
+    titre: "Version 55 : Philippe, le nouveau personnage",
+    type: "appli",
+    points: [
+      "Philippe arrive : grand, fin et musclé, cheveux carrés, maillot bleu numéro 0. C'est le personnage de départ de Footdex, et le seul qui revient après un carton rouge.",
+      "Nouvelle histoire à gagner dans le coffre : « Le ballon marqué du Jongleur ». Philippe, plus fort, garde toujours le ballon. Mais cette fois il glisse, sa jambe est en vrac, et le Jongleur récupère enfin son ballon.",
+      "Le ballon du Jongleur porte une étoile rouge pour le reconnaître.",
+    ],
+  },
+  {
+    date: "2026-11-05",
     titre: "Version 54 : histoires à gagner, voix filles et garçons",
     type: "appli",
     points: [

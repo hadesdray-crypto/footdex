@@ -43,6 +43,13 @@ export const CARAC: Record<Mode, Carac> = {
     tenue: { body: 1, skin: 6, hair: 2, hairColor: 1, outfit: 8, acc: ["slime", "stitches", "eyedrop", "flies"] },
     readAcc: ["glasses"],
   },
+  philippe: {
+    level: 2,
+    label: "Sérieux",
+    style: "Grand et fin, mais musclé. Cheveux carrés, maillot bleu numéro 0. Sérieux, passionné de foot, il lace toujours ses chaussures. Il est plus fort que le Jongleur.",
+    tenue: { body: 6, skin: 1, hair: 2, hairColor: 0, outfit: 11, acc: [] },
+    readAcc: ["clip"],
+  },
   excite: {
     level: 4,
     label: "À fond",

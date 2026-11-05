@@ -10,6 +10,7 @@ export const BODIES = [
   { name: "Costaud", sw: 116, sc: 1 },
   { name: "Trapu", sw: 110, sc: 0.94 },
   { name: "Robuste", sw: 100, sc: 1 },
+  { name: "Grand et fin", sw: 88, sc: 1.05 },
 ];
 export const SKINS = ["#f0cfae", "#e5b98f", "#d9a67a", "#a8734f", "#7a4a30", "#5a3624", "#86a462"];
 export const HAIRS = [
@@ -33,6 +34,7 @@ export const OUTFITS = [
   { name: "Maillot de zombie", shirt: "#7a8a4a", s2: "#4b5a2a", pat: "v", shorts: "#5b4a3a", sock: "#3a3f2c", sock2: "#3a3f2c", num: "13" },
   { name: "Tenue d'arbitre", shirt: "#1d2230", s2: "#f6c453", pat: "zip", shorts: "#10131c", sock: "#10131c", sock2: "#f6c453", num: "" },
   { name: "Blouse de médecin", shirt: "#f4f7fc", s2: "#2f5bff", pat: "zip", shorts: "#2f5bff", sock: "#2f5bff", sock2: "#ffffff", num: "" },
+  { name: "Bleu numéro 0", shirt: "#1e4fd6", s2: "#ffffff", pat: "v", shorts: "#ffffff", sock: "#1e4fd6", sock2: "#ffffff", num: "0" },
 ];
 /** Outfits that are not football shirts (left out of the random styled characters). */
 export const SPECIAL_OUTFITS = [8, 9, 10];
@@ -65,6 +67,7 @@ export const PRESETS: { name: string; perso: number; look: Look }[] = [
   { name: "Le Jongleur", perso: 3, look: { body: 0, skin: 0, hair: 0, hairColor: 1, outfit: 5, acc: ["armband", "band"] } },
   { name: "Le Pointu", perso: 4, look: { body: 1, skin: 2, hair: 2, hairColor: 0, outfit: 3, acc: ["glasses", "headset"] } },
   { name: "Le Jeune", perso: 1, look: { body: 0, skin: 3, hair: 1, hairColor: 0, outfit: 1, acc: ["ball"] } },
+  { name: "Philippe", perso: 6, look: { body: 6, skin: 1, hair: 2, hairColor: 0, outfit: 11, acc: [] } },
   { name: "Le Zombie", perso: 5, look: { body: 1, skin: 6, hair: 2, hairColor: 1, outfit: 8, acc: ["slime", "stitches", "eyedrop", "flies"] } },
 ];
 

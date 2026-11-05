@@ -535,7 +535,7 @@ export async function refereeCard(color: "jaune" | "rouge") {
   setEvac(0); // the main character is back
   if (color === "rouge") return; // red: only the base character stays; the others have to be found again (yellow card brings them back)
   // yellow: they come back one after the other, the most excited first
-  const order = ["excite", "joueur", "zombie", "poli", "pointu", "statue", "medecin"];
+  const order = ["excite", "joueur", "zombie", "poli", "pointu", "statue", "philippe", "medecin"];
   const queue = friends.sort((a, b) => order.indexOf(a) - order.indexOf(b));
   for (const k of queue) {
     await new Promise((ok) => window.setTimeout(ok, 2200));

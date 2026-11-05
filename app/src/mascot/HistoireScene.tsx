@@ -13,6 +13,10 @@ const nom = (k: string) => (k === "medecin" ? "Le Médecin" : PERSOS.find((p) =>
 const wait = (ms: number) => new Promise<void>((ok) => window.setTimeout(ok, ms));
 const POOL = ["excite", "poli", "pointu", "joueur", "statue"];
 
+/** Le ballon du Jongleur : un ballon normal avec une étoile rouge, pour le reconnaître. */
+const BALLE =
+  '<svg viewBox="0 0 100 100" width="34" height="34"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#10131c" stroke-width="4"/><path d="M50 30 l17 12 -6 20 h-22 l-6 -20Z" fill="#10131c"/><path d="M50 30 V6 M67 42 L90 34 M61 62 L76 84 M39 62 L24 84 M33 42 L10 34" stroke="#10131c" stroke-width="4"/><path d="M50 40 l3.5 7 7.5 1 -5.5 5.3 1.3 7.5 -6.8 -3.6 -6.8 3.6 1.3 -7.5 -5.5 -5.3 7.5 -1Z" fill="#e0284f"/></svg>';
+
 type Run = { h: Histoire; cast: string[]; map: Record<string, string>; lignes: Ligne[]; premiere: boolean };
 
 function parler(who: string, text: string) {
@@ -33,6 +37,8 @@ export function HistoireScene() {
   const [speaker, setSpeaker] = useState("");
   const [sub, setSub] = useState("");
   const [fin, setFin] = useState(false);
+  const [balle, setBalle] = useState("");
+  const [sol, setSol] = useState("");
   const token = useRef(0);
   const together = useRef<Record<string, number>>({});
   const lastVersion = useRef<Record<string, number>>({});
@@ -42,7 +48,7 @@ export function HistoireScene() {
     const h = histoire(id);
     if (!h || run) return;
     // the witnesses: the characters who are there (otherwise anybody), never the ones the story needs
-    const libres = [...prefer, ...POOL].filter((k, i, a) => !h.fixes.includes(k) && k !== "medecin" && k !== "zombie" && a.indexOf(k) === i);
+    const libres = [...prefer, ...POOL].filter((k, i, a) => !h.fixes.includes(k) && k !== "medecin" && k !== "zombie" && !(h.id === "philippe" && k === "philippe") && a.indexOf(k) === i);
     const map: Record<string, string> = {};
     for (let i = 1; i <= h.temoins; i += 1) map[`w${i}`] = libres[(i - 1) % libres.length];
     const cast = [...new Set([...h.fixes, ...Object.values(map)])];
@@ -53,11 +59,15 @@ export function HistoireScene() {
     const t = ++token.current;
     setRun(r);
     setFin(false);
+    setBalle("");
+    setSol("");
     void (async () => {
       await wait(900);
       for (const l of r.lignes) {
         if (token.current !== t) return;
         const who = map[l.who] ?? l.who;
+        if (l.balle) setBalle(l.balle);
+        if (l.sol) setSol(l.sol);
         setSpeaker(who);
         setSub(l.text);
         await parler(who, l.text);
@@ -75,6 +85,8 @@ export function HistoireScene() {
     token.current += 1;
     stopTalking();
     setRun(null);
+    setBalle("");
+    setSol("");
     setSpeaker("");
     setSub("");
   }
@@ -127,8 +139,10 @@ export function HistoireScene() {
     <div className="hs" role="dialog" aria-modal="true" aria-label={run.h.titre}>
       <div className="hs__stage">
         {run.cast.map((k, i) => (
-          <div key={k} className={cx("hs__who", speaker === k && "is-on")} data-who={k} style={{ animationDelay: `${(i * 0.37) % 1}s`, "--from": i % 2 ? "70px" : "-70px" } as CSSProperties}>
-            <Fig look={look(k)} size={118} mouth={PERSOS.find((p) => p.mode === k)?.mouth ?? "smile"} talk={speaker === k} cheer={fin} />
+          <div key={k} className={cx("hs__who", speaker === k && "is-on", sol === k && "is-sol")} data-who={k} style={{ animationDelay: `${(i * 0.37) % 1}s`, "--from": i % 2 ? "70px" : "-70px" } as CSSProperties}>
+            <Fig look={look(k)} size={118} mouth={PERSOS.find((p) => p.mode === k)?.mouth ?? "smile"} talk={speaker === k} cheer={fin} hurt={sol === k ? 1 : 0} wounds={sol === k ? { b: 1, legA: true, legB: false, arm: false } : undefined} />
+            {balle === k ? <i className="hs__balle" aria-label="Le ballon marqué du Jongleur" dangerouslySetInnerHTML={{ __html: BALLE }} /> : null}
+            {sol === k ? <b className="hs__os" aria-hidden="true">Aïe</b> : null}
             <span>{nom(k)}</span>
           </div>
         ))}

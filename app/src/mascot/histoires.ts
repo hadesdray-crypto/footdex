@@ -2,7 +2,8 @@
 // Chaque histoire a plusieurs versions ; on peut la revoir depuis le coffre (avec d'autres personnages pour les témoins).
 import { useSyncExternalStore } from "react";
 
-export type Ligne = { who: string; text: string };
+/** `balle` : qui tient le ballon marqué à partir de cette ligne ; `sol` : qui est par terre (blessé) à partir de cette ligne. */
+export type Ligne = { who: string; text: string; balle?: string; sol?: string };
 export type Histoire = {
   id: string;
   titre: string;
@@ -15,7 +16,7 @@ export type Histoire = {
 };
 
 const w1 = "w1", w2 = "w2";
-const L = (who: string, text: string): Ligne => ({ who, text });
+const L = (who: string, text: string, fx: { balle?: string; sol?: string } = {}): Ligne => ({ who, text, ...fx });
 
 export const HISTOIRES: Histoire[] = [
   {
@@ -55,6 +56,37 @@ export const HISTOIRES: Histoire[] = [
         L(w1, "Ouille !"),
         L(w2, "Le pauvre Philippe…"),
         L("statue", "Voilà pourquoi il ne joue pas dans un grand club. Mais ça, c'est un secret entre nous."),
+      ],
+    ],
+  },
+  {
+    id: "ballon",
+    prix: 500,
+    titre: "Le ballon marqué du Jongleur",
+    teaser: "Pourquoi le Jongleur n'arrive jamais à garder son ballon.",
+    indice: "Philippe et le Jongleur, ensemble.",
+    fixes: ["philippe", "joueur"],
+    temoins: 0,
+    versions: [
+      [
+        L("joueur", "Philippe, rends-moi mon ballon !", { balle: "philippe" }),
+        L("philippe", "Celui avec la marque ? Non. Viens le chercher."),
+        L("joueur", "Je n'y arrive jamais ! Tu es trop fort pour moi !"),
+        L("philippe", "C'est le foot, mon grand. Regarde, je tire !"),
+        L("philippe", "Aïe ! Aïe aïe aïe ! J'ai glissé ! Ma jambe est en vrac !", { sol: "philippe" }),
+        L("joueur", "Ça y est ! Mon ballon ! Enfin !", { balle: "joueur" }),
+        L("joueur", "Merci la glissade, Philippe ! Je le garde, et j'appelle le Médecin !"),
+        L("philippe", "Garde-le… Moi, je reste là, par terre."),
+      ],
+      [
+        L("joueur", "Mon ballon, il a ma marque dessus ! Rends-le-moi !", { balle: "philippe" }),
+        L("philippe", "Je suis plus fort que toi. Je le garde. Comme toujours."),
+        L("joueur", "À chaque fois, tu m'empêches de le reprendre !"),
+        L("philippe", "Parce que c'est du sérieux. Attention, tir de loin !"),
+        L("philippe", "Ouille ! Le pied qui part ! Ma jambe !", { sol: "philippe" }),
+        L("joueur", "Il roule ! Il est à moi ! Mon ballon !", { balle: "joueur" }),
+        L("joueur", "Tu es plus fort que moi, c'est vrai. Mais le sol est plus fort que toi !"),
+        L("philippe", "Ne rigole pas… Appelle le Médecin."),
       ],
     ],
   },

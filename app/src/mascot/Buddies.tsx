@@ -31,6 +31,7 @@ const TALK: Record<Buddy, string[]> = {
   joueur: ["Tu me fais une passe ?", "Regarde mes jongles… enfin, imagine-les !", "Un petit match après ?"],
   pointu: ["D'après les chiffres, nous sommes plusieurs. C'est mieux qu'un.", "Statistiquement, je parle moins que le supporter.", "Précisément : il y a 22 joueurs sur un terrain."],
   zombie: ["Grrr… du foot…", "Mmmh… cerveaux… euh, ballons !", "Grrr… je suis gentil. Presque."],
+  philippe: ["Le foot, c'est du sérieux.", "Je lace toujours mes chaussures. Toujours.", "Numéro zéro, présent."],
   medecin: ["Tout le monde va bien ? Personne n'est blessé ?", "Un pansement ? J'en ai plein ma sacoche.", "Je surveille, je surveille. Le docteur est là !"],
 };
 const REACT: Record<"thrown" | "doctor" | "card", Partial<Record<Buddy, string[]>> & { all: string[] }> = {
