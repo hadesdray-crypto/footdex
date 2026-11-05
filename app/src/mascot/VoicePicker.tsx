@@ -59,7 +59,7 @@ function Wheel({ items, value, onPick, title, icon, empty }: { items: VoiceOptio
             {items.map((o) => (
               <button key={o.key} type="button" role="option" aria-selected={o.key === value} className={cx("vw__item", o.key === value && "is-on")} onClick={() => { quiet.current = false; ref.current?.scrollTo({ top: items.indexOf(o) * ITEM, behavior: "smooth" }); }}>
                 <strong>{o.label}</strong>
-                <small>{o.stars === 3 ? "Très fluide" : o.stars === 2 ? "Bien" : "Rigolo"}</small>
+                <small>{o.genre === "fille" ? "Fille · " : o.genre === "garcon" ? "Garçon · " : ""}{o.stars === 3 ? "Très fluide" : o.stars === 2 ? "Bien" : "Rigolo"}</small>
               </button>
             ))}
           </div>
@@ -96,15 +96,19 @@ export function VoicePicker({ compact = false }: { compact?: boolean }) {
     setSaved(false);
   }, [who]);
 
-  const all = list ?? [];
+  const [genre, setGenre] = useState<"tous" | "fille" | "garcon">("tous");
+  const all = (list ?? []).filter((o) => genre === "tous" || o.genre === genre || (o.v.engine === "robot" || o.v.engine === "babble"));
   const online = all.filter((o) => /Avec Internet/.test(o.tag));
   const offline = all.filter((o) => !/Avec Internet/.test(o.tag));
-  const current = all.find((o) => o.key === sel);
+  const current = (list ?? []).find((o) => o.key === sel);
   const listen = (o: VoiceOption | undefined, p = pitch, f = fun) => tryVoice({ engine: o?.v.engine ?? "auto", native: o?.v.native ?? -1, phone: o?.v.phone ?? "", pitch: p, fun: f }, WHO[who].sample);
+  // a new voice: grave/aigu and the funny effect go back to neutral, so that the new voice is heard as it really is
   const pick = (o: VoiceOption) => {
     setSel(o.key);
     setSaved(false);
-    listen(o);
+    setPitch(1);
+    setFun("");
+    listen(o, 1, "");
   };
   const keep = () => {
     if (current) setVoiceOf(mode, { ...current.v, pitch, fun });
@@ -130,6 +134,11 @@ export function VoicePicker({ compact = false }: { compact?: boolean }) {
       <section className="vbox">
         <p className="vp__step"><b>2</b> Fais rouler une molette : tu entends la voix</p>
         {list === null ? <p className="note">Je cherche les voix du téléphone…</p> : null}
+        <div className="chips" role="radiogroup" aria-label="Voix de fille ou de garçon">
+          {([["tous", "Toutes"], ["fille", "Voix de fille"], ["garcon", "Voix de garçon"]] as const).map(([id, name]) => (
+            <button key={id} type="button" role="radio" aria-checked={genre === id} className={cx("chip", genre === id && "chip--on")} onClick={() => setGenre(id)}>{name}</button>
+          ))}
+        </div>
         <div className="vw__pair">
           <Wheel items={offline} value={sel} onPick={pick} title="Sans connexion" icon={<LuWifiOff aria-hidden="true" />} empty="Aucune voix sans connexion ici." />
           <Wheel items={online} value={sel} onPick={pick} title="Avec connexion" icon={<LuWifi aria-hidden="true" />} empty="Aucune voix avec connexion sur ce téléphone." />
@@ -142,10 +151,13 @@ export function VoicePicker({ compact = false }: { compact?: boolean }) {
         <p className="mm__label">Aigu ou grave</p>
         <div className="vp__pitch">
           <span aria-hidden="true">Aigu</span>
-          <input type="range" min={0.6} max={1.6} step={0.05} value={2.2 - pitch} aria-label="Aigu ou grave"
-            onChange={(e: { target: { value: string } }) => { setPitch(2.2 - Number(e.target.value)); setSaved(false); }}
+          <input type="range" min={0.6} max={1.4} step={0.05} value={Math.max(0.6, Math.min(1.4, 2 - pitch))} aria-label="Aigu ou grave"
+            onChange={(e: { target: { value: string } }) => { setPitch(2 - Number(e.target.value)); setSaved(false); }}
             onPointerUp={() => listen(current, pitch)} onKeyUp={() => listen(current, pitch)} />
           <span aria-hidden="true">Grave</span>
+        </div>
+        <div className="chips">
+          <button type="button" className="chip" onClick={() => { setPitch(1); setFun(""); setSaved(false); listen(current, 1, ""); }}>Remettre normal</button>
         </div>
         <p className="mm__label">Vitesse</p>
         <div className="chips">

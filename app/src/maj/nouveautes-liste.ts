@@ -3,6 +3,17 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    date: "2026-11-05",
+    titre: "Version 54 : histoires à gagner, voix filles et garçons",
+    type: "appli",
+    points: [
+      "Les histoires secrètes sont maintenant des cartes très rares du coffre, à ouvrir avec beaucoup de pièces. Sans la carte, rien ne se passe dans le jeu. 3 nouvelles histoires.",
+      "Le Médecin et l'arbitre bougent la bouche quand ils parlent.",
+      "Voix : choix « voix de fille » ou « voix de garçon », et grave/aigu qui revient à normal quand on change de voix.",
+      "Après un carton, les personnages reviennent par des côtés différents, avec chacun une attitude différente.",
+    ],
+  },
+  {
     date: "2026-11-04",
     titre: "Version 53 : les histoires secrètes",
     type: "appli",

@@ -985,11 +985,19 @@ export function tryVoice(v: PVoice, text?: string) {
 }
 
 /** One choice in the voice picker. */
-export type VoiceOption = { key: string; label: string; stars: 1 | 2 | 3; tag: string; v: Pick<PVoice, "engine" | "native" | "phone"> };
+export type Genre = "fille" | "garcon" | "";
+export type VoiceOption = { key: string; label: string; stars: 1 | 2 | 3; tag: string; genre: Genre; v: Pick<PVoice, "engine" | "native" | "phone"> };
 
 /** Every voice this phone can give, best first (⭐⭐⭐ the most fluid). Simple names for a child: « Voix 1 », « Voix 2 »… */
 export async function voiceCatalog(): Promise<VoiceOption[]> {
   const out: Omit<VoiceOption, "label">[] = [];
+  const genreDe = (name: string): Genre => {
+    if (/x-fr[ac]\b|x-fr[ac]-/i.test(name)) return "fille"; // Google: fra, frc
+    if (/x-fr[bd]\b|x-fr[bd]-/i.test(name)) return "garcon"; // Google: frb, frd
+    if (/female|femme|woman|fille|denise|hortense|julie|eloise|éloïse|vivienne|brigitte|celeste|céleste|coralie|jacqueline|yvette|ariane|charline|google fran/i.test(name)) return "fille";
+    if (/\bmale\b|homme|\bman\b|garçon|henri|paul|thomas|antoine|jerome|jérôme|remy|rémy|alain|fabrice|gerard|gérard|maurice|nicolas|guillaume|yves|claude/i.test(name)) return "garcon";
+    return "";
+  };
   if (isApp()) {
     let list: { index: number; name: string; local: boolean }[] = [];
     try {
@@ -1005,21 +1013,21 @@ export async function voiceCatalog(): Promise<VoiceOption[]> {
       const google = /x-[a-z]{3}-(local|network)|google/i.test(v.name);
       const samsung = /smt|samsung/i.test(v.name);
       const stars: 1 | 2 | 3 = google || net ? 3 : samsung ? 2 : 2;
-      out.push({ key: `n${v.index}`, stars, tag: net ? "Avec Internet" : "Sans Internet", v: { engine: "native", native: v.index, phone: "" } });
+      out.push({ key: `n${v.index}`, stars, tag: net ? "Avec Internet" : "Sans Internet", genre: genreDe(v.name), v: { engine: "native", native: v.index, phone: "" } });
     }
-    if (!list.length) out.push({ key: "n-1", stars: 2, tag: "Sans Internet", v: { engine: "native", native: -1, phone: "" } });
+    if (!list.length) out.push({ key: "n-1", stars: 2, tag: "Sans Internet", genre: "", v: { engine: "native", native: -1, phone: "" } });
   } else if (hasVoice()) {
     const all = window.speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith("fr"));
     for (const v of all) {
       const good = /google|natural|neural|premium|enhanced|online/i.test(v.name) || !v.localService;
-      out.push({ key: `p${v.name}`, stars: good ? 3 : 2, tag: v.localService ? "Sans Internet" : "Avec Internet", v: { engine: "phone", native: -1, phone: v.name } });
+      out.push({ key: `p${v.name}`, stars: good ? 3 : 2, tag: v.localService ? "Sans Internet" : "Avec Internet", genre: genreDe(v.name), v: { engine: "phone", native: -1, phone: v.name } });
     }
   }
-  if (snap.s.piper) out.push({ key: "piper", stars: 3, tag: "Belle voix · sans Internet", v: { engine: "piper", native: -1, phone: "" } });
+  if (snap.s.piper) out.push({ key: "piper", stars: 3, tag: "Belle voix · sans Internet", genre: "", v: { engine: "piper", native: -1, phone: "" } });
   out.sort((a, b) => b.stars - a.stars);
   const named = out.map((o, i) => ({ ...o, label: o.key === "piper" ? "Belle voix" : `Voix ${i + 1}` }));
-  named.push({ key: "robot", label: "Voix robot", stars: 1, tag: "Marche partout", v: { engine: "robot", native: -1, phone: "" } });
-  named.push({ key: "babble", label: "Bruits rigolos", stars: 1, tag: "Sans mots", v: { engine: "babble", native: -1, phone: "" } });
+  named.push({ key: "robot", label: "Voix robot", stars: 1, tag: "Marche partout", genre: "", v: { engine: "robot", native: -1, phone: "" } });
+  named.push({ key: "babble", label: "Bruits rigolos", stars: 1, tag: "Sans mots", genre: "", v: { engine: "babble", native: -1, phone: "" } });
   return named;
 }
 export const optionKey = (v: PVoice) => (v.engine === "native" ? `n${v.native}` : v.engine === "phone" ? `p${v.phone}` : v.engine === "auto" ? "" : v.engine);

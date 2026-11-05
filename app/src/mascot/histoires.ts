@@ -9,6 +9,7 @@ export type Histoire = {
   teaser: string;
   indice: string; // ce qu'il faut faire pour la débloquer (affiché avec un « ? »)
   fixes: string[]; // les personnages obligatoires
+  prix: number; // en pièces : les histoires sont les cartes les plus rares du coffre
   temoins: number; // combien de personnages « au hasard » écoutent (w1, w2)
   versions: Ligne[][];
 };
@@ -19,6 +20,7 @@ const L = (who: string, text: string): Ligne => ({ who, text });
 export const HISTOIRES: Histoire[] = [
   {
     id: "philippe",
+    prix: 400,
     titre: "Philippe et la bouteille",
     teaser: "Pourquoi Philippe n'est jamais devenu un grand joueur.",
     indice: "Le Papy + 2 copains, côte à côte, un petit moment.",
@@ -58,6 +60,7 @@ export const HISTOIRES: Histoire[] = [
   },
   {
     id: "lacet",
+    prix: 450,
     titre: "Le lacet du Jongleur",
     teaser: "Pourquoi le Jongleur tombe tout le temps.",
     indice: "Le Papy et le Jongleur, ensemble.",
@@ -85,7 +88,84 @@ export const HISTOIRES: Histoire[] = [
     ],
   },
   {
+    id: "voix",
+    prix: 500,
+    titre: "La voix du supporter",
+    teaser: "Pourquoi le supporter n'a plus de voix après un match.",
+    indice: "Le Supporter excité et le Poli, ensemble.",
+    fixes: ["excite", "poli"],
+    temoins: 0,
+    versions: [
+      [
+        L("poli", "Excusez-moi… vous avez l'air un peu enroué, non ?"),
+        L("excite", "Chhh ! Parle plus bas… Hier, j'ai tellement crié pour mon équipe que j'ai perdu ma voix pendant une semaine."),
+        L("poli", "Oh, je suis désolé. Une semaine entière ?"),
+        L("excite", "Sept jours sans pouvoir dire BUUUT ! J'ai dû applaudir à la place. Mais surtout, ne le dis à personne."),
+        L("poli", "Je vous le promets. Pardon de vous avoir fait parler."),
+      ],
+      [
+        L("excite", "Hé, toi ! Tu veux entendre mon plus beau cri ?"),
+        L("poli", "Avec plaisir, mais… je ne voudrais pas vous déranger."),
+        L("excite", "Ahhh… hhh… Voilà. Plus de voix. Ça m'arrive à chaque grand match."),
+        L("poli", "Pardon, pardon ! C'est de ma faute ?"),
+        L("excite", "Mais non ! C'est la faute du but à la dernière minute. Chut, c'est notre secret."),
+      ],
+    ],
+  },
+  {
+    id: "jardin",
+    prix: 550,
+    titre: "Le ballon du président",
+    teaser: "Pourquoi le Poli s'excuse tout le temps.",
+    indice: "Le Poli et le Papy, ensemble.",
+    fixes: ["poli", "statue"],
+    temoins: 0,
+    versions: [
+      [
+        L("statue", "Hm. Pourquoi t'excuses-tu toujours, mon garçon ?"),
+        L("poli", "Pardon… C'est une vieille histoire. Un jour, j'ai tapé dans un ballon un peu trop fort."),
+        L("poli", "Il est passé par-dessus un mur. Dans le jardin du président du club."),
+        L("statue", "Aïe. Et alors ?"),
+        L("poli", "Il a cassé son rosier préféré. Depuis, je dis pardon à tout le monde. Pardon, papy."),
+        L("statue", "Hm. Un rosier… Ça se replante, tu sais."),
+      ],
+      [
+        L("poli", "Papy, je peux vous confier quelque chose ? Je vous demande pardon d'avance."),
+        L("statue", "Hm. Parle, je t'écoute."),
+        L("poli", "Un ballon, un mur, le jardin du président… et un grand bruit de vase."),
+        L("statue", "Un vase ! Ha ha. Et le président ?"),
+        L("poli", "Il n'a rien dit. Et c'est pire. Pardon, pardon, pardon."),
+      ],
+    ],
+  },
+  {
+    id: "stats",
+    prix: 600,
+    titre: "Les chiffres du Pointu",
+    teaser: "Les statistiques que le Pointu n'a jamais osé calculer.",
+    indice: "Le Pointu et le Jongleur, ensemble.",
+    fixes: ["pointu", "joueur"],
+    temoins: 0,
+    versions: [
+      [
+        L("joueur", "Pointu, tu connais les chiffres de tout le monde. Et les tiens ?"),
+        L("pointu", "Précisément… non. Je ne les ai jamais calculés."),
+        L("joueur", "Allez, je t'aide ! Combien de buts as-tu marqués ?"),
+        L("pointu", "Zéro. Sur zéro match. Taux de réussite : impossible à calculer."),
+        L("joueur", "Ha ha ! Alors tu es aussi bon que moi quand j'ai oublié mes lacets !"),
+      ],
+      [
+        L("pointu", "Je connais le nombre de passes de tout le monde. Sauf les miennes."),
+        L("joueur", "Les tiennes ? Compte-les !"),
+        L("pointu", "Une. Hier. Et elle est partie dans la mauvaise direction."),
+        L("joueur", "Alors la statistique, c'est cent pour cent de passes ratées !"),
+        L("pointu", "Précisément… Je préfère ne pas écrire ça dans mon carnet."),
+      ],
+    ],
+  },
+  {
     id: "medecin",
+    prix: 700,
     titre: "Le secret du Médecin",
     teaser: "D'où vient vraiment le Zombie ?",
     indice: "Le Médecin et le Pointu, ensemble, après deux soins pour une fracture.",
@@ -112,6 +192,7 @@ export const HISTOIRES: Histoire[] = [
   },
   {
     id: "mere",
+    prix: 900,
     titre: "La mère du Zombie",
     teaser: "Ce que disait sa maman, quand il était footballeur.",
     indice: "Le Médecin et le Zombie, ensemble, après le secret du Médecin.",
@@ -136,6 +217,8 @@ export const HISTOIRES: Histoire[] = [
 ];
 
 export const histoire = (id: string) => HISTOIRES.find((h) => h.id === id);
+/** The chest id of a story's card: nothing happens in the game for a story whose card was not opened. */
+export const carteId = (id: string) => `h-${id}`;
 
 // ------------------------------------------------------------------ what has been discovered
 const KEY = "footdex.histoires.v1";
@@ -177,13 +260,14 @@ export function soins(): number {
 }
 
 /** Does this story unlock now? `present` = who is on the screen. */
-export function conditionRemplie(id: string, present: string[]): boolean {
+export function conditionRemplie(id: string, present: string[], chest: string[] = []): boolean {
   const h = histoire(id);
   if (!h) return false;
+  if (!chest.includes(carteId(id))) return false; // the card has to be won in the chest first
   if (!h.fixes.every((k) => present.includes(k))) return false;
   if (present.length < h.fixes.length + h.temoins) return false;
   if (id === "medecin") return soins() >= 2;
-  if (id === "mere") return (vues().medecin ?? 0) > 0;
+  if (id === "mere") return chest.includes(carteId("medecin"));
   return true;
 }
 

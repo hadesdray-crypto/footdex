@@ -6,7 +6,7 @@ import { Fig } from "../mascot/Fig";
 import { PERSOS } from "../mascot/lines";
 import { CARAC } from "../mascot/caractere";
 import { DOCTOR_LOOK } from "../mascot/state";
-import { HISTOIRES, lancerHistoire, useVues } from "../mascot/histoires";
+import { HISTOIRES, carteId, lancerHistoire, useVues } from "../mascot/histoires";
 import { say, update, useMascot } from "../mascot/state";
 import { unlockChest, useStore } from "../store";
 import { PageTitle } from "../ui/bits";
@@ -116,7 +116,8 @@ export function Coffre() {
       {tab === "histoires" ? (
         <ul className="specials">
           {HISTOIRES.map((h) => {
-            const mine = (vues[h.id] ?? 0) > 0;
+            const mine = s.chest.includes(carteId(h.id));
+            const bloquee = h.id === "mere" && !s.chest.includes(carteId("medecin"));
             const look = (k: string) => (k === "medecin" ? DOCTOR_LOOK : m.s.looks[k] ?? CARAC[k as keyof typeof CARAC].tenue);
             return (
               <li key={h.id} className={cx("spec", !mine && "spec--locked")} style={{ "--h1": "#c58bff", "--h2": "#3d1a6b" }}>
@@ -127,11 +128,16 @@ export function Coffre() {
                 {mine ? (
                   <>
                     <p className="spec__quirk">{h.teaser}</p>
-                    <p className="spec__fact">Vue {vues[h.id]} fois</p>
+                    <p className="spec__fact">{vues[h.id] ? `Vue ${vues[h.id]} fois` : "Pas encore vue : mets les bons personnages côte à côte !"}</p>
                     <button type="button" className="btn btn--gold" onClick={() => lancerHistoire(h.id, [...m.s.buddies, ...[PERSOS[m.s.perso].mode as string]])}>Revoir l'histoire</button>
                   </>
                 ) : (
-                  <p className="spec__quirk">{h.indice}</p>
+                  <>
+                    <p className="spec__quirk">{h.indice}</p>
+                    <button type="button" className="btn btn--soft" disabled={bloquee} onClick={() => buy(carteId(h.id), h.prix, h.titre, "")}>
+                      {bloquee ? "Ouvre d'abord le secret du Médecin" : <><Piece />  Ouvrir pour {h.prix}</>}
+                    </button>
+                  </>
                 )}
               </li>
             );

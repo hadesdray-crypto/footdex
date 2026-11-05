@@ -1,10 +1,11 @@
 // Joue une histoire : les personnages se resserrent à l'écran, parlent avec leur voix (la bouche suit le son), puis la carte est gagnée.
-import { useEffect, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Fig } from "./Fig";
 import { CARAC } from "./caractere";
 import { HISTOIRES, conditionRemplie, histoire, marquerVue, useVues, type Histoire, type Ligne } from "./histoires";
 import { PERSOS } from "./lines";
+import { useStore } from "../store";
 import { DOCTOR_LOOK, getMascot, speakAs, stopTalking, useMascot, type VoiceKey } from "./state";
 import { cx } from "../util";
 
@@ -27,6 +28,7 @@ function parler(who: string, text: string) {
 export function HistoireScene() {
   const m = useMascot();
   const vues = useVues();
+  const chest = useStore().chest;
   const [run, setRun] = useState<Run | null>(null);
   const [speaker, setSpeaker] = useState("");
   const [sub, setSub] = useState("");
@@ -34,6 +36,7 @@ export function HistoireScene() {
   const token = useRef(0);
   const together = useRef<Record<string, number>>({});
   const lastVersion = useRef<Record<string, number>>({});
+  const dernier = useRef(0);
 
   function demarrer(id: string, prefer: string[], version?: number) {
     const h = histoire(id);
@@ -88,31 +91,44 @@ export function HistoireScene() {
   });
 
   // together long enough: the story unlocks by itself
+  // (a stable timer: it must not restart each time something is drawn, or it would never fire)
+  const latest = useRef({ run, vues, chest, demarrer });
+  latest.current = { run, vues, chest, demarrer };
   useEffect(() => {
     const t = window.setInterval(() => {
+      const { run, vues, chest, demarrer } = latest.current;
       const s = getMascot();
       const busy = !!document.querySelector(".mm, .wd, .reveal, .majfull, .subst, .thief, .hs");
       if (run || busy || document.hidden || s.s.rest || s.evac !== 0) return;
       const present = [PERSOS[s.s.perso].mode as string, ...s.s.buddies.filter((b) => !s.away.includes(b))];
       for (const h of HISTOIRES) {
-        if ((vues[h.id] ?? 0) > 0) continue;
-        if (conditionRemplie(h.id, present)) {
+        // only the stories whose card was won in the chest; the first time as soon as they have been together a while,
+        // then only now and then (at most one every ten minutes, and not every time)
+        if (conditionRemplie(h.id, present, chest)) {
           together.current[h.id] = (together.current[h.id] ?? 0) + 2;
-          if (together.current[h.id] >= 20) { together.current[h.id] = 0; demarrer(h.id, present); return; }
+          const premiere = !(vues[h.id] > 0);
+          const delai = premiere ? 20 : 60;
+          if (together.current[h.id] >= delai) {
+            together.current[h.id] = 0;
+            if (!premiere && (Date.now() - dernier.current < 600000 || Math.random() > 0.3)) continue;
+            dernier.current = Date.now();
+            demarrer(h.id, present);
+            return;
+          }
         } else together.current[h.id] = 0;
       }
     }, 2000);
     return () => window.clearInterval(t);
-  });
+  }, []);
 
   if (!run) return null;
   const look = (k: string) => (k === "medecin" ? DOCTOR_LOOK : m.s.looks[k] ?? CARAC[k as keyof typeof CARAC].tenue);
   return createPortal(
     <div className="hs" role="dialog" aria-modal="true" aria-label={run.h.titre}>
       <div className="hs__stage">
-        {run.cast.map((k) => (
-          <div key={k} className={cx("hs__who", speaker === k && "is-on")} data-who={k}>
-            <Fig look={look(k)} size={118} mouth={PERSOS.find((p) => p.mode === k)?.mouth ?? "smile"} talk={speaker === k} />
+        {run.cast.map((k, i) => (
+          <div key={k} className={cx("hs__who", speaker === k && "is-on")} data-who={k} style={{ animationDelay: `${(i * 0.37) % 1}s`, "--from": i % 2 ? "70px" : "-70px" } as CSSProperties}>
+            <Fig look={look(k)} size={118} mouth={PERSOS.find((p) => p.mode === k)?.mouth ?? "smile"} talk={speaker === k} cheer={fin} />
             <span>{nom(k)}</span>
           </div>
         ))}

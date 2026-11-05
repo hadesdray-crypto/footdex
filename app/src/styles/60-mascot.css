@@ -523,3 +523,12 @@
 .hs__actions { display: grid; justify-items: center; gap: 10px; text-align: center; }
 .hs__bravo { margin: 0; font: 700 16px/1.3 var(--f-body); }
 .hs__bravo--s { font-size: 13px; color: var(--fg-2); }
+
+.hs__who { animation: hs-in 0.7s cubic-bezier(0.3, 1.3, 0.5, 1) both, hs-sway 2.6s ease-in-out 0.8s infinite alternate; }
+.hs__who.is-on { animation: hs-in 0.7s cubic-bezier(0.3, 1.3, 0.5, 1) both, hs-bounce 0.7s ease-in-out 0.8s infinite alternate; }
+@keyframes hs-in { from { opacity: 0; transform: translateX(var(--from, 60px)) scale(0.8); } }
+@keyframes hs-sway { from { transform: rotate(-2.5deg) scale(0.94); } to { transform: rotate(2.5deg) scale(0.94); } }
+@keyframes hs-bounce { from { transform: translateY(0) scale(1.06); } to { transform: translateY(-9px) scale(1.1); } }
+.hs__bravo { animation: hs-pop 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) both; }
+@keyframes hs-pop { from { opacity: 0; transform: scale(0.6); } }
+@media (prefers-reduced-motion: reduce) { .hs__who, .hs__who.is-on, .hs__bravo { animation: none; } }

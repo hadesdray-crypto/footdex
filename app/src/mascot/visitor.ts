@@ -1,7 +1,7 @@
 // Visitors: the Doctor and the Square Referee. They walk in from the side of the screen, do their job, and leave.
 // Same jointed body as the Jongleur (hips, knees, feet, shoulders, elbows), moved every frame: walking, kneeling,
 // whistling, showing a card, shrugging, dragging a sack. Each one has his own small speech bubble.
-import { takeTurn, visitorSpeak } from "./state";
+import { DOCTOR_LOOK, takeTurn, visitorSpeak } from "./state";
 import { depthZ } from "./depth";
 import { figSvg, type Look } from "./look";
 import { sideHeadSvg } from "./runner";
@@ -153,7 +153,11 @@ export class Visitor {
     this.el.setAttribute("aria-hidden", "true");
     // the referee: one of several, with a side view to walk and a front view to talk to you
     if (kind === "arbitre") this.look = REFEREES[Math.floor(Math.random() * REFEREES.length)].look;
-    this.el.innerHTML = `<div class="vis__fx">${buildSvg(kind, this.look ?? undefined)}</div>${this.look ? `<div class="vis__front"><div class="mfw">${figSvg(this.look, { size: 74, mouth: "smile", label: "L'arbitre" })}</div></div>` : ""}`;
+    // a front view (to talk to you): the Referee, and the Doctor. Its mouth moves with the real sound (data-who + .talk).
+    const fl = kind === "arbitre" ? this.look : kind === "medecin" ? DOCTOR_LOOK : null;
+    this.hasFront = !!fl;
+    this.el.dataset.who = kind;
+    this.el.innerHTML = `<div class="vis__fx">${buildSvg(kind, this.look ?? undefined)}</div>${fl ? `<div class="vis__front"><div class="mfw talk">${figSvg(fl, { size: 74, mouth: "smile", label: kind === "medecin" ? "Le Médecin" : "L'arbitre" })}</div></div>` : ""}`;
     this.bubble = document.createElement("div");
     this.bubble.className = "vis__bubble";
     document.body.appendChild(this.el);
@@ -164,8 +168,10 @@ export class Visitor {
   }
 
   /** Turns to face you (the referee), or back to his side view to walk. */
+  hasFront = false;
+  frontBySay = false;
   front(on: boolean) {
-    if (!this.look) return;
+    if (!this.hasFront) return;
     this.isFront = on;
     this.el.classList.toggle("is-front", on);
     if (!on) delete this.el.dataset.pose;
@@ -215,9 +221,12 @@ export class Visitor {
           if (over) return;
           over = true;
           this.pending = Math.max(0, this.pending - 1);
+          if (this.frontBySay && this.pending === 0 && !this.dead) { this.frontBySay = false; this.front(false); }
           end();
         };
         if (this.dead) return done();
+        // he turns to face you to talk (his mouth moves with the sound)
+        if (this.hasFront && !this.isFront) { this.frontBySay = true; this.front(true); }
         // the end of his line: his voice is finished (and the bubble stayed long enough to be read)
         const t0 = Date.now();
         const finish = () => window.setTimeout(done, Math.max(100, 1300 - (Date.now() - t0)));

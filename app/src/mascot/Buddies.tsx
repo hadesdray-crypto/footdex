@@ -92,6 +92,7 @@ type Body = {
   say: (text: string, force?: boolean, slot?: Slot, o?: SayOpts) => Promise<void>;
   act: (name: string, ms: number) => void;
   hidden: boolean;
+  entering?: boolean;
   // last values written to the page (see step)
   ctr?: string; czi?: string; cfl?: string; cw?: boolean; cr?: boolean;
 };
@@ -359,7 +360,7 @@ function think() {
   const main = mainSpot();
   const vw = window.innerWidth;
   for (const b of bodies.values()) {
-    if (b.hidden || b.mode !== "free") continue;
+    if (b.hidden || b.entering || b.mode !== "free") continue;
     if (b.key === "zombie") {
       // he never stays still: he walks after somebody, slowly; sometimes he stops to groan
       if (t < b.pause) {
@@ -1020,6 +1021,47 @@ async function teams() {
 }
 
 /** 7. The Referee whistles the end of playtime: everybody back to his place. */
+/** Back on the screen after a card: each one comes in by another side, with another attitude (never the same twice in a row). */
+let lastEntry = "";
+async function entrance(bd: Body) {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const kinds = ["peek", "stroll", "run", "sneak"].filter((k) => k !== lastEntry);
+  const kind = kinds[Math.floor(Math.random() * kinds.length)];
+  lastEntry = kind;
+  const left = Math.random() < 0.5;
+  const sign = left ? -1 : 1;
+  bd.entering = true;
+  bd.mode = "free";
+  bd.wish = { x: 0, y: 0 };
+  bd.x = left ? W / 2 : vw - W / 2;
+  bd.y = Math.max(top() + H, Math.min(bottom(), vh * (0.58 + Math.random() * 0.28)));
+  bd.dir = left ? 1 : -1;
+  const slide = (px: number, ms: number) => {
+    bd.el.style.transition = ms ? `translate ${ms}ms ease-out` : "none";
+    bd.el.style.translate = `${sign * px}px 0`;
+  };
+  slide(W + 10, 0);
+  await wait(60);
+  const home = { x: W + Math.random() * Math.max(1, vw - 2 * W), y: Math.max(top(), Math.min(bottom(), vh * (0.58 + Math.random() * 0.28))) };
+  if (kind === "peek" || kind === "sneak") {
+    slide(W * 0.55, 500); // only his head and shoulder show
+    await wait(1300 + Math.random() * 700);
+    if (kind === "sneak") {
+      slide(W + 10, 400); // he hides again…
+      await wait(900);
+      slide(W * 0.5, 450); // …and looks once more
+      await wait(700);
+    }
+  }
+  slide(0, kind === "run" ? 350 : 700);
+  await wait(kind === "run" ? 350 : 700);
+  bd.el.style.transition = "";
+  bd.el.style.translate = "";
+  bd.entering = false;
+  await goTo(bd, home.x, home.y, kind === "run" ? 300 : kind === "stroll" ? 55 : 110, { timeout: 9000 });
+}
+
 /** Red card: they all gather and walk off the screen, each to the nearest side. */
 async function evacuate() {
   const list = [...bodies.values()].filter((b) => !b.hidden);
@@ -1459,9 +1501,19 @@ function One({ b, index }: { b: Buddy; index: number }) {
     update({ buddyPos: { ...getMascot().s.buddyPos, [b]: { fx: Math.max(0, Math.min(1, (body.x - W / 2) / Math.max(1, window.innerWidth - W))), fy: Math.max(0, Math.min(1, (body.y - H - 60) / Math.max(1, window.innerHeight - H - 80))) } } });
   };
 
+  // gone (red/yellow card, or resting): the element stays in place (the body keeps its element), it is only not shown
   const away = m.evac === 2 || m.away.includes(b);
-  useEffect(() => { const bd = bodies.get(b); if (bd) bd.hidden = away; }, [away]);
-  if (m.s.rest || away) return null;
+  const gone = m.s.rest || away;
+  const wasAway = useRef(false);
+  useEffect(() => {
+    const bd = bodies.get(b);
+    if (bd) {
+      bd.hidden = gone;
+      if (!gone && wasAway.current && getMascot().evac === 0) void entrance(bd);
+      else if (!gone) { bd.el.style.translate = ""; bd.el.style.transition = ""; }
+    }
+    wasAway.current = away;
+  }, [gone, away]);
   const mode = b === "medecin" ? "poli" : b;
   return (
     <>
@@ -1470,7 +1522,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
         data-who={b}
         type="button"
         className={cx("buddy", b === "statue" && "is-old", b === "zombie" && "is-zombie")}
-        style={{ display: hidden ? "none" : undefined }}
+        style={{ display: hidden || gone ? "none" : undefined }}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
@@ -1481,7 +1533,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
           <Fig look={look} size={W} crop="full" mouth={talk ? "open" : b === "medecin" ? "smile" : PERSOS.find((p) => p.mode === b)?.mouth ?? "smile"} talk={talk} mode={mode} act={act} />
         </span>
       </button>
-      {bubble && !hidden ? (
+      {bubble && !hidden && !gone ? (
         <div className="buddy__bubble" style={{ left: `${Math.max(8, Math.min(window.innerWidth - 188, bpos.x - 90))}px`, top: `${Math.max(64, bpos.y - H - 56)}px` }} role="status">
           <b>{BUDDY_NAME(b)}</b> {bubble}
         </div>

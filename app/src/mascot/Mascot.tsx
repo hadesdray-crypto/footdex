@@ -33,6 +33,21 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
   const m = useMascot();
   const [wd, setWd] = useState(wounds);
   const treating = useRef(false);
+  // back after a card: he comes in by a side, with an attitude (head first, strolling, running…)
+  const [coming, setComing] = useState<{ side: -1 | 1; off: number; ms: number } | null>(null);
+  const lastEvac = useRef(m.evac);
+  useEffect(() => {
+    const was = lastEvac.current;
+    lastEvac.current = m.evac;
+    if (was === 2 && m.evac === 0) {
+      const side: -1 | 1 = Math.random() < 0.5 ? -1 : 1;
+      const kind = ["peek", "stroll", "run"][Math.floor(Math.random() * 3)];
+      setComing({ side, off: kind === "peek" ? 1 : 2, ms: kind === "run" ? 700 : kind === "stroll" ? 2400 : 1500 });
+      const t1 = window.setTimeout(() => setComing((c) => (c ? { ...c, off: 0 } : c)), 120);
+      const t2 = window.setTimeout(() => setComing(null), 3200);
+      return () => { window.clearTimeout(t1); window.clearTimeout(t2); };
+    }
+  }, [m.evac]);
   useEffect(() => onWounds(() => setWd(wounds())), []);
   // « Afficher ce qu'il dit » off: no speech bubbles at all (his, the Doctor's, the Referee's)
   useEffect(() => {
@@ -709,7 +724,8 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
   const thrown = m.anim === "thrown";
   const leaving = m.evac === 1;
   const fabStyle = {
-    left: `${leaving ? (pos.x + W / 2 > size.w / 2 ? size.w + 120 : -W - 120) : pos.x}px`,
+    left: `${leaving ? (pos.x + W / 2 > size.w / 2 ? size.w + 120 : -W - 120) : coming && coming.off ? (coming.side < 0 ? (coming.off === 1 ? -W * 0.45 : -W - 20) : coming.off === 1 ? size.w - W * 0.55 : size.w + 20) : pos.x}px`,
+    ...(coming ? { transition: coming.off ? "none" : `left ${coming.ms}ms ease-out` } : {}),
     top: `${pos.y}px`,
     "--tx": `${m.vx * 1300}px`,
     "--ty": `${m.vy * 1300}px`,
