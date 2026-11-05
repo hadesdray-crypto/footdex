@@ -1060,5 +1060,6 @@ export function visitorSpeak(text: string, who: "medecin" | "arbitre", onEnd?: (
   const mine = voiceOf(PERSOS[snap.s.perso].mode);
   trying = his ? voiceOf(who) : { ...mine, pitch: DEFAULT_PITCH[who], fun: "" };
   nextIsVisitor = true;
+  speechWho = who; // the mouth that moves is his (data-who), not the main character's
   voice(text, onEnd);
 }
