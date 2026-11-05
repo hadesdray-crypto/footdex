@@ -199,7 +199,7 @@ export const PERSOS: Perso[] = [
     mode: "philippe",
     ask: [],
     more: [],
-    extra: [],
+    extra: ["Le foot, c'est du sérieux.", "Et ça, c'est du sérieux.", "Concentre-toi, c'est important.", "Retiens ça : c'est du football, du vrai."],
     name: "Philippe",
     tag: "Grand, fin, sérieux. Le foot, c'est sa vie",
     sample: "Bonjour. Je suis Philippe. Le foot, c'est du sérieux. On y va ?",

@@ -847,6 +847,14 @@ export function explain(page: string) {
   // the Papi explains slowly… and the pages about today's football are not for him
   if (p.mode === "statue") return sayInParts("Hm. ", text, ["saison", "scores", "joueurs", "matchs", "paquets"].includes(page) ? [pick(AFTER_2000)] : []);
   if (p.mode === "joueur") return say(pick(p.open) + sentencesOf(text)[0]);
+  if (p.mode === "philippe") {
+    // Philippe: serious and to the point, one sentence. The details only if asked (double tap).
+    const parts = sentencesOf(text);
+    const rest = parts.slice(1);
+    say(`${pick(p.open)}${parts[0]}${rest.length ? " Pour le détail, touche-moi deux fois." : ""}`.trim());
+    queue = chunk(rest);
+    return;
+  }
   if (p.mode === "excite") {
     say(pick(p.ask));
     queue = chunk(sentencesOf(text));

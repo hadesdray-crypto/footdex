@@ -31,7 +31,7 @@ const TALK: Record<Buddy, string[]> = {
   joueur: ["Tu me fais une passe ?", "Regarde mes jongles… enfin, imagine-les !", "Un petit match après ?"],
   pointu: ["D'après les chiffres, nous sommes plusieurs. C'est mieux qu'un.", "Statistiquement, je parle moins que le supporter.", "Précisément : il y a 22 joueurs sur un terrain."],
   zombie: ["Grrr… du foot…", "Mmmh… cerveaux… euh, ballons !", "Grrr… je suis gentil. Presque."],
-  philippe: ["Le foot, c'est du sérieux.", "Je lace toujours mes chaussures. Toujours.", "Numéro zéro, présent."],
+  philippe: ["Le foot, c'est du sérieux.", "Je lace toujours mes chaussures. Toujours.", "Numéro zéro, présent.", "J'aurais pu jouer en pro… Enfin. Passons."],
   medecin: ["Tout le monde va bien ? Personne n'est blessé ?", "Un pansement ? J'en ai plein ma sacoche.", "Je surveille, je surveille. Le docteur est là !"],
 };
 const REACT: Record<"thrown" | "doctor" | "card", Partial<Record<Buddy, string[]>> & { all: string[] }> = {
@@ -41,9 +41,10 @@ const REACT: Record<"thrown" | "doctor" | "card", Partial<Record<Buddy, string[]
     zombie: ["Grrr… moi aussi je veux voler !"],
     medecin: ["J'arrive ! Ne bouge pas !", "Oh là là… Je prépare un bandage."],
     pointu: ["Selon mes calculs, ça a fait très mal."],
+    philippe: ["Ça, c'est une faute grave. Ça va ?", "Debout. Je te donne la main."],
   },
-  doctor: { all: ["Le docteur arrive !", "Courage !"], zombie: ["Grrr… le docteur… il a un goût de métal."] },
-  card: { all: ["Oh oh… un carton !", "Il est sévère, l'arbitre !"], excite: ["CARTON ! Mais non, arbitre !"], statue: ["Hm. De mon temps, il n'y avait pas de cartons. Ils sont arrivés en 1970."] },
+  doctor: { all: ["Le docteur arrive !", "Courage !"], zombie: ["Grrr… le docteur… il a un goût de métal."], philippe: ["Docteur, soignez-le bien. Sérieusement."] },
+  card: { all: ["Oh oh… un carton !", "Il est sévère, l'arbitre !"], excite: ["CARTON ! Mais non, arbitre !"], statue: ["Hm. De mon temps, il n'y avait pas de cartons. Ils sont arrivés en 1970."], philippe: ["Carton. Il l'a mérité. Le règlement, c'est le règlement."] },
 };
 /** Little chats: the friend says something, the character answers. */
 const CHATS: { a: string; b: string; who?: Buddy; to?: Mode }[] = [
@@ -52,6 +53,11 @@ const CHATS: { a: string; b: string; who?: Buddy; to?: Mode }[] = [
   { a: "Hm. Tu sais d'où on vient, toi ?", b: "Oui, Papi. Du Concepteur. Tu nous l'as déjà dit cent fois !", who: "statue" },
   { a: "Grrr… tu me prêtes ton ballon ?", b: "Pas question ! La dernière fois, tu l'as mangé.", who: "zombie" },
   { a: "N'oublie pas de t'hydrater, c'est important.", b: "Oui docteur !", who: "medecin" },
+  { a: "Un bon joueur lace toujours ses chaussures.", b: "Oui, Philippe, tu nous l'as déjà dit !", who: "philippe" },
+  { a: "Philippe, raconte-nous ta carrière !", b: "Pas aujourd'hui. Il y a eu une bouteille. C'est tout.", to: "philippe" },
+  { a: "Tu m'apprends à tirer ?", b: "Concentre-toi. Pose le pied. Et regarde où tu marches.", to: "philippe" },
+  { a: "Philippe, rends-moi mon ballon !", b: "Viens le chercher, mon grand.", who: "joueur", to: "philippe" },
+  { a: "Papy, tu connais mon histoire ?", b: "Hm. Je la connais, Philippe. Et je ne dirai rien.", who: "philippe", to: "statue" },
   { a: "Tu as vu toutes ces cartes dans le classeur ?", b: "Oui ! Et il en manque encore plein à trouver." },
 ];
 const SCARED: string[][] = [
@@ -473,6 +479,7 @@ let thinker = 0;
 const AFFINITY: Record<string, number> = {
   "excite|poli": 3, "excite|joueur": 3.5, "joueur|poli": 2, "medecin|poli": 2.5, "medecin|statue": 3, "excite|statue": 0.6, "poli|statue": 2,
   "joueur|statue": 1.5, "excite|medecin": 1.2, "joueur|medecin": 1.4,
+  "joueur|philippe": 2, "philippe|statue": 3, "philippe|poli": 2, "excite|philippe": 1.5, "philippe|pointu": 1.5, "medecin|philippe": 1.5,
 };
 const aff = (a: string, b: string) => (a === "zombie" || b === "zombie" ? 0.3 : AFFINITY[[a, b].sort().join("|")] ?? 1);
 
@@ -849,6 +856,7 @@ const FLAVOUR: Record<string, string[]> = {
   statue: ["De mon temps, les ballons étaient en cuir…", "Ah… ça me rappelle ma jeunesse."],
   medecin: ["Pensez à vous échauffer !", "Buvez de l'eau, ça fait du bien."],
   joueur: ["Allez, une petite partie ?", "Je m'entraîne tous les jours !"],
+  philippe: ["Le foot, c'est du sérieux.", "Concentre-toi, et lace tes chaussures."],
 };
 function freeFriends() {
   return [...bodies.values()].filter((b) => !b.hidden && b.mode === "free" && b.key !== "zombie");
@@ -1671,7 +1679,7 @@ export function Buddies() {
 export function BuddyPicker() {
   const m = useMascot();
   const mode = PERSOS[m.s.perso].mode;
-  const all: Buddy[] = ["statue", "excite", "poli", "joueur", "pointu", "zombie", "medecin"];
+  const all: Buddy[] = ["philippe", "statue", "excite", "poli", "joueur", "pointu", "zombie", "medecin"];
   const on = m.s.buddies;
   const toggle = (b: Buddy) => {
     const next = on.includes(b) ? on.filter((x) => x !== b) : [...on, b].slice(-3);

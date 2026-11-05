@@ -10,6 +10,7 @@ export const NOUVEAUTES: Nouveaute[] = [
       "Philippe arrive : grand, fin et musclé, cheveux carrés, maillot bleu numéro 0. C'est le personnage de départ de Footdex, et le seul qui revient après un carton rouge.",
       "Nouvelle histoire à gagner dans le coffre : « Le ballon marqué du Jongleur ». Philippe, plus fort, garde toujours le ballon. Mais cette fois il glisse, sa jambe est en vrac, et le Jongleur récupère enfin son ballon.",
       "Le ballon du Jongleur porte une étoile rouge pour le reconnaître.",
+      "Philippe est complet comme les autres : on peut le choisir comme personnage principal ou comme copain, avec ses habitudes (il lace ses chaussures, il s'entraîne), ses amitiés et ses répliques. Il explique en une phrase sérieuse ; touche-le deux fois pour le détail.",
     ],
   },
   {

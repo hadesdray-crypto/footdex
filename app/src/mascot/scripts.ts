@@ -100,6 +100,27 @@ export async function runScript(mode: Mode, a: Actor, c: Ctx) {
         await a.wait(3600);
       }
     } else await a.walkTo(spot(), "walk", 8, 12000);
+  } else if (mode === "philippe") {
+    // Philippe: serious. Either he ties his laces (always), or he trains hard (he is the strongest).
+    const r = Math.random();
+    if (r < 0.45) {
+      await a.walkTo(spot(), "walk", 8, 12000);
+      if (!a.dead) {
+        a.pose("kneel");
+        say(pick(["Toujours bien lacer ses chaussures.", "Un nœud double. Toujours.", "Une chaussure mal lacée, c'est un match perdu."]));
+        await a.wait(3800);
+      }
+    } else if (r < 0.8) {
+      await sprint(a, 2);
+      if (!a.dead) {
+        a.pose("tired");
+        say(pick(["Concentré. Respire.", "Encore un. Sérieusement.", "On ne lâche rien."]));
+        await a.wait(2200);
+      }
+    } else if (!a.dead) {
+      say(pick(["Dix pompes. Pas une de moins.", "Le sérieux, ça s'entretient."]));
+      await pushups(a);
+    }
   } else if (mode === "zombie") {
     // The zombie: slow, heavy steps, arms in front, and a groan.
     say(pick(["Grrrr… cerveaux…", "Mmmmh… du fooot…", "Grrr… j'ai faim… de foot."]));

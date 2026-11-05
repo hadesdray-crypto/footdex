@@ -219,6 +219,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
     } else if (perso.mode === "joueur") every(7000, 15000, () => wander());
     else if (perso.mode === "excite") every(22000, 42000, () => wander());
     else if (perso.mode === "zombie") every(12000, 22000, () => wander());
+    else if (perso.mode === "philippe") every(16000, 30000, () => wander());
     // the zombie lifts his arms like in the films, now and then (just a little, for fun)
     if (perso.mode === "zombie") every(25000, 50000, () => { const st = getMascot(); if (!st.busy && !st.talking && !st.bubble) { play("zarms", 2600); say(pick(["Braaaains… euh… ballons !", "Grrraaaaah…", "Mmmmh… du fooot…"])); } });
     else every(40000, 75000, () => wander());
