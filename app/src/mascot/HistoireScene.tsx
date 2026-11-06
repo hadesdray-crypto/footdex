@@ -3,7 +3,7 @@ import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Fig } from "./Fig";
 import { CARAC } from "./caractere";
-import { HISTOIRES, conditionRemplie, histoire, marquerVue, useVues, type Histoire, type Ligne } from "./histoires";
+import { HISTOIRES, conditionRemplie, desarmer, estArmee, histoire, marquerVue, useVues, type Histoire, type Ligne } from "./histoires";
 import { PERSOS } from "./lines";
 import { useStore } from "../store";
 import { DOCTOR_LOOK, getMascot, speakAs, stopTalking, useMascot, type VoiceKey } from "./state";
@@ -108,7 +108,7 @@ export function HistoireScene() {
   latest.current = { run, vues, chest, demarrer };
   useEffect(() => {
     const t = window.setInterval(() => {
-      const { run, vues, chest, demarrer } = latest.current;
+      const { run, chest, demarrer } = latest.current;
       const s = getMascot();
       const busy = !!document.querySelector(".mm, .wd, .reveal, .majfull, .subst, .thief, .hs");
       if (run || busy || document.hidden || s.s.rest || s.evac !== 0) return;
@@ -116,14 +116,13 @@ export function HistoireScene() {
       for (const h of HISTOIRES) {
         // only the stories whose card was won in the chest; the first time as soon as they have been together a while,
         // then only now and then (at most one every ten minutes, and not every time)
-        if (conditionRemplie(h.id, present, chest)) {
+        // ...and only while the player has activated the card (30 minutes): never by itself
+        if (estArmee(h.id) && conditionRemplie(h.id, present, chest)) {
           together.current[h.id] = (together.current[h.id] ?? 0) + 2;
-          const premiere = !(vues[h.id] > 0);
-          const delai = premiere ? 20 : 60;
-          if (together.current[h.id] >= delai) {
+          if (together.current[h.id] >= 20) {
             together.current[h.id] = 0;
-            if (!premiere && (Date.now() - dernier.current < 600000 || Math.random() > 0.3)) continue;
             dernier.current = Date.now();
+            desarmer(h.id); // it plays once; to see it again by itself, activate the card again
             demarrer(h.id, present);
             return;
           }

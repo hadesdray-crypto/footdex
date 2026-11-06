@@ -6,7 +6,7 @@ import { Fig } from "../mascot/Fig";
 import { PERSOS } from "../mascot/lines";
 import { CARAC } from "../mascot/caractere";
 import { DOCTOR_LOOK } from "../mascot/state";
-import { HISTOIRES, carteId, lancerHistoire, useVues } from "../mascot/histoires";
+import { HISTOIRES, armer, carteId, desarmer, lancerHistoire, useArmees, useVues } from "../mascot/histoires";
 import { say, update, useMascot } from "../mascot/state";
 import { unlockChest, useStore } from "../store";
 import { PageTitle } from "../ui/bits";
@@ -68,6 +68,7 @@ export function Coffre() {
   const m = useMascot();
   const [tab, setTab] = useState<"perso" | "cartes" | "histoires">("perso");
   const vues = useVues();
+  const armees = useArmees();
   const [flash, setFlash] = useState("");
   const [opened, setOpened] = useState(0);
 
@@ -128,8 +129,17 @@ export function Coffre() {
                 {mine ? (
                   <>
                     <p className="spec__quirk">{h.teaser}</p>
-                    <p className="spec__fact">{vues[h.id] ? `Vue ${vues[h.id]} fois` : "Pas encore vue : mets les bons personnages côte à côte !"}</p>
-                    <button type="button" className="btn btn--gold" onClick={() => lancerHistoire(h.id, [...m.s.buddies, ...[PERSOS[m.s.perso].mode as string]])}>Revoir l'histoire</button>
+                    <p className="spec__fact">
+                      {armees[h.id] > 0
+                        ? `Carte activée, encore ${Math.max(1, Math.ceil(armees[h.id] / 60000))} min : mets les bons personnages côte à côte.`
+                        : `${vues[h.id] ? `Vue ${vues[h.id]} fois. ` : ""}Carte éteinte : l'histoire ne vient pas toute seule.`}
+                    </p>
+                    {armees[h.id] > 0 ? (
+                      <button type="button" className="btn btn--soft" onClick={() => desarmer(h.id)}>Éteindre la carte</button>
+                    ) : (
+                      <button type="button" className="btn btn--gold" onClick={() => armer(h.id)}>Activer 30 minutes</button>
+                    )}
+                    <button type="button" className="btn btn--soft" onClick={() => lancerHistoire(h.id, [...m.s.buddies, ...[PERSOS[m.s.perso].mode as string]])}>Revoir l'histoire</button>
                   </>
                 ) : (
                   <>

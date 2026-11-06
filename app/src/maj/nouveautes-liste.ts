@@ -4,6 +4,16 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-06",
+    titre: "Version 57 : les histoires sur activation",
+    type: "appli",
+    points: [
+      "Les histoires ne se lancent plus toutes seules, même si la carte est gagnée et que les personnages sont ensemble.",
+      "Dans le coffre, onglet Histoires : « Activer 30 minutes ». Pendant ces 30 minutes, si les bons personnages sont réunis, l'histoire vient une fois. Après, il faut réactiver la carte.",
+      "« Revoir l'histoire » marche toujours, quand on veut.",
+    ],
+  },
+  {
+    date: "2026-11-06",
     titre: "Version 56 : l'histoire du Papy",
     type: "appli",
     points: [

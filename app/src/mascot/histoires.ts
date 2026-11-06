@@ -1,6 +1,6 @@
 // Les histoires secrètes : des petites scènes que l'on débloque en laissant certains personnages ensemble.
 // Chaque histoire a plusieurs versions ; on peut la revoir depuis le coffre (avec d'autres personnages pour les témoins).
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 /** `balle` : qui tient le ballon marqué à partir de cette ligne ; `sol` : qui est par terre (blessé) à partir de cette ligne. */
 export type Ligne = { who: string; text: string; balle?: string; sol?: string };
@@ -320,6 +320,50 @@ export function useVues(): Vues {
   );
   try { return JSON.parse(raw); } catch { return {}; }
 }
+/** A story only plays by itself while its card has been activated by the player (30 minutes). */
+const ARMEES = "footdex.histoires.armees.v1";
+export const DUREE_ARMEE = 30 * 60 * 1000;
+const lireArmees = (): Record<string, number> => {
+  try {
+    const v = JSON.parse(localStorage.getItem(ARMEES) ?? "{}");
+    return v && typeof v === "object" ? v : {};
+  } catch {
+    return {};
+  }
+};
+const ecrireArmees = (v: Record<string, number>) => {
+  try { localStorage.setItem(ARMEES, JSON.stringify(v)); } catch { /* nothing */ }
+  window.dispatchEvent(new Event(EVT));
+};
+/** Milliseconds left before the card stops being active (0 = not active). */
+export function resteArmee(id: string): number {
+  return Math.max(0, (lireArmees()[id] ?? 0) - Date.now());
+}
+export const estArmee = (id: string) => resteArmee(id) > 0;
+export function armer(id: string) {
+  const v = lireArmees();
+  v[id] = Date.now() + DUREE_ARMEE;
+  ecrireArmees(v);
+}
+export function desarmer(id: string) {
+  const v = lireArmees();
+  delete v[id];
+  ecrireArmees(v);
+}
+/** Re-renders now and then so the remaining time stays right. */
+export function useArmees(): Record<string, number> {
+  const [, setT] = useState(0);
+  useEffect(() => {
+    const f = () => setT((n) => n + 1);
+    window.addEventListener(EVT, f);
+    const i = window.setInterval(f, 15000);
+    return () => { window.removeEventListener(EVT, f); window.clearInterval(i); };
+  }, []);
+  const out: Record<string, number> = {};
+  for (const id of Object.keys(lireArmees())) out[id] = resteArmee(id);
+  return out;
+}
+
 /** The Doctor treated a fracture (cast): two in a row unlock his secret. */
 export function compterSoin() {
   try { localStorage.setItem(SOINS, String(soins() + 1)); } catch { /* nothing */ }
