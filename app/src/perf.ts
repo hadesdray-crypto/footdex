@@ -1,6 +1,6 @@
 // Keeps the app light: an animation that nobody can see is paused (the cards that shine, the glowing buttons…).
 // Elements come and go with the pages, so a MutationObserver hands the new ones to one IntersectionObserver.
-const WATCH = ".carte, .paquet, .btn--glow, .pathbar, .pathmap, .hero__cards, .ball, .fbc, .sd, .aurora";
+const WATCH = ".carte, .paquet, .btn--glow, .pathbar, .pathmap, .hero__cards, .ball, .fbc, .sd, .aurora, .mascot, .buddy";
 
 export function garderLegere() {
   if (typeof IntersectionObserver === "undefined" || typeof MutationObserver === "undefined") return;

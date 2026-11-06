@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { LuMic, LuArrowLeft, LuBookMarked, LuBookOpen, LuCalendarDays, LuFilm, LuGlobe, LuGraduationCap, LuHouse, LuLibrary, LuMessageSquareQuote, LuPackageOpen, LuShieldCheck, LuTrophy, LuUserRound, LuUsers, LuZap, LuMessageCircle, LuSettings, LuShirt, LuVolume2, LuX } from "react-icons/lu";
+import { LuSwatchBook, LuRefreshCw, LuMic, LuArrowLeft, LuBookMarked, LuBookOpen, LuCalendarDays, LuFilm, LuGlobe, LuGraduationCap, LuHouse, LuLibrary, LuMessageSquareQuote, LuPackageOpen, LuShieldCheck, LuTrophy, LuUserRound, LuUsers, LuZap, LuMessageCircle, LuSettings, LuShirt, LuVolume2, LuX } from "react-icons/lu";
 import type { Album } from "../data";
 import { useOverlay } from "../ui/cards";
 import { cx, dayKey } from "../util";
@@ -893,6 +893,18 @@ function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "go
               </button>
               <button type="button" className="mm__big" onClick={() => setView("copains")}>
                 <LuUsers aria-hidden="true" /> <span>Ses copains<small>Qui est à l'écran avec lui</small></span>
+              </button>
+            </section>
+            <section className="mm__box">
+              <p className="mm__label">L'appli</p>
+              <button type="button" className="mm__big" onClick={() => { close(); go({ page: "reg-apparence" }); }}>
+                <LuSwatchBook aria-hidden="true" /> <span>Apparence<small>Couleur du fond, police lisible, contraste</small></span>
+              </button>
+              <button type="button" className="mm__big" onClick={() => { close(); go({ page: "reg-sons" }); }}>
+                <LuVolume2 aria-hidden="true" /> <span>Les sons<small>Allumer ou couper les sons de l'appli</small></span>
+              </button>
+              <button type="button" className="mm__big" onClick={() => { close(); go({ page: "reg-maj" }); }}>
+                <LuRefreshCw aria-hidden="true" /> <span>Mises à jour<small>Ce qui a changé, chercher une mise à jour</small></span>
               </button>
             </section>
             <button type="button" className="btn btn--soft" onClick={() => { close(); go({ page: "reg-personnage" }); }}>

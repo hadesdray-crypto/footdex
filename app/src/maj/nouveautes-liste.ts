@@ -4,6 +4,17 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-06",
+    titre: "Version 58 : menu Apparence, Philippe après le carton rouge, appli plus légère",
+    type: "appli",
+    points: [
+      "Nouveau menu « Apparence » (Paramètres, et dans le menu du petit personnage) : couleur du fond (Nuit de match d'origine, Pelouse, Stade rouge, Noir total), police lisible, contraste fort, animations calmes. Rien ne change tant que tu ne choisis pas.",
+      "Le menu du petit personnage donne maintenant accès à Apparence, aux sons et aux mises à jour.",
+      "Carton rouge : c'est toujours Philippe, le personnage de départ, qui revient seul, quel que soit le personnage d'avant.",
+      "Appli plus fluide : moins de calculs en arrière-plan, animations des personnages mises en pause quand on ne les voit pas.",
+    ],
+  },
+  {
+    date: "2026-11-06",
     titre: "Version 57 : les histoires sur activation",
     type: "appli",
     points: [

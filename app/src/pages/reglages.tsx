@@ -5,7 +5,7 @@
 //   └─ Pour les grands (code) : temps d'écran et Internet · réglages du jeu · atelier · essais (développeur)
 // Chaque écran a une flèche de retour (celle d'Android aussi) et ne montre que ce dont il parle.
 import { type ReactNode, useState, useSyncExternalStore } from "react";
-import { LuLock, LuCopy, LuMic, LuRefreshCw, LuSettings, LuShieldCheck, LuShirt, LuUserRound, LuUsers, LuVolume2, LuZap } from "react-icons/lu";
+import { LuSwatchBook, LuLock, LuCopy, LuMic, LuRefreshCw, LuSettings, LuShieldCheck, LuShirt, LuUserRound, LuUsers, LuVolume2, LuZap } from "react-icons/lu";
 import { CodeParent } from "../maj/code";
 import { voirBienvenue } from "../maj/Bienvenue";
 import { EST_APK, VERSION_APK } from "../maj/env";
@@ -20,6 +20,7 @@ import { choosePerso, hideBubble, sample, stopTalking, update, useMascot } from 
 import { VoicePicker } from "../mascot/VoicePicker";
 import { Wardrobe } from "../mascot/Wardrobe";
 import type { Route } from "../router";
+import { SKINS, changerApparence, remettreApparence, useApparence } from "../apparence";
 import { onSoundChange, setSound, soundOn } from "../sound";
 import { BackLink, Door, PageTitle, Section } from "../ui/bits";
 import { cx } from "../util";
@@ -71,6 +72,7 @@ export function Reglages() {
 
       <Section title="L'appli" kicker="Pour tout le monde">
         <div className="doors doors--list">
+          <Door to={{ page: "reg-apparence" }} kicker="L'appli" title="Apparence" figure="Couleurs, police lisible, contraste, calme" tone="gold" icon={LuSwatchBook} />
           <Door to={{ page: "reg-sons" }} kicker="L'appli" title="Les sons" figure={sound ? "Allumés" : "Coupés"} icon={LuVolume2} />
           <Door to={{ page: "reg-maj" }} kicker="L'appli" title="Mises à jour et nouveautés" figure={EST_APK ? `Version 1.${VERSION_APK}` : "Chercher une mise à jour"} icon={LuRefreshCw} />
           <Door to={{ page: "reg-sauvegarde" }} kicker="L'appli" title="Sauvegarder ma progression" figure="Pour changer de téléphone sans rien perdre" icon={LuCopy} />
@@ -165,6 +167,44 @@ export function RegBruitages() {
 }
 
 // ------------------------------------------------------------------ l'appli
+
+export function RegApparence() {
+  const a = useApparence();
+  const ligne = (titre: string, note: string, on: boolean, clé: "lisible" | "contraste" | "calme") => (
+    <div className="approw">
+      <span>{titre}<small>{note}</small></span>
+      <div className="chips">
+        <button type="button" className={cx("chip", on && "chip--on")} aria-pressed={on} onClick={() => changerApparence({ [clé]: true })}>Oui</button>
+        <button type="button" className={cx("chip", !on && "chip--on")} aria-pressed={!on} onClick={() => changerApparence({ [clé]: false })}>Non</button>
+      </div>
+    </div>
+  );
+  return (
+    <Ecran titre="Apparence" kicker="Tu choisis, l'appli change tout de suite">
+      <Section title="Couleur du fond" kicker="Touche pour choisir">
+        <div className="app__skins">
+          {SKINS.map((s) => (
+            <button key={s.id} type="button" className={cx("skin", a.skin === s.id && "skin--on")} aria-pressed={a.skin === s.id} onClick={() => changerApparence({ skin: s.id })}>
+              <span className="skin__sw" style={{ background: `linear-gradient(135deg, ${s.a}, ${s.b})` }} />
+              <strong>{s.nom}</strong>
+              <small>{s.note}</small>
+            </button>
+          ))}
+        </div>
+      </Section>
+      <Section title="Pour lire plus facilement">
+        {ligne("Police lisible", "Des lettres plus simples et plus larges", a.lisible, "lisible")}
+        {ligne("Contraste fort", "Textes plus clairs, traits plus visibles", a.contraste, "contraste")}
+        {ligne("Animations calmes", "Les cartes et boutons ne brillent plus en boucle", a.calme, "calme")}
+      </Section>
+      <Section>
+        <div className="chips">
+          <button type="button" className="btn btn--soft" onClick={remettreApparence}>Remettre comme au départ</button>
+        </div>
+      </Section>
+    </Ecran>
+  );
+}
 
 export function RegSons() {
   const sound = useSyncExternalStore(onSoundChange, soundOn);

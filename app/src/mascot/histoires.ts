@@ -313,20 +313,33 @@ export function marquerVue(id: string) {
   cache = JSON.stringify(v);
   window.dispatchEvent(new Event(EVT));
 }
+let vuesBrut = "";
+let vuesObj: Vues = {};
 export function useVues(): Vues {
   const raw = useSyncExternalStore(
     (fn: () => void) => { window.addEventListener(EVT, fn); return () => window.removeEventListener(EVT, fn); },
     () => cache,
   );
-  try { return JSON.parse(raw); } catch { return {}; }
+  if (raw !== vuesBrut) {
+    vuesBrut = raw;
+    try { vuesObj = JSON.parse(raw); } catch { vuesObj = {}; }
+  }
+  return vuesObj;
 }
 /** A story only plays by itself while its card has been activated by the player (30 minutes). */
 const ARMEES = "footdex.histoires.armees.v1";
 export const DUREE_ARMEE = 30 * 60 * 1000;
+let armeesBrut: string | null = null;
+let armeesObj: Record<string, number> = {};
 const lireArmees = (): Record<string, number> => {
   try {
-    const v = JSON.parse(localStorage.getItem(ARMEES) ?? "{}");
-    return v && typeof v === "object" ? v : {};
+    const raw = localStorage.getItem(ARMEES) ?? "{}";
+    if (raw !== armeesBrut) {
+      armeesBrut = raw;
+      const v = JSON.parse(raw);
+      armeesObj = v && typeof v === "object" ? v : {};
+    }
+    return armeesObj;
   } catch {
     return {};
   }
@@ -341,12 +354,12 @@ export function resteArmee(id: string): number {
 }
 export const estArmee = (id: string) => resteArmee(id) > 0;
 export function armer(id: string) {
-  const v = lireArmees();
+  const v = { ...lireArmees() };
   v[id] = Date.now() + DUREE_ARMEE;
   ecrireArmees(v);
 }
 export function desarmer(id: string) {
-  const v = lireArmees();
+  const v = { ...lireArmees() };
   delete v[id];
   ecrireArmees(v);
 }

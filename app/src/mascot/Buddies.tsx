@@ -362,6 +362,7 @@ const wait = (ms: number) => new Promise((r) => window.setTimeout(r, ms));
 // ------------------------------------------------------------------ behaviours (a few times a second)
 const lastFearTalk = new Map<Buddy, number>();
 function think() {
+  if (document.hidden) return; // the app is in the background: nothing to decide
   const t = now();
   const z = zombieSpot();
   const main = mainSpot();

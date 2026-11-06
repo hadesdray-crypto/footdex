@@ -34,7 +34,7 @@ function silentVideo() {
     video.srcObject = stream;
     document.body.appendChild(video);
     void video.play().catch(() => undefined);
-    window.setInterval(() => g.fillRect(0, 0, 2, 2), 1000);
+    window.setInterval(() => { if (!document.hidden) g.fillRect(0, 0, 2, 2); }, 1000);
   } catch {
     /* nothing more to try */
   }

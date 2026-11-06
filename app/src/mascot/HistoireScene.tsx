@@ -110,8 +110,8 @@ export function HistoireScene() {
     const t = window.setInterval(() => {
       const { run, chest, demarrer } = latest.current;
       const s = getMascot();
-      const busy = !!document.querySelector(".mm, .wd, .reveal, .majfull, .subst, .thief, .hs");
-      if (run || busy || document.hidden || s.s.rest || s.evac !== 0) return;
+      if (run || document.hidden || s.s.rest || s.evac !== 0) return;
+      if (document.querySelector(".mm, .wd, .reveal, .majfull, .subst, .thief, .hs")) return;
       const present = [PERSOS[s.s.perso].mode as string, ...s.s.buddies.filter((b) => !s.away.includes(b))];
       for (const h of HISTOIRES) {
         // only the stories whose card was won in the chest; the first time as soon as they have been together a while,

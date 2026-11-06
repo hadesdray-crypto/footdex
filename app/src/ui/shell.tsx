@@ -26,7 +26,7 @@ const TABS: { to: Route; label: string; icon: typeof LuHouse; match: string[] }[
   },
   { to: { page: "paquets" }, label: "Paquets", icon: LuPackageOpen, match: ["paquets"] },
   { to: { page: "collection" }, label: "Collection", icon: LuLibrary, match: ["collection", "classeur"] },
-  { to: { page: "moi" }, label: "Réglages", icon: LuUserRound, match: ["moi", "reglages", "personnage", "parents", "reg-personnage", "reg-voix", "reg-copains", "reg-bruitages", "reg-sons", "reg-maj", "reg-sauvegarde", "reg-grands", "reg-ecran", "reg-jeu", "reg-atelier", "reg-dev"] },
+  { to: { page: "moi" }, label: "Réglages", icon: LuUserRound, match: ["moi", "reglages", "personnage", "parents", "reg-personnage", "reg-voix", "reg-copains", "reg-bruitages", "reg-sons", "reg-apparence", "reg-maj", "reg-sauvegarde", "reg-grands", "reg-ecran", "reg-jeu", "reg-atelier", "reg-dev"] },
 ];
 
 export function Shell({ page, pageKey, album, children }: { page: string; pageKey: string; album: Album; children: ReactNode }) {

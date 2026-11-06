@@ -2,7 +2,7 @@
 // the Square Referee asks for a substitute, and sometimes turns up for no reason… and shows a card if you misbehave.
 import { pick, PERSOS } from "./lines";
 import { CARAC } from "./caractere";
-import { emit, getMascot, inter, setAway, setEvac } from "./state";
+import { emit, getMascot, inter, setAway, setEvac, update } from "./state";
 import { compterSoin } from "./histoires";
 import { enter, sackFor, type Visitor } from "./visitor";
 
@@ -532,6 +532,16 @@ export async function refereeCard(color: "jaune" | "rouge") {
   await new Promise((ok) => window.setTimeout(ok, 1500));
   const friends = [...getMascot().s.buddies] as string[];
   setAway(friends);
+  if (color === "rouge") {
+    // red card: only the base character comes back, Philippe, whoever was the main character before
+    const st = getMascot().s;
+    update({
+      perso: 6,
+      look: st.looks?.philippe ?? CARAC.philippe.tenue,
+      buddies: st.buddies.filter((b) => b !== "philippe"),
+    });
+    setAway(friends.filter((b) => b !== "philippe"));
+  }
   setEvac(0); // the main character is back
   if (color === "rouge") return; // red: only the base character stays; the others have to be found again (yellow card brings them back)
   // yellow: they come back one after the other, the most excited first
