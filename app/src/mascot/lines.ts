@@ -291,6 +291,7 @@ export const LORE_HINTS: string[] = [
 
 // ------------------------------------------------------------------ the Papi's old football stories (before 2000: after, he does not know)
 export const OLD_STORIES: string[] = [
+  "J'avais un ami, à l'école. Il adorait le foot. C'est grâce à lui que je suis là, devant vous. Hm… Mais passons.",
   "En 1958, en Suède, un gamin brésilien de 17 ans a gagné la Coupe du monde. Il a marqué deux buts en finale. Il s'appelait Pelé. Il en a gagné trois en tout : 1958, 1962 et 1970. Trois ! Personne n'a fait mieux.",
   "En 1958 aussi, un Français, Just Fontaine, a marqué 13 buts dans une seule Coupe du monde. Treize ! C'est toujours le record, petit. Toujours.",
   "Raymond Kopa, un petit Français fils de mineurs, a gagné le Ballon d'Or en 1958. Il dribblait si bien qu'on l'appelait le Napoléon du football.",

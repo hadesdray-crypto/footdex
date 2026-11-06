@@ -140,7 +140,7 @@ export function HistoireScene() {
       <div className="hs__stage">
         {run.cast.map((k, i) => (
           <div key={k} className={cx("hs__who", speaker === k && "is-on", sol === k && "is-sol")} data-who={k} style={{ animationDelay: `${(i * 0.37) % 1}s`, "--from": i % 2 ? "70px" : "-70px" } as CSSProperties}>
-            <Fig look={look(k)} size={118} mouth={PERSOS.find((p) => p.mode === k)?.mouth ?? "smile"} talk={speaker === k} cheer={fin} hurt={sol === k ? 1 : 0} wounds={sol === k ? { b: 1, legA: true, legB: false, arm: false } : undefined} />
+            <Fig look={look(k)} size={118} mouth={PERSOS.find((p) => p.mode === k)?.mouth ?? "smile"} talk={speaker === k} cheer={fin && !run.h.calme} hurt={sol === k ? 1 : 0} wounds={sol === k ? { b: 1, legA: true, legB: false, arm: false } : undefined} />
             {balle === k ? <i className="hs__balle" aria-label="Le ballon marqué du Jongleur" dangerouslySetInnerHTML={{ __html: BALLE }} /> : null}
             {sol === k ? <b className="hs__os" aria-hidden="true">Aïe</b> : null}
             <span>{nom(k)}</span>

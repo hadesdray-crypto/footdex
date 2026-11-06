@@ -13,6 +13,7 @@ export type Histoire = {
   prix: number; // en pièces : les histoires sont les cartes les plus rares du coffre
   temoins: number; // combien de personnages « au hasard » écoutent (w1, w2)
   versions: Ligne[][];
+  calme?: boolean; // histoire douce : pas de fête à la fin
 };
 
 const w1 = "w1", w2 = "w2";
@@ -87,6 +88,42 @@ export const HISTOIRES: Histoire[] = [
         L("joueur", "Il roule ! Il est à moi ! Mon ballon !", { balle: "joueur" }),
         L("joueur", "Tu es plus fort que moi, c'est vrai. Mais le sol est plus fort que toi !"),
         L("philippe", "Ne rigole pas… Appelle le Médecin."),
+      ],
+    ],
+  },
+  {
+    id: "papy",
+    prix: 800,
+    titre: "Pourquoi le Papy aime le foot",
+    teaser: "Ce que le foot veut dire pour le Papy.",
+    indice: "Le Papy + 1 copain, un moment tranquille.",
+    fixes: ["statue"],
+    temoins: 1,
+    calme: true,
+    versions: [
+      [
+        L(w1, "Papy, pourquoi tu aimes autant le foot ?"),
+        L("statue", "Hm. Au début, ce n'est pas le foot que j'aimais."),
+        L("statue", "J'avais un meilleur ami, à l'école. Je l'aimais plus que tout, mais je n'ai jamais osé le lui dire."),
+        L("statue", "Lui, il adorait le foot. Alors je l'ai suivi à tous ses matchs, pendant des années."),
+        L(w1, "Et toi, tu aimais ça ?"),
+        L("statue", "Pas du tout. Je regardais surtout mon ami. Et puis, petit à petit, j'ai aimé le jeu aussi."),
+        L("statue", "Mon ami n'est plus là aujourd'hui. Moi, je suis toujours là."),
+        L("statue", "Le foot, c'est tout ce qui me reste de lui. Quand je regarde un match, il est à côté de moi."),
+        L(w1, "Alors on regardera des matchs avec toi, Papy."),
+        L("statue", "Merci, mon petit. Hm… Chut. C'est entre nous."),
+      ],
+      [
+        L("statue", "Hm. Viens t'asseoir, petit. Je vais te dire pourquoi je suis fou de football."),
+        L(w1, "Je t'écoute, Papy."),
+        L("statue", "Quand j'étais petit, j'avais un copain d'école. Mon meilleur ami. Je l'aimais très fort, et je n'ai jamais su lui dire."),
+        L("statue", "Il ne parlait que de foot. Alors je l'accompagnais à chaque match, même sous la pluie."),
+        L(w1, "Mais toi, ça ne t'intéressait pas ?"),
+        L("statue", "Au début, non. Et puis, avec les années, je suis devenu un vrai fan. Plus que lui, peut-être."),
+        L("statue", "Il est parti depuis longtemps. Moi, je suis resté."),
+        L("statue", "Alors le foot, c'est ma façon de rester avec lui. Chaque match, c'est un peu de lui."),
+        L(w1, "Il serait fier de toi, Papy."),
+        L("statue", "Hm… Peut-être. Merci. Et chut, hein ? Ça reste entre nous."),
       ],
     ],
   },

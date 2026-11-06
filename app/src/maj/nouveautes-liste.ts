@@ -3,6 +3,15 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    date: "2026-11-06",
+    titre: "Version 56 : l'histoire du Papy",
+    type: "appli",
+    points: [
+      "Nouvelle histoire à gagner dans le coffre : « Pourquoi le Papy aime le foot » (800 pièces). Une histoire douce, sans fête à la fin.",
+      "Le Papy laisse parfois échapper un petit mot sur son vieil ami d'école.",
+    ],
+  },
+  {
     date: "2026-11-05",
     titre: "Version 55 : Philippe, le nouveau personnage",
     type: "appli",
