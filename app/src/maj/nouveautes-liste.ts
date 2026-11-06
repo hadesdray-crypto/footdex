@@ -3,6 +3,16 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    date: "2026-11-07",
+    titre: "Version 59 : Ballon d'Or 2026 complété",
+    type: "appli",
+    points: [
+      "Ballon d'Or 2026 (Londres, 26 octobre) : Harry Kane gagne, Kylian Mbappé finit deuxième, Lamine Yamal troisième. Chez les femmes, Alexia Putellas gagne son troisième Ballon d'Or.",
+      "Les fiches de Mbappé et de Yamal indiquent maintenant leur place au Ballon d'Or 2026.",
+      "Rien n'a été retiré. Les clubs des joueurs ont été revérifiés : aucun changement confirmé depuis le 19 octobre.",
+    ],
+  },
+  {
     date: "2026-11-06",
     titre: "Version 58 : menu Apparence, Philippe après le carton rouge, appli plus légère",
     type: "appli",

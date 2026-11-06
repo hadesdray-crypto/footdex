@@ -1129,6 +1129,52 @@
    "ancien": " Deux penaltys contre Flamengo le 8 octobre, 2-2.",
    "nouveau": "",
    "source": "Non vérifié par deux sources : retiré (règle : ne pas inventer)"
+  },
+  {
+   "op": "remplacer",
+   "chemin": [
+    "coupes",
+    "coupes",
+    {
+     "id": "ballon"
+    },
+    "finals",
+    0,
+    "text"
+   ],
+   "ancien": "Le tenant était Ousmane Dembélé.",
+   "nouveau": "Le tenant était Ousmane Dembélé. Kylian Mbappé finit deuxième et Lamine Yamal troisième. Chez les femmes, Alexia Putellas gagne le Ballon d'Or, son troisième.",
+   "source": "ESPN, kickfootball et Yahoo Sports, cérémonie du 26 octobre 2026 à Londres (vérifié le 7 novembre 2026)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "mbappe"
+    },
+    "honours"
+   ],
+   "index": 5,
+   "ancien": null,
+   "valeur": "Deuxième du Ballon d'Or 2026",
+   "source": "ESPN, kickfootball et Yahoo Sports, cérémonie du 26 octobre 2026 à Londres (vérifié le 7 novembre 2026)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "yamal"
+    },
+    "honours"
+   ],
+   "index": 3,
+   "ancien": null,
+   "valeur": "Troisième du Ballon d'Or 2026",
+   "source": "ESPN, kickfootball et Yahoo Sports, cérémonie du 26 octobre 2026 à Londres (vérifié le 7 novembre 2026)"
   }
  ]
 }
