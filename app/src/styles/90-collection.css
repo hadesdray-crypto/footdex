@@ -82,7 +82,9 @@
 .colx__chest, .colx__binder { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border-radius: 16px; padding: 12px 14px; margin: 0 0 10px; cursor: pointer; font: inherit; color: var(--fg); }
 .colx__chest { border: 2px solid #ffd76a88; background: linear-gradient(120deg, #5a3d0a, #2a1d06); }
 .colx__chest.is-free { box-shadow: 0 0 18px #ffd76a88; animation: packWiggle 2.4s ease-in-out infinite; }
-.colx__chesticon { font-size: 2.2rem; }
+.colx__chesticon { display: grid; place-items: center; width: 64px; flex: none; }
+.colx__chesticon .chest { width: 60px; height: 50px; filter: none; }
+.chm__have { text-align: center; color: var(--muted); font-size: 0.85rem; margin: 2px 0 0; }
 .colx__binder { border: 1px solid var(--line-2); background: #ffffff08; }
 .colx__binder svg { width: 32px; height: 32px; color: #ffd76a; }
 .colx__chest strong, .colx__binder strong { display: block; font: 900 1.05rem var(--f-display, inherit); }

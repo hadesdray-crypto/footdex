@@ -63,7 +63,7 @@ export function Binder({ album }: { album: Album }) {
     const pulled = drawRarity(pools, ch.index, r, state.cards);
     const result = buyCard(pulled, RARITY[r].price);
     if (!result) return;
-    setOpening({ id: ++seq, kind: "boutique", title: `Boutique · Carte ${RARITY[r].label}`, pulled, result, chemin: ch.index });
+    setOpening({ id: ++seq, kind: "boutique", title: `Boutique · Paquet ${RARITY[r].label}`, pulled, result, chemin: ch.index });
   }
 
   return (
@@ -323,7 +323,7 @@ function Shop({ pools, chemin, ready, onBuy }: { pools: ReturnType<typeof usePoo
           <span>pièces</span>
         </div>
         <p className="note">
-          Les pièces viennent des doublons (Base +2, Rare +5, Éclat +15, Légende et Moment +25, Brillante +40 en plus) et des récompenses du chemin. Une carte achetée est toujours une carte
+          Les pièces viennent des doublons (Base +2, Rare +5, Éclat +15, Légende et Moment +25, Brillante +40 en plus) et des récompenses du chemin. Chaque achat est un paquet de 5 cartes, avec une carte de la rareté choisie
           que tu n'as pas encore, quand il en reste.
         </p>
         <div className="offers">
@@ -334,7 +334,7 @@ function Shop({ pools, chemin, ready, onBuy }: { pools: ReturnType<typeof usePoo
             return (
               <article key={r} className={cx("offer", `offer--${r}`, !open && "offer--locked")} style={{ "--rc": RARITY[r].color }}>
                 <span className="offer__gem" aria-hidden="true" />
-                <h3 className="offer__name">Carte {RARITY[r].label}</h3>
+                <h3 className="offer__name">Paquet {RARITY[r].label}</h3>
                 <p className="offer__text">{RARITY[r].text}</p>
                 {open ? (
                   <button type="button" className="btn btn--gold" disabled={!ready || missing > 0} onClick={() => onBuy(r)}>

@@ -62,7 +62,7 @@ export function PackArt({ kind, chemin, glow, tear = 0, torn, className, label, 
           <span className="paquet__brand">FOOTDEX</span>
           <Ball className="paquet__ball" />
           <span className="paquet__name">{label ?? type?.name ?? (gift ? GIFT_LABEL[kind as GiftKind] : ch.name)}</span>
-          <span className="paquet__count">{size ? `${size} carte${size > 1 ? "s" : ""}` : kind === "cadeau" || !gift ? `${reglages().cartesParPaquet} cartes` : "1 carte"}</span>
+          <span className="paquet__count">{size ? `${size} carte${size > 1 ? "s" : ""}` : `${gift && kind !== "cadeau" ? 5 : reglages().cartesParPaquet} cartes`}</span>
         </div>
         <span className="paquet__crimp paquet__crimp--bottom" />
       </div>

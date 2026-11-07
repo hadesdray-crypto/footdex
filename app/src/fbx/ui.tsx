@@ -2,9 +2,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Piece } from "../ui/Piece";
+import { LuGift } from "react-icons/lu";
 import { cx } from "../util";
 import { FBX, RARITY, fbx, fbxSvg } from "./art";
-import { chestStars, freeChestToday, openChest, useCollec, type Loot } from "./store";
+import { chestStars, openChest, useCollec, type Loot } from "./store";
 import { spendStars, useStore } from "../store";
 import { Chest } from "../pages/coffre";
 import { Fig } from "../mascot/Fig";
@@ -244,9 +245,8 @@ export function ChestModal({ onClose }: { onClose: () => void }) {
   const [loot, setLoot] = useState<Loot[]>([]);
   const [i, setI] = useState(0);
   const [cardI, setCardI] = useState(0);
-  const free = freeChestToday();
 
-  function start(pay: "free" | "paid") {
+  function start(pay: "paid") {
     if (pay === "paid" && !spendStars(chestStars())) return say(`Il te faut ${chestStars()} pièces pour ouvrir un coffre.`);
     const got = openChest(pay);
     if (!got) return;
@@ -284,16 +284,16 @@ export function ChestModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="chm" role="dialog" aria-modal="true" aria-label="Le coffre au trésor">
+    <div className="chm" role="dialog" aria-modal="true" aria-label="Le coffre des Footballinis">
       <div className="chm__box">
         {phase === "choose" ? (
           <>
-            <h2 className="chm__title">Le coffre au trésor</h2>
+            <h2 className="chm__title">Le coffre des Footballinis</h2>
             <div className="chm__chest"><Chest open={false} /></div>
-            <p className="chm__hint">Dedans : des pièces, des paquets cadeaux de cartes Footdex, des cartes Footballinis (rares), des figurines, des personnages stylés… On ne sait jamais !</p>
+            <p className="chm__hint">Dedans : des pièces, des paquets cadeaux, des Footballinis, des figurines, des personnages stylés… Tu ne les trouves nulle part ailleurs. On ne sait jamais !</p>
             <div className="chm__pay">
-              <button type="button" className="btn btn--gold btn--big btn--glow" disabled={!free} onClick={() => start("free")}>{free ? "🎁 Le coffre gratuit du jour" : "Coffre gratuit : reviens demain"}</button>
-              <button type="button" className="btn btn--soft" disabled={s.stars < chestStars()} onClick={() => start("paid")}><Piece /> Ouvrir pour {chestStars()} pièces ({s.stars})</button>
+              <button type="button" className="btn btn--gold btn--big btn--glow" disabled={s.stars < chestStars()} onClick={() => start("paid")}><Piece /> Ouvrir pour {chestStars()} pièces</button>
+              <p className="chm__have">Tu as {s.stars} pièces.</p>
             </div>
             <button type="button" className="btn btn--ghost" onClick={onClose}>Fermer</button>
           </>
@@ -307,13 +307,13 @@ export function ChestModal({ onClose }: { onClose: () => void }) {
             {loot.length > 1 ? <p className="chm__count">Surprise {i + 1} sur {loot.length}</p> : null}
             {cur.loot.k === "coins" ? (
               <div className="chm__item">
-                <div className="chm__coins">{Array.from({ length: 7 }, (_, k) => <span key={k} style={{ animationDelay: `${k * 90}ms`, left: `${10 + k * 12}%` }}>🪙</span>)}</div>
+                <div className="chm__coins">{Array.from({ length: 7 }, (_, k) => <span key={k} style={{ animationDelay: `${k * 90}ms`, left: `${10 + k * 12}%` }}><Piece /></span>)}</div>
                 <h3>+{cur.loot.n} pièces d'or</h3>
                 <button type="button" className="btn btn--gold btn--big" onClick={next}>Super !</button>
               </div>
             ) : cur.loot.k === "gift" ? (
               <div className="chm__item">
-                <div className="fbpack fbpack--5" aria-hidden="true"><b>🎁</b><span>PAQUET</span><em>CADEAU</em></div>
+                <div className="fbpack fbpack--5" aria-hidden="true"><b><LuGift aria-hidden="true" /></b><span>PAQUET</span><em>CADEAU</em></div>
                 <h3>Un paquet cadeau Footdex !</h3>
                 <p>Des joueurs, des légendes, des moments de match. Ouvre-le dans l'onglet « Paquets ».</p>
                 <button type="button" className="btn btn--gold btn--big" onClick={next}>Super !</button>

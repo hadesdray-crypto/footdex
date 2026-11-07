@@ -226,7 +226,7 @@ export const PERSOS: Perso[] = [
 ];
 
 export const PAGES: Record<string, string> = {
-  collection: "Ta collection ! En haut, le coffre au trésor : un coffre gratuit chaque jour, avec des pièces, des paquets de cartes Footballinis, des figurines et des personnages stylés. Dessous, ton classeur de cartes, puis les Footballinis, les figurines et les personnages stylés.",
+  collection: "Ta collection ! En haut, le coffre des Footballinis : tu l'ouvres avec des pièces, et il cache des figurines, des cartes Footballinis et des personnages stylés. Dessous, ton classeur de cartes, puis les Footballinis, les figurines et les personnages stylés.",
   accueil: "Ici, c'est la maison de Footdex. Tu vois la fiche du jour, une recherche pour trouver un joueur, et en bas, le menu pour aller partout.",
   joueurs: "Ici, tu cherches un joueur. Écris son nom, ou utilise les filtres pour chercher par pays, par club ou par époque. Touche une carte pour ouvrir sa fiche.",
   fiche: "Voici la fiche d'un joueur : son club, sa carrière, ses titres et ses anecdotes. Lis tout, tu vas apprendre plein de choses.",

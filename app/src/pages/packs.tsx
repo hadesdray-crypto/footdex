@@ -224,7 +224,7 @@ export function Packs({ album }: { album: Album }) {
       <section className="panel odds">
         <h2 className="section-title">Ce qu'il y a dans un paquet</h2>
         <p className="note">
-          Des cartes différentes, tirées parmi les {ready ? fmt(poolSize) : "…"} cartes de ce chemin. La dernière est toujours au moins Rare. Un paquet a toujours au moins 5 cartes ; exceptionnellement 10, et très rarement 15. Parfois, une carte Footballini rare tombe en plus. Une carte déjà reçue est un doublon : elle
+          Des cartes différentes, tirées parmi les {ready ? fmt(poolSize) : "…"} cartes de ce chemin. La dernière est toujours au moins Rare. Un paquet a toujours au moins 5 cartes ; exceptionnellement 10, et très rarement 15. Une carte déjà reçue est un doublon : elle
           rapporte des pièces, à dépenser dans la boutique du classeur.
         </p>
         <div className="tablewrap">

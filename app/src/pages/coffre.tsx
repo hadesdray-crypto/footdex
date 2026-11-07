@@ -45,20 +45,49 @@ export const SPECIALS: Special[] = [
   { id: "c-coupe", name: "La Coupe Étoilée", icon: LuTrophy, hue: ["#c58bff", "#3d1a6b"], quirk: "On dit qu'elle chante quand on la soulève.", fact: "La FIFA, qui organise la Coupe du monde, a été fondée en 1904 à Paris.", price: 240 },
 ];
 
+/** The treasure chest of Footdex: dark wood, gold bands, a football on the lock. It opens in a burst of light and coins. */
+let chestSeq = 0;
 export function Chest({ open }: { open: boolean }) {
+  const [u] = useState(() => `c${(chestSeq += 1)}`);
   return (
     <svg className={cx("chest", open && "chest--open")} viewBox="0 0 160 130" aria-hidden="true">
-      <ellipse cx="80" cy="120" rx="64" ry="8" fill="#0006" />
-      <g className="chest__glow"><circle cx="80" cy="60" r="46" fill="#ffd76a" opacity=".55" /></g>
-      <rect x="22" y="58" width="116" height="58" rx="8" fill="#8a4b1e" stroke="#3b1d08" strokeWidth="3" />
-      <path d="M22 78 H138 M22 98 H138" stroke="#3b1d08" strokeWidth="2" opacity=".5" />
-      <rect x="22" y="58" width="116" height="10" fill="#c9a24a" />
-      <rect x="70" y="66" width="20" height="26" rx="4" fill="#f6c453" stroke="#3b1d08" strokeWidth="2.5" />
-      <circle cx="80" cy="79" r="3.4" fill="#3b1d08" />
-      <g className="chest__lid" style={{ transformOrigin: "22px 58px" }}>
-        <path d="M22 58 Q22 20 80 20 Q138 20 138 58Z" fill="#a35a24" stroke="#3b1d08" strokeWidth="3" />
-        <path d="M22 58 H138" stroke="#c9a24a" strokeWidth="8" />
-        <path d="M50 28 V58 M110 28 V58" stroke="#c9a24a" strokeWidth="6" />
+      <defs>
+        <linearGradient id={`w${u}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#9c5a26" /><stop offset="1" stopColor="#5e3213" /></linearGradient>
+        <linearGradient id={`l${u}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#c07a38" /><stop offset="1" stopColor="#7a431a" /></linearGradient>
+        <linearGradient id={`g${u}`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fff0a6" /><stop offset=".5" stopColor="#f6c453" /><stop offset="1" stopColor="#b9832a" /></linearGradient>
+        <radialGradient id={`h${u}`}><stop offset="0" stopColor="#ffe9a0" stopOpacity=".95" /><stop offset="1" stopColor="#ffb52e" stopOpacity="0" /></radialGradient>
+      </defs>
+      <ellipse cx="80" cy="121" rx="66" ry="7" fill="#000" opacity=".4" />
+      <g className="chest__glow"><circle cx="80" cy="58" r="64" fill={`url(#h${u})`} /></g>
+      <g className="chest__sparks" fill="#fff5c2">
+        <path d="M30 24 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2z" />
+        <path d="M132 16 l1.6 4.8 4.8 1.6 -4.8 1.6 -1.6 4.8 -1.6 -4.8 -4.8 -1.6 4.8 -1.6z" />
+        <path d="M118 44 l1.2 3.6 3.6 1.2 -3.6 1.2 -1.2 3.6 -1.2 -3.6 -3.6 -1.2 3.6 -1.2z" />
+      </g>
+      <g className="chest__coins">
+        <ellipse cx="56" cy="62" rx="13" ry="5" fill={`url(#g${u})`} stroke="#7a5318" strokeWidth="1.5" />
+        <ellipse cx="84" cy="58" rx="14" ry="5.4" fill={`url(#g${u})`} stroke="#7a5318" strokeWidth="1.5" />
+        <ellipse cx="108" cy="63" rx="12" ry="4.8" fill={`url(#g${u})`} stroke="#7a5318" strokeWidth="1.5" />
+        <circle cx="72" cy="52" r="6" fill="#ffd76a" stroke="#7a5318" strokeWidth="1.5" /><circle cx="97" cy="50" r="5" fill="#ffd76a" stroke="#7a5318" strokeWidth="1.5" />
+      </g>
+      <rect x="20" y="58" width="120" height="60" rx="9" fill={`url(#w${u})`} stroke="#2b1405" strokeWidth="3" />
+      <path d="M21 80 H139 M21 98 H139" stroke="#2b1405" strokeWidth="2" opacity=".45" />
+      <path d="M26 64 H134" stroke="#fff" strokeWidth="2" opacity=".12" />
+      <rect x="20" y="58" width="120" height="11" fill={`url(#g${u})`} stroke="#2b1405" strokeWidth="2" />
+      <rect x="20" y="108" width="120" height="10" rx="4" fill={`url(#g${u})`} stroke="#2b1405" strokeWidth="2" />
+      <rect x="36" y="58" width="12" height="60" fill={`url(#g${u})`} stroke="#2b1405" strokeWidth="2" /><rect x="112" y="58" width="12" height="60" fill={`url(#g${u})`} stroke="#2b1405" strokeWidth="2" />
+      <g fill="#3a1d08"><circle cx="42" cy="76" r="2" /><circle cx="42" cy="100" r="2" /><circle cx="118" cy="76" r="2" /><circle cx="118" cy="100" r="2" /></g>
+      <path d="M66 70 h28 a4 4 0 0 1 4 4 v22 a14 14 0 0 1 -14 14 h-8 a14 14 0 0 1 -14 -14 v-22 a4 4 0 0 1 4 -4z" fill={`url(#g${u})`} stroke="#2b1405" strokeWidth="2.5" />
+      <circle cx="80" cy="88" r="11" fill="#fff" stroke="#2b1405" strokeWidth="2" />
+      <path d="M80 81.5 l6 4.4 -2.3 7 h-7.4 l-2.3 -7z" fill="#1a1f33" />
+      <g className="chest__lid" style={{ transformOrigin: "20px 58px" }}>
+        <path d="M20 58 Q20 16 80 16 Q140 16 140 58z" fill={`url(#l${u})`} stroke="#2b1405" strokeWidth="3" />
+        <path d="M30 50 Q34 28 60 24" stroke="#fff" strokeWidth="3" opacity=".18" fill="none" strokeLinecap="round" />
+        <path d="M20 58 H140" stroke="#2b1405" strokeWidth="2.5" />
+        <path d="M44 24 V58 M116 24 V58" stroke={`url(#g${u})`} strokeWidth="9" />
+        <path d="M44 24 V58 M116 24 V58" stroke="#2b1405" strokeWidth="1.2" opacity=".6" />
+        <circle cx="80" cy="30" r="7" fill={`url(#g${u})`} stroke="#2b1405" strokeWidth="2" />
+        <circle cx="80" cy="30" r="2.6" fill="#7a5318" />
       </g>
     </svg>
   );
@@ -138,11 +167,11 @@ export function Coffre() {
       <PageTitle kicker="Le trésor" title="Le coffre">
         <p>Ouvre le coffre avec tes pièces : tu ne sais jamais ce qu'il cache. Personnages secrets, cartes rigolotes, histoires… Ce que tu trouves reste à toi.</p>
       </PageTitle>
-      <button type="button" className="colx__chest is-free" onClick={() => go({ page: "collection" })}>
-        <span className="colx__chesticon" aria-hidden="true">🧰</span>
+      <button type="button" className="colx__chest" onClick={() => go({ page: "collection" })}>
+        <span className="colx__chesticon" aria-hidden="true"><Chest open={false} /></span>
         <span>
-          <strong>Le coffre au trésor des Footballinis</strong>
-          <em>Cartes rigolotes, figurines, pièces d'or… dans « Ma collection »</em>
+          <strong>Le coffre des Footballinis</strong>
+          <em>Un autre coffre, avec des pièces : figurines, personnages stylés… dans « Ma collection »</em>
         </span>
       </button>
       <div className="coffre__top">

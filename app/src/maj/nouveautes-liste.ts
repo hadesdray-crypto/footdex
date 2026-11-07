@@ -4,6 +4,17 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-07",
+    titre: "Version 61 : plus jamais un paquet d'une seule carte, Footballinis seulement dans le coffre, nouveau coffre",
+    type: "appli",
+    points: [
+      "Un paquet a toujours au moins 5 cartes. Les cartes garanties (Rare, Éclat, Légende) arrivent aussi dans un paquet de 5, avec la carte garantie dedans. La boutique du classeur donne aussi un paquet de 5.",
+      "Les Footballinis (Brain Rot), les figurines et les personnages stylés ne se trouvent plus que dans le coffre, avec des pièces : plus de coffre gratuit chaque jour (le coffre coûte 100 pièces) et plus de Footballini dans les paquets normaux.",
+      "Un nouveau coffre, plus beau : bois sombre, bandes dorées, ballon sur la serrure, il s'ouvre dans la lumière avec des pièces d'or.",
+      "Les cartes déjà gagnées sont gardées.",
+    ],
+  },
+  {
+    date: "2026-11-07",
     titre: "Version 60 : paquets de 5 cartes minimum, coffre mystère, voix qui ne se coupent plus",
     type: "appli",
     points: [

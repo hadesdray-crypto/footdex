@@ -71,8 +71,8 @@ export function useCollec(): Collec {
   );
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
-export const freeChestToday = () => state.freeDay !== today();
+/** No more free chest: the chest is opened with coins only. */
+export const freeChestToday = () => false;
 export const chestStars = () => reglages().coffreEtoiles;
 
 // ------------------------------------------------------------------ chance
@@ -93,6 +93,15 @@ const RAR_W: [Rarity, number][] = [
   [3, 4.4],
   [4, 0.6],
 ];
+/** Footballini cards come 5 at a time (a pack is never a single card), all different when possible. */
+function drawFive(): string[] {
+  const out: string[] = [];
+  for (let n = 0; n < 60 && out.length < 5; n += 1) {
+    const id = drawCard();
+    if (!out.includes(id) || n > 40) out.push(id);
+  }
+  return out;
+}
 function drawCard(): string {
   const r = roll(RAR_W);
   const pool = FBX.filter((f) => f.rar === r);
@@ -129,7 +138,7 @@ function chestLoot(): Loot[] {
       return { k: "fig", id, v, fresh: !(v === "c" ? state.figsC : state.figs)[id] };
     }
     if (k === "style") return { k: "style", look: randomLook(), name: `${NAMES_A[Math.floor(Math.random() * NAMES_A.length)]} ${NAMES_B[Math.floor(Math.random() * NAMES_B.length)]}` };
-    if (k === "fbx") return { k: "pack", cards: [drawCard()] };
+    if (k === "fbx") return { k: "pack", cards: drawFive() };
     return { k: "gift" };
   };
   return Math.random() < 0.12 ? [one(), one()] : [one()];
@@ -148,12 +157,10 @@ export function brainRotDuPaquet(): string | null {
   return id;
 }
 
-/** Opens a chest: "free" (once a day), or paid with pièces (spent by the caller, see store.ts). */
-export function openChest(pay: "free" | "paid"): Loot[] | null {
-  if (pay === "free" && !freeChestToday()) return null;
+/** Opens a chest, paid with pièces (spent by the caller). */
+export function openChest(pay: "paid"): Loot[] | null {
   const loot = chestLoot();
   let next: Collec = { ...state, cards: { ...state.cards }, figs: { ...state.figs }, figsC: { ...state.figsC }, styles: [...state.styles], chests: state.chests + 1 };
-  if (pay === "free") next.freeDay = today();
   for (const l of loot) {
     if (l.k === "gift") addGift("cadeau", "Le coffre au trésor");
     if (l.k === "coins") gagnerEtoiles(l.n);

@@ -37,7 +37,7 @@ export const DEFAUT: Reglages = {
   valeurDoublon: [1, 2, 5, 12, 30],
   gainMachine: 2,
   gainJeu: 3,
-  coffreEtoiles: 25,
+  coffreEtoiles: 100,
   coffrePieces: 60,
   coffreChances: { pieces: 34, paquet: 30, carteFbx: 7, figurine: 13, style: 6 },
   codeMission: "",
@@ -70,7 +70,7 @@ function charge(): Reglages {
       valeurDoublon: Array.isArray(r.valeurDoublon) && r.valeurDoublon.length === 5 ? r.valeurDoublon.map((n, i) => Math.round(num(n, d.valeurDoublon[i], 0, 1000))) : [...d.valeurDoublon],
       gainMachine: Math.round(num(r.gainMachine, d.gainMachine, 0, 50)),
       gainJeu: Math.round(num(r.gainJeu, d.gainJeu, 0, 50)),
-      coffreEtoiles: Math.round(num(r.coffreEtoiles, d.coffreEtoiles, 1, 500)),
+      coffreEtoiles: r.coffreEtoiles === 25 ? d.coffreEtoiles : Math.round(num(r.coffreEtoiles, d.coffreEtoiles, 1, 500)), // 25 was the old price
       coffrePieces: Math.round(num(r.coffrePieces, d.coffrePieces, 1, 2000)),
       coffreChances: {
         pieces: num(c.pieces, d.coffreChances.pieces, 0, 1000),
@@ -135,7 +135,10 @@ export function ecrireCompteurs(c: Compteurs) {
 }
 
 /** True when a Footballini (Brain Rot) card falls in this pack: on average 1 in N, and at the latest every `brainRotMax` packs. */
+// Footballinis are won in the chest with coins, never found in a pack
+const FOOTBALLINIS_DANS_PAQUETS = false;
 export function brainRotTombe(): boolean {
+  if (!FOOTBALLINIS_DANS_PAQUETS) return false;
   const r = etat;
   if (!r.brainRotMoyenne) return false;
   const depuis = compteurs.depuisBrainRot + 1; // this pack is the (depuis)th since the last one

@@ -6,7 +6,8 @@ import { LuLibrary, LuLock } from "react-icons/lu";
 import { FBX, RARITY } from "../fbx/art";
 import { ChestModal, FbxCard, FigZoom, Figurine } from "../fbx/ui";
 import type { Edition } from "../fbx/Standee";
-import { dupValue, freeChestToday, tradeDuplicates, tradeFigDuplicates, useCollec } from "../fbx/store";
+import { Chest } from "./coffre";
+import { dupValue, tradeDuplicates, tradeFigDuplicates, useCollec } from "../fbx/store";
 import { Fig } from "../mascot/Fig";
 import { say, update } from "../mascot/state";
 import { go } from "../router";
@@ -28,7 +29,6 @@ export function Collection() {
   const cardsOwned = FBX.filter((f) => c.cards[f.id]).length;
   const figsOwned = FBX.filter((f) => c.figs[f.id]).length + FBX.filter((f) => c.figsC[f.id]).length;
   const figs = ed === "c" ? c.figsC : c.figs;
-  const free = freeChestToday();
   const dupCards = FBX.reduce((a, f) => a + Math.max(0, (c.cards[f.id] ?? 0) - 1) * dupValue(f.rar), 0);
 
   function tradeAll() {
@@ -48,11 +48,11 @@ export function Collection() {
         <span><Piece /> <b>{s.stars}</b> pièces</span>
       </div>
 
-      <button type="button" className={cx("colx__chest", free && "is-free")} onClick={() => setChest(true)}>
-        <span className="colx__chesticon" aria-hidden="true">🧰</span>
+      <button type="button" className="colx__chest" onClick={() => setChest(true)}>
+        <span className="colx__chesticon" aria-hidden="true"><Chest open={false} /></span>
         <span>
-          <strong>Le coffre au trésor</strong>
-          <em>{free ? "Un coffre gratuit t'attend aujourd'hui !" : "Tu peux l'ouvrir avec des pièces"}</em>
+          <strong>Le coffre des Footballinis</strong>
+          <em>Ouvre-le avec des pièces : surprises, figurines, personnages stylés</em>
         </span>
       </button>
 
@@ -78,7 +78,7 @@ export function Collection() {
       {tab === "cartes" ? (
         <>
           <p className="note">20 personnages rigolos à collectionner. Les plus rares brillent. Touche une carte pour la voir en grand.</p>
-          {dupCards ? <button type="button" className="btn btn--soft" onClick={tradeAll}>🪙 Échanger mes doublons contre {dupCards} pièces</button> : null}
+          {dupCards ? <button type="button" className="btn btn--soft" onClick={tradeAll}><Piece /> Échanger mes doublons contre {dupCards} pièces</button> : null}
           <div className="colx__grid">
             {FBX.map((f) => (
               <FbxCard key={f.id} id={f.id} owned={!!c.cards[f.id]} count={c.cards[f.id] ?? 0} onClick={() => c.cards[f.id] && setZoom(f.id)} />

@@ -159,10 +159,8 @@ export function ReglagesJeu() {
         <Nombre label="Légende ou Moment au moins tous les" aide="0 = jamais garanti." value={r.garantieLegende} min={0} max={500} suffixe="paquets" onChange={(n) => regler({ garantieLegende: Math.round(n) })} />
       </Bloc>
 
-      <Bloc titre="Cartes Footballinis (Brain Rot) dans les paquets">
-        <p className="note">Une carte Footballini peut tomber d'un paquet normal. C'est rare, pour que ce soit une vraie surprise.</p>
-        <Nombre label="En moyenne, une tous les" aide="0 = elles ne tombent jamais des paquets." value={r.brainRotMoyenne} min={0} max={100} suffixe="paquets" onChange={(n) => regler({ brainRotMoyenne: Math.round(n) })} />
-        <Nombre label="Et au plus tard tous les" aide="Une est garantie à ce moment-là. 0 = pas de garantie." value={r.brainRotMax} min={0} max={200} suffixe="paquets" onChange={(n) => regler({ brainRotMax: Math.round(n) })} />
+      <Bloc titre="Cartes Footballinis (Brain Rot)">
+        <p className="note">Elles ne tombent plus des paquets : on les gagne seulement dans le coffre, avec des pièces.</p>
         <h4>Valeur d'un doublon (en pièces)</h4>
         {FRAR.map((x, i) => (
           <Nombre key={x.name} label={x.name} value={r.valeurDoublon[i]} min={0} max={1000} onChange={(n) => regler({ valeurDoublon: r.valeurDoublon.map((v, j) => (j === i ? Math.round(n) : v)) })} />
@@ -193,7 +191,7 @@ export function ReglagesJeu() {
       <button type="button" className="btn btn--ghost" onClick={() => { if (window.confirm("Remettre tous les réglages du jeu aux valeurs d'origine ?")) remettreOrigine(); }}>
         Remettre les valeurs d'origine
       </button>
-      <p className="note">Valeurs d'origine : {DEFAUT.cartesParPaquet} cartes par paquet, une Footballini en moyenne tous les {DEFAUT.brainRotMoyenne} paquets.</p>
+      <p className="note">Valeurs d'origine : {DEFAUT.cartesParPaquet} cartes par paquet, les Footballinis seulement dans le coffre.</p>
     </div>
   );
 }

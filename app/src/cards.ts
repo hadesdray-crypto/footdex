@@ -389,14 +389,25 @@ export function drawPack(pools: Pools, chemin: number, owned: Record<string, unk
   return out;
 }
 
-/** A single guaranteed card for a reward. A Légende comes from the legends even before their path opens. */
+/** A guaranteed card for a reward (in a pack of 5). A Légende comes from the legends even before their path opens. */
 export function drawGift(pools: Pools, chemin: number, kind: GiftKind, owned: Record<string, unknown>): Pulled[] {
   if (kind === "cadeau") return drawPack(pools, chemin, owned);
   const d = drawContext(pools, chemin, owned, kind === "legende" ? ["legendes"] : []);
   const floor: Rarity = kind === "legende" ? "legende" : kind === "eclat" ? "eclat" : "rare";
   const odds = { ...SLOT_ODDS.last, legende: kind === "legende" ? 100 : SLOT_ODDS.last.legende, moment: kind === "legende" ? 0 : SLOT_ODDS.last.moment };
   const card = drawOne(d, odds, floor) ?? drawOne(d, SLOT_ODDS.last, "rare");
-  return card ? [{ card, shiny: random() < SHINY_CHANCE * 2 }] : [];
+  return card ? withFour({ card, shiny: random() < SHINY_CHANCE * 2 }, pools, chemin, owned) : [];
+}
+
+/** A guaranteed card always comes in a pack of 5: the guaranteed card and 4 more, all different. A pack is never a single card. */
+function withFour(star: Pulled, pools: Pools, chemin: number, owned: Record<string, unknown>): Pulled[] {
+  const out: Pulled[] = [star];
+  for (let tries = 0; tries < 4 && out.length < 5; tries += 1) {
+    for (const p of drawPack(pools, chemin, { ...owned, [star.card.id]: 1 }, 5)) {
+      if (out.length < 5 && !out.some((o) => o.card.id === p.card.id)) out.push(p);
+    }
+  }
+  return out;
 }
 
 /** Rarities the shop can sell on this path: only those the open groups have. */
@@ -407,7 +418,7 @@ export function shopRarities(pools: Pools, chemin: number): Set<Rarity> {
 /** A card bought with stars: the rarity chosen, a card the child does not have whenever there is one. */
 export function drawRarity(pools: Pools, chemin: number, rarity: Rarity, owned: Record<string, unknown>): Pulled[] {
   const card = cardOf(drawContext(pools, chemin, owned), rarity, 1);
-  return card ? [{ card, shiny: random() < SHINY_CHANCE }] : [];
+  return card ? withFour({ card, shiny: random() < SHINY_CHANCE }, pools, chemin, owned) : [];
 }
 
 /** Reveal order: the best card comes last. */
