@@ -2,7 +2,7 @@
 // the Footballinis cards, the figurines, the styled characters, and soon music, clips and match moments.
 import { useState } from "react";
 import { Piece } from "../ui/Piece";
-import { LuLibrary, LuLock } from "react-icons/lu";
+import { LuClapperboard, LuLibrary, LuLock, LuMusic, LuTrophy } from "react-icons/lu";
 import { FBX, RARITY } from "../fbx/art";
 import { ChestModal, FbxCard, FigZoom, Figurine } from "../fbx/ui";
 import type { Edition } from "../fbx/Standee";
@@ -126,11 +126,11 @@ export function Collection() {
       ) : (
         <div className="colx__soon">
           {[
-            ["🎵", "Musiques", "De courts morceaux de musique à collectionner."],
-            ["🎬", "Clips", "De petits clips vidéo rigolos."],
-            ["⚽", "Séquences de match", "Les plus beaux buts, à revoir."],
+            [<LuMusic key="m" />, "Musiques", "De courts morceaux de musique à collectionner."],
+            [<LuClapperboard key="c" />, "Clips", "De petits clips vidéo rigolos."],
+            [<LuTrophy key="t" />, "Séquences de match", "Les plus beaux buts, à revoir."],
           ].map(([i, t, d]) => (
-            <div key={t} className="colx__soonitem">
+            <div key={String(t)} className="colx__soonitem">
               <span aria-hidden="true">{i}</span>
               <strong>{t}</strong>
               <em>{d}</em>

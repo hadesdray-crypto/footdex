@@ -49,7 +49,7 @@
 .chm__title { margin: 0; font: 900 1.5rem var(--f-display, inherit); color: #ffd76a; }
 .chm__hint { margin: 0; font-size: 0.92rem; color: #c9d4ea; }
 .chm__pay { display: grid; gap: 8px; width: 100%; }
-.chm__chest { position: relative; display: grid; place-items: center; }
+.chm__chest { position: relative; display: grid; place-items: center; padding-top: 34px; }
 .chm__chest--big .chest { width: 220px; height: 180px; }
 .chm__chest.is-shake .chest { animation: chShake 0.25s ease-in-out infinite; }
 @keyframes chShake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-5deg) translateY(-2px); } 75% { transform: rotate(5deg) translateY(-2px); } }
@@ -143,6 +143,11 @@
 @media (max-height: 640px) {
   .chm { padding-top: 64px; padding-bottom: 84px; }
   .chm__box { max-height: calc(100dvh - 150px); }
+  .chm__chest--big .chest { width: 150px; height: 122px; }
+  .chm__chest { padding-top: 26px; }
+  .chm__box { gap: 8px; padding: 12px 14px; }
+  .chm__hint { display: none; }
+  .chm__title { font-size: 1.25rem; }
 }
 
 /* Paramètres : portes plus compactes pour voir tout le menu sans chercher */
