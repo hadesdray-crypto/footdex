@@ -418,7 +418,7 @@ export function shopRarities(pools: Pools, chemin: number): Set<Rarity> {
 /** A card bought with stars: the rarity chosen, a card the child does not have whenever there is one. */
 export function drawRarity(pools: Pools, chemin: number, rarity: Rarity, owned: Record<string, unknown>): Pulled[] {
   const card = cardOf(drawContext(pools, chemin, owned), rarity, 1);
-  const n = random() < 0.6 ? 10 : 15; // a shop pack: 10 cards, or 15
+  const x = random(); const n = x < 0.2 ? 5 : x < 0.7 ? 10 : 15; // a shop pack: 5, 10 or 15 cards
   return card ? withFour({ card, shiny: random() < SHINY_CHANCE }, pools, chemin, owned, n) : [];
 }
 
@@ -433,9 +433,9 @@ export function isBig(p: Pulled): boolean {
 
 /** The pack types of the reserve: always at least 5 cards; exceptionally 10, and very rarely 15. */
 export const PACK_TYPES: Record<number, { name: string; tone: [string, string]; weight: number }> = {
-  5: { name: "Finale", tone: ["#ffd76a", "#4a2c06"], weight: 80 },
-  10: { name: "Ballon d'or", tone: ["#fff1a8", "#5a3a00"], weight: 20 },
-  15: { name: "Coupe du monde", tone: ["#ffffff", "#1b2a5a"], weight: 0 },
+  5: { name: "Finale", tone: ["#ffd76a", "#4a2c06"], weight: 70 },
+  10: { name: "Ballon d'or", tone: ["#fff1a8", "#5a3a00"], weight: 22 },
+  15: { name: "Coupe du monde", tone: ["#ffffff", "#1b2a5a"], weight: 8 },
 };
 /** An old pack of the reserve (1 to 4 cards, or 7) becomes a pack of the new sizes: nothing is lost, nothing is smaller than 5. */
 export function packSizeOk(n: number): number {

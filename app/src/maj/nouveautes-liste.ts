@@ -4,11 +4,11 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-07",
-    titre: "Version 62 : tailles des paquets",
+    titre: "Version 62 : 5, 10 ou 15 cartes par paquet",
     type: "appli",
     points: [
-      "Les paquets du jour : 5 cartes la plupart du temps, 10 de temps en temps. Si tu en as plusieurs d'un coup, tu les ouvres un par un.",
-      "Les paquets achetés avec les pièces dans la boutique : 10 cartes, ou 15 cartes, avec toujours une carte de la rareté choisie.",
+      "Les paquets du jour : 5, 10 ou 15 cartes (le plus souvent 5). Si tu en as plusieurs d'un coup, tu les ouvres un par un.",
+      "Les paquets achetés avec les pièces dans la boutique : 5, 10 ou 15 cartes (le plus souvent 10), avec toujours une carte de la rareté choisie.",
     ],
   },
   {
