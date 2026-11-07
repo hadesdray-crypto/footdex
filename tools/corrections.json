@@ -1175,6 +1175,21 @@
    "ancien": null,
    "valeur": "Troisième du Ballon d'Or 2026",
    "source": "ESPN, kickfootball et Yahoo Sports, cérémonie du 26 octobre 2026 à Londres (vérifié le 7 novembre 2026)"
+  },
+  {
+   "op": "inserer",
+   "chemin": [
+    "players",
+    "players",
+    {
+     "id": "dembele"
+    },
+    "honours"
+   ],
+   "index": 3,
+   "ancien": null,
+   "valeur": "Tenant du Ballon d'Or jusqu'au 26 octobre 2026, quand Harry Kane lui succède",
+   "source": "ESPN, kickfootball et Yahoo Sports (cérémonie du 26 octobre 2026), footmercato"
   }
  ]
 }

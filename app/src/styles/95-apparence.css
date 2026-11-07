@@ -46,3 +46,6 @@
 /* Le coffre : rien à voir tant que rien n'est gagné */
 .coffre__vide { list-style: none; padding: 18px 14px; text-align: center; opacity: .8; }
 .coffre__open { width: 100%; justify-content: center; margin: 8px 0 4px; min-height: 48px; }
+
+/* jamais de défilement de côté, même si un personnage passe hors de l'écran */
+html, body { overflow-x: clip; }

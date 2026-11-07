@@ -623,8 +623,12 @@ function voice(text: string, onEnd?: () => void, cut = false) {
     mouthFor(text);
     return;
   }
-  while (vq.length >= 4) vq.shift(); // old chatter that nobody heard in time is dropped, never a line being said
-  vq.push({ text, onEnd, trying: mine.trying, visitor: mine.visitor, who: mine.who, at: Date.now() });
+  // old chatter that nobody heard in time is dropped (its turn is released at once), never a line being said
+  while (vq.length >= 8) vq.shift()?.onEnd?.();
+  const item: VItem = { text, onEnd, trying: mine.trying, visitor: mine.visitor, who: mine.who, at: Date.now() };
+  // the Doctor and the Referee speak next (they never cut the one who is talking, but they do not wait behind the chatter)
+  if (mine.visitor && (mine.who === "medecin" || mine.who === "arbitre")) vq.unshift(item);
+  else vq.push(item);
   vPump();
 }
 
