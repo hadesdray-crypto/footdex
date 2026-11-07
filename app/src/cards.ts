@@ -50,7 +50,7 @@ export type Reward =
 export type GiftKind = "cadeau" | "rare" | "eclat" | "legende";
 
 export const GIFT_LABEL: Record<GiftKind, string> = {
-  cadeau: "Paquet cadeau de 5 cartes",
+  cadeau: "Paquet cadeau",
   rare: "Carte Rare garantie",
   eclat: "Carte Éclat garantie",
   legende: "Carte Légende garantie",

@@ -5,6 +5,7 @@ import { LuArrowLeft, LuCircleCheck, LuGem, LuLayers, LuPlay, LuRotateCcw, LuSta
 import { Fig } from "../mascot/Fig";
 import { PERSOS } from "../mascot/lines";
 import { emit, sayLabel, stopTalking, useMascot } from "../mascot/state";
+import { reglages } from "../reglages-jeu";
 import { playFx } from "../mascot/bruits";
 import { gameReward, useStore } from "../store";
 import { PageTitle } from "../ui/bits";
@@ -785,7 +786,7 @@ export function Jeux() {
   return (
     <div className="jeux">
       <PageTitle kicker="On joue ensemble" title="Les jeux">
-        <p>Dix petits jeux où le personnage joue avec toi et parle à voix haute. Gagne-en un chaque jour : 3 pièces par jeu !</p>
+        <p>Dix petits jeux où le personnage joue avec toi et parle à voix haute. Gagne-en un chaque jour : {reglages().gainJeu} pièces par jeu !</p>
       </PageTitle>
       {game ? (
         <GameFrame key={game.id} game={game} onExit={() => setGame(null)} lv={lv} setLv={setLv} />

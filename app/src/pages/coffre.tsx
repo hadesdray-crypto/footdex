@@ -9,6 +9,7 @@ import { DOCTOR_LOOK } from "../mascot/state";
 import { HISTOIRES, armer, carteId, desarmer, lancerHistoire, useArmees, useVues } from "../mascot/histoires";
 import { say, update, useMascot } from "../mascot/state";
 import { unlockChest, useStore } from "../store";
+import { reglages } from "../reglages-jeu";
 import { PageTitle } from "../ui/bits";
 import { go } from "../router";
 import { click } from "../sound";
@@ -112,13 +113,13 @@ export function Coffre() {
   const [opened, setOpened] = useState(0);
 
   const ouvrir = () => {
-    if (s.stars < OUVRIR) {
-      say(`Il te manque ${OUVRIR - s.stars} pièces. Gagne-en avec les jeux, le défi du jour, ou les doublons !`);
-      return;
-    }
     const g = tirer(s.chest);
     if (!g) {
       say("Tu as déjà tout trouvé dans le coffre. Bravo !");
+      return;
+    }
+    if (s.stars < OUVRIR) {
+      say(`Il te manque ${OUVRIR - s.stars} pièces. Gagne-en avec les jeux ou avec les doublons !`);
       return;
     }
     if (unlockChest(g.id, OUVRIR)) {
@@ -155,7 +156,7 @@ export function Coffre() {
       <button type="button" className="btn btn--gold coffre__open" onClick={ouvrir}>
         <Piece />  Ouvrir le coffre : {OUVRIR} pièces
       </button>
-      <p className="coffre__how">Comment gagner des pièces ? Avec les doublons de tes paquets, le défi du jour, et en gagnant aux jeux (3 pièces par jeu et par jour).</p>
+      <p className="coffre__how">Comment gagner des pièces ? Avec les doublons de tes paquets et en gagnant aux jeux ({reglages().gainJeu} pièces par jeu et par jour).</p>
       {flash ? <p className="coffre__flash" role="status">Nouveau dans ton coffre : {flash} !</p> : null}
 
       <div className="segmented" role="tablist" aria-label="Ce que tu as trouvé">

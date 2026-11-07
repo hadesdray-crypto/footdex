@@ -52,7 +52,7 @@ export function Collection() {
         <span className="colx__chesticon" aria-hidden="true">🧰</span>
         <span>
           <strong>Le coffre au trésor</strong>
-          <em>{free ? "Un coffre gratuit t'attend aujourd'hui !" : "Ouvre-le avec des pièces ou des pièces"}</em>
+          <em>{free ? "Un coffre gratuit t'attend aujourd'hui !" : "Tu peux l'ouvrir avec des pièces"}</em>
         </span>
       </button>
 

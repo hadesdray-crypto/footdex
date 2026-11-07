@@ -11,7 +11,7 @@ export const EVT_BIENVENUE = "footdex:bienvenue";
 const ETAPES = [
   { titre: "Bienvenue dans Footdex !", texte: "Collectionne les cartes des joueurs et des clubs, et apprends plein de choses sur le football." },
   { titre: "Ouvre des paquets", texte: "Dans l'onglet des paquets, ouvre-en pour gagner de nouvelles cartes. Elles se rangent toutes seules dans ton classeur." },
-  { titre: "Joue chaque jour", texte: "Le défi du jour et les jeux te donnent des pièces et des étoiles pour avoir encore plus de cartes." },
+  { titre: "Joue chaque jour", texte: "Les jeux te donnent des pièces pour ouvrir le coffre, et le défi du jour te donne un paquet de cartes en plus." },
   { titre: "Ton personnage", texte: "Touche-le : il parle et il joue avec toi. Tu peux changer sa voix et ses copains dans Paramètres." },
 ];
 
