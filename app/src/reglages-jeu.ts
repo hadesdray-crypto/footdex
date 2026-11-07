@@ -59,7 +59,7 @@ function charge(): Reglages {
     const d = DEFAUT;
     const c = (r.coffreChances ?? {}) as Record<string, unknown>;
     return {
-      cartesParPaquet: Math.round(num(r.cartesParPaquet, d.cartesParPaquet, 1, 12)),
+      cartesParPaquet: Math.round(num(r.cartesParPaquet, d.cartesParPaquet, 5, 15)),
       chancesNormal: odds(r.chancesNormal, d.chancesNormal),
       chancesDerniere: odds(r.chancesDerniere, d.chancesDerniere),
       nouvellesCartes: num(r.nouvellesCartes, d.nouvellesCartes, 0, 100),

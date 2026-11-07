@@ -2,7 +2,7 @@
 // Saved in this browser, and also in the artifact's private per-person store
 // when the page is opened signed in on claude.ai.
 import { useSyncExternalStore } from "react";
-import { CARDS_PER_CHEMIN, MILESTONES, RARITY, randomPackSize, SHINY_STARS, cheminOf, milestoneRewards, type GiftKind, type Pulled, type Reward } from "./cards";
+import { CARDS_PER_CHEMIN, MILESTONES, RARITY, packSizeOk, randomPackSize, SHINY_STARS, cheminOf, milestoneRewards, type GiftKind, type Pulled, type Reward } from "./cards";
 import { dayKey, daysSinceEpoch, storageGet, storageSet } from "./util";
 import { reglages } from "./reglages-jeu";
 
@@ -74,7 +74,7 @@ function sane(raw: unknown): State | null {
     chest: strings(st.chest),
     gamesDay: st.gamesDay && typeof st.gamesDay === "object" ? st.gamesDay : {},
     book: st.book && typeof st.book === "object" ? st.book : {},
-    stock: Array.isArray(st.stock) ? st.stock.filter((x): x is number => typeof x === "number" && x >= 1 && x <= 12).slice(0, 80) : [],
+    stock: Array.isArray(st.stock) ? st.stock.filter((x): x is number => typeof x === "number" && x >= 1).map(packSizeOk).slice(0, 80) : [],
     stockDay: typeof st.stockDay === "string" ? st.stockDay : "",
   };
 }

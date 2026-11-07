@@ -269,7 +269,8 @@ let audioEl: HTMLAudioElement | null = null;
 let speakTimer = 0;
 let wake = 0;
 
-export function stopTalking() {
+/** Stops the sound that is playing now (internal: a new line never calls this, only an explicit stop does). */
+function stopAudio() {
   window.clearTimeout(talkTimer);
   window.clearTimeout(speakTimer);
   wake += 1;
@@ -291,6 +292,15 @@ export function stopTalking() {
     /* nothing to stop */
   }
   if (snap.talking) set({ talking: false });
+}
+
+/** An explicit stop (the player closes the bubble, opens a menu, leaves): the voice stops and nobody is waiting any more. */
+export function stopTalking() {
+  vq.length = 0;
+  vId += 1;
+  vOn = false;
+  window.clearTimeout(vGuard);
+  stopAudio();
 }
 
 function mouthFor(text: string) {
@@ -565,9 +575,62 @@ function order(): Engine[] {
   return list.length ? list : ["robot", "babble"];
 }
 
+// ------------------------------------------------------------------ the voice line: nobody is ever cut off
+// A new line waits until the one being said is finished (it is never interrupted by another character,
+// by a scene or by a timer). Only an explicit stop (stopTalking) or `cut` stops a voice.
+type VItem = { text: string; onEnd?: () => void; trying: PVoice | null; visitor: boolean; who: string; at: number };
+const vq: VItem[] = [];
+let vOn = false;
+let vId = 0;
+let vGuard = 0;
+/** True while a voice is speaking or lines wait for their turn to be heard. */
+export const voiceBusy = () => vOn || vq.length > 0;
+function vPump() {
+  if (vOn) return;
+  // a line that waited far too long is no more up to date
+  let it = vq.shift();
+  while (it && Date.now() - it.at > 20000 && vq.length) it = vq.shift();
+  if (!it) return;
+  vOn = true;
+  vId += 1;
+  const id = vId;
+  const cur = it;
+  const fin = () => {
+    if (id !== vId || !vOn) return;
+    window.clearTimeout(vGuard);
+    vOn = false;
+    try {
+      cur.onEnd?.();
+    } finally {
+      window.setTimeout(vPump, 140);
+    }
+  };
+  // safety only: the real end of the voice releases the line long before this
+  window.clearTimeout(vGuard);
+  vGuard = window.setTimeout(fin, Math.min(60000, 12000 + cur.text.length * 130));
+  trying = cur.trying;
+  nextIsVisitor = cur.visitor;
+  speechWho = cur.who;
+  voiceNow(cur.text, fin);
+}
+/** Speaks a text. It starts when the voice before it has finished (so nobody is cut off); `cut` stops what is said now. */
+function voice(text: string, onEnd?: () => void, cut = false) {
+  const mine = { trying, visitor: nextIsVisitor, who: speechWho };
+  trying = null;
+  nextIsVisitor = false;
+  if (cut) stopTalking();
+  if (!snap.s.auto) {
+    mouthFor(text);
+    return;
+  }
+  while (vq.length >= 4) vq.shift(); // old chatter that nobody heard in time is dropped, never a line being said
+  vq.push({ text, onEnd, trying: mine.trying, visitor: mine.visitor, who: mine.who, at: Date.now() });
+  vPump();
+}
+
 /** Speaks a text and moves the mouth, in the way chosen in the settings; in automatic mode, the next way takes over when one fails. */
-function voice(text: string, onEnd?: () => void) {
-  stopTalking();
+function voiceNow(text: string, onEnd?: () => void) {
+  stopAudio();
   if (!snap.s.auto) {
     mouthFor(text);
     return;
@@ -668,7 +731,6 @@ export function hideBubble() {
 type Turn = { run: (end: () => void) => void; at: number; prio: number; ms: number };
 const turns: Turn[] = [];
 let turnOn = false;
-let turnPrio = 0;
 let turnId = 0;
 let turnGuard = 0;
 /** True while somebody is speaking or waiting to speak. */
@@ -680,7 +742,6 @@ function startTurn() {
   while (t && t.prio === 0 && Date.now() - t.at > 9000) t = turns.shift();
   if (!t) return;
   turnOn = true;
-  turnPrio = t.prio;
   turnId += 1;
   const my = turnId;
   const end = () => {
@@ -690,7 +751,7 @@ function startTurn() {
     window.setTimeout(startTurn, 260);
   };
   window.clearTimeout(turnGuard);
-  turnGuard = window.setTimeout(end, Math.min(14000, t.ms + 2500));
+  turnGuard = window.setTimeout(end, Math.min(40000, t.ms * 2 + 4000));
   try {
     t.run(end);
   } catch {
@@ -709,18 +770,12 @@ export function takeTurn(run: (end: () => void) => void, opts: { prio?: number; 
   let i = turns.findIndex((x) => x.prio < prio);
   if (i < 0) i = turns.length;
   turns.splice(i, 0, item);
-  if (turnOn && turnPrio < prio) {
-    turnId += 1;
-    turnOn = false;
-    window.clearTimeout(turnGuard);
-    // the one who was talking is cut short: his bubble goes away
-    window.dispatchEvent(new Event("footdex:hush"));
-  }
+  // an important line goes first in the queue, but it never cuts the one who is talking: it waits for him to finish
   startTurn();
 }
 /** The main character speaks: he has the floor at once, and the friends wait until he has finished. */
 function claimTurn(ms: number): () => void {
-  turns.length = 0;
+  for (let k = turns.length - 1; k >= 0; k -= 1) if (turns[k].prio === 0) turns.splice(k, 1); // only idle chatter is dropped
   turnId += 1;
   turnOn = true;
   const my = turnId;
@@ -731,23 +786,30 @@ function claimTurn(ms: number): () => void {
     window.setTimeout(startTurn, 260);
   };
   window.clearTimeout(turnGuard);
-  turnGuard = window.setTimeout(release, Math.min(14000, ms + 1500));
+  turnGuard = window.setTimeout(release, Math.min(40000, ms * 2 + 3000));
   return release;
 }
 
 /** Shows a bubble and speaks it. `top` shows it at the top of the screen (during a pack opening). */
-export function say(text: string, opts: { top?: boolean; quiet?: boolean; keepQueue?: boolean } = {}) {
+export function say(text: string, opts: { top?: boolean; quiet?: boolean; keepQueue?: boolean; cut?: boolean } = {}) {
   if (!opts.keepQueue) queue = [];
   window.clearTimeout(hideTimer);
   bubbleId += 1;
   set({ bubble: { id: bubbleId, text, top: !!opts.top, silent: P().mode === "joueur" && !opts.top } });
   const release = claimTurn(Math.max(2400, text.length * 68));
-  if (!opts.quiet) voice(text, release);
+  if (!opts.quiet) voice(text, release, opts.cut);
   const wait = Math.max(4200, text.length * 70);
-  hideTimer = window.setTimeout(() => {
-    if (snap.talking) hideTimer = window.setTimeout(hideBubble, 1500);
-    else set({ bubble: null });
-  }, wait);
+  const myBubble = bubbleId;
+  // the bubble goes away by itself, but never while the voice is still speaking: the voice is never cut by a timer
+  let waited = 0;
+  const softHide = () => {
+    if (bubbleId !== myBubble) return;
+    if ((snap.talking || voiceBusy()) && waited < 45000) {
+      waited += 700;
+      hideTimer = window.setTimeout(softHide, 700);
+    } else set({ bubble: null });
+  };
+  hideTimer = window.setTimeout(softHide, wait);
 }
 
 export function play(anim: string, ms: number, vx = 0, vy = 0) {
@@ -989,7 +1051,7 @@ export function installAndroidVoices() {
 export function tryVoice(v: PVoice, text?: string) {
   trying = v;
   const t = text ?? P().sample;
-  say(t.length > 4 ? t : "Salut ! C'est moi, avec cette voix-là !");
+  say(t.length > 4 ? t : "Salut ! C'est moi, avec cette voix-là !", { cut: true });
 }
 
 /** One choice in the voice picker. */
@@ -1070,4 +1132,11 @@ export function visitorSpeak(text: string, who: "medecin" | "arbitre", onEnd?: (
   nextIsVisitor = true;
   speechWho = who; // the mouth that moves is his (data-who), not the main character's
   voice(text, onEnd);
+}
+
+// test hook (address « ?essai-terrain » only): lets a test make characters speak
+if (typeof window !== "undefined" && location.search.includes("essai-terrain")) {
+  (window as unknown as Record<string, unknown>).__say = say;
+  (window as unknown as Record<string, unknown>).__speakAs = speakAs;
+  (window as unknown as Record<string, unknown>).__voiceBusy = voiceBusy;
 }

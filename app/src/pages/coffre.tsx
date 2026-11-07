@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Piece } from "../ui/Piece";
 import { LuGem, LuGift, LuHeart, LuLock, LuSparkles, LuStar, LuTrophy, LuZap, LuFlag } from "react-icons/lu";
 import type { Look } from "../mascot/look";
@@ -12,7 +12,7 @@ import { unlockChest, useStore } from "../store";
 import { PageTitle } from "../ui/bits";
 import { go } from "../router";
 import { click } from "../sound";
-import { cx, fmt } from "../util";
+import { cx, fmt, storageGet, storageSet } from "../util";
 
 type Icon = typeof LuStar;
 
@@ -63,32 +63,79 @@ export function Chest({ open }: { open: boolean }) {
   );
 }
 
+/** What one opening of the chest costs, in coins. What is inside is drawn by chance: nothing can be chosen or seen before. */
+export const OUVRIR = 100;
+
+// The grown-up's key (menu « Essais »): shows everything and opens it for free, to test. Never on for the child.
+const TOUT = "footdex.coffre.tout.v1";
+export const coffreTout = () => storageGet(TOUT) === "1";
+export function setCoffreTout(on: boolean) {
+  storageSet(TOUT, on ? "1" : "0");
+  window.dispatchEvent(new Event("footdex:coffretout"));
+}
+export function useCoffreTout(): boolean {
+  const [on, setOn] = useState(coffreTout);
+  useEffect(() => {
+    const f = () => setOn(coffreTout());
+    window.addEventListener("footdex:coffretout", f);
+    return () => window.removeEventListener("footdex:coffretout", f);
+  }, []);
+  return on;
+}
+
+type Gain = { id: string; name: string; line: string; poids: number };
+/** Everything the chest can give. The cheaper old prices are now the odds: the rarest things come out the least. */
+function toutesLesCartes(): Gain[] {
+  return [
+    ...SECRETS.map((c) => ({ id: c.id, name: c.name, line: c.line, poids: 1000 / c.price })),
+    ...SPECIALS.map((c) => ({ id: c.id, name: c.name, line: "", poids: 1000 / c.price })),
+    ...HISTOIRES.map((h) => ({ id: carteId(h.id), name: h.titre, line: "", poids: 1000 / h.prix })),
+  ];
+}
+function tirer(chest: string[]): Gain | null {
+  const possibles = toutesLesCartes().filter((g) => !chest.includes(g.id) && !(g.id === carteId("mere") && !chest.includes(carteId("medecin"))));
+  const total = possibles.reduce((n, g) => n + g.poids, 0);
+  if (!possibles.length || total <= 0) return null;
+  let x = Math.random() * total;
+  for (const g of possibles) { x -= g.poids; if (x < 0) return g; }
+  return possibles[possibles.length - 1];
+}
+
 export function Coffre() {
   const s = useStore();
   const m = useMascot();
+  const tout = useCoffreTout();
   const [tab, setTab] = useState<"perso" | "cartes" | "histoires">("perso");
   const vues = useVues();
   const armees = useArmees();
   const [flash, setFlash] = useState("");
   const [opened, setOpened] = useState(0);
 
-  function buy(id: string, price: number, name: string, line: string) {
-    if (s.stars < price) {
-      say(`Il te manque ${price - s.stars} pièces. Gagne-en avec les jeux, le défi du jour, ou les doublons !`);
+  const ouvrir = () => {
+    if (s.stars < OUVRIR) {
+      say(`Il te manque ${OUVRIR - s.stars} pièces. Gagne-en avec les jeux, le défi du jour, ou les doublons !`);
       return;
     }
-    if (unlockChest(id, price)) {
+    const g = tirer(s.chest);
+    if (!g) {
+      say("Tu as déjà tout trouvé dans le coffre. Bravo !");
+      return;
+    }
+    if (unlockChest(g.id, OUVRIR)) {
       click("button");
       setOpened((n: number) => n + 1);
-      setFlash(name);
-      say(`Bravo ! Le coffre s'ouvre : ${name} ! ${line}`);
+      setFlash(g.name);
+      say(`Bravo ! Le coffre s'ouvre : ${g.name} ! ${g.line}`.trim());
     }
-  }
+  };
+  /** The grown-up's key only: opens one thing for free, to try it. */
+  const offrir = (id: string) => { unlockChest(id, 0); setOpened((n: number) => n + 1); };
+  const cache = (id: string) => tout || s.chest.includes(id);
 
   return (
     <div className="coffre">
       <PageTitle kicker="Le trésor" title="Le coffre">
-        <p>Dépense tes pièces pour ouvrir le coffre : des personnages secrets pour la mascotte, et des cartes rigolotes qu'on ne trouve que là.</p>
+        <p>Ouvre le coffre avec tes pièces : tu ne sais jamais ce qu'il cache. Personnages secrets, cartes rigolotes, histoires… Ce que tu trouves reste à toi.</p>
       </PageTitle>
       <button type="button" className="colx__chest is-free" onClick={() => go({ page: "collection" })}>
         <span className="colx__chesticon" aria-hidden="true">🧰</span>
@@ -105,10 +152,13 @@ export function Coffre() {
           <span>pièces</span>
         </div>
       </div>
+      <button type="button" className="btn btn--gold coffre__open" onClick={ouvrir}>
+        <Piece />  Ouvrir le coffre : {OUVRIR} pièces
+      </button>
       <p className="coffre__how">Comment gagner des pièces ? Avec les doublons de tes paquets, le défi du jour, et en gagnant aux jeux (3 pièces par jeu et par jour).</p>
       {flash ? <p className="coffre__flash" role="status">Nouveau dans ton coffre : {flash} !</p> : null}
 
-      <div className="segmented" role="tablist" aria-label="Le coffre">
+      <div className="segmented" role="tablist" aria-label="Ce que tu as trouvé">
         <button type="button" role="tab" aria-selected={tab === "perso"} className={cx("segmented__tab", tab === "perso" && "segmented__tab--on")} onClick={() => setTab("perso")}>Personnages</button>
         <button type="button" role="tab" aria-selected={tab === "cartes"} className={cx("segmented__tab", tab === "cartes" && "segmented__tab--on")} onClick={() => setTab("cartes")}>Cartes</button>
         <button type="button" role="tab" aria-selected={tab === "histoires"} className={cx("segmented__tab", tab === "histoires" && "segmented__tab--on")} onClick={() => setTab("histoires")}>Histoires</button>
@@ -116,16 +166,15 @@ export function Coffre() {
 
       {tab === "histoires" ? (
         <ul className="specials">
-          {HISTOIRES.map((h) => {
+          {HISTOIRES.filter((h) => cache(carteId(h.id))).map((h) => {
             const mine = s.chest.includes(carteId(h.id));
-            const bloquee = h.id === "mere" && !s.chest.includes(carteId("medecin"));
             const look = (k: string) => (k === "medecin" ? DOCTOR_LOOK : m.s.looks[k] ?? CARAC[k as keyof typeof CARAC].tenue);
             return (
               <li key={h.id} className={cx("spec", !mine && "spec--locked")} style={{ "--h1": "#c58bff", "--h2": "#3d1a6b" }}>
                 <div className="spec__art spec__art--duo">
                   {mine ? h.fixes.map((k) => <Fig key={k} look={look(k)} size={52} crop="bust" />) : <LuLock aria-hidden="true" />}
                 </div>
-                <h3>{mine ? h.titre : "Histoire secrète ?"}</h3>
+                <h3>{h.titre}</h3>
                 {mine ? (
                   <>
                     <p className="spec__quirk">{h.teaser}</p>
@@ -142,20 +191,16 @@ export function Coffre() {
                     <button type="button" className="btn btn--soft" onClick={() => lancerHistoire(h.id, [...m.s.buddies, ...[PERSOS[m.s.perso].mode as string]])}>Revoir l'histoire</button>
                   </>
                 ) : (
-                  <>
-                    <p className="spec__quirk">{h.indice}</p>
-                    <button type="button" className="btn btn--soft" disabled={bloquee} onClick={() => buy(carteId(h.id), h.prix, h.titre, "")}>
-                      {bloquee ? "Ouvre d'abord le secret du Médecin" : <><Piece />  Ouvrir pour {h.prix}</>}
-                    </button>
-                  </>
+                  <button type="button" className="btn btn--soft" onClick={() => offrir(carteId(h.id))}>Essai : l'ouvrir gratuitement</button>
                 )}
               </li>
             );
           })}
+          {!HISTOIRES.some((h) => cache(carteId(h.id))) ? <li className="coffre__vide">Rien pour l'instant. Ouvre le coffre pour découvrir ce qu'il cache !</li> : null}
         </ul>
       ) : tab === "perso" ? (
         <ul className="secrets">
-          {SECRETS.map((c) => {
+          {SECRETS.filter((c) => cache(c.id)).map((c) => {
             const mine = s.chest.includes(c.id);
             const wearing = m.s.perso === c.perso && JSON.stringify(m.s.look) === JSON.stringify(c.look);
             return (
@@ -165,46 +210,42 @@ export function Coffre() {
                   {!mine ? <span className="secret__lock"><LuLock aria-hidden="true" /></span> : null}
                 </div>
                 <div className="secret__body">
-                  <h3>{mine ? c.name : "Personnage secret"}</h3>
-                  <p className="secret__tag">{mine ? c.tag : "Ouvre le coffre pour le découvrir !"}</p>
-                  {mine ? <p>{c.text}</p> : null}
+                  <h3>{c.name}</h3>
+                  <p className="secret__tag">{c.tag}</p>
+                  <p>{c.text}</p>
                   {mine ? (
                     <button type="button" className="btn btn--gold" disabled={wearing} onClick={() => { update({ perso: c.perso, look: c.look }); window.setTimeout(() => say(c.line), 250); }}>
                       {wearing ? "Il est avec toi" : "Le choisir"}
                     </button>
                   ) : (
-                    <button type="button" className="btn btn--soft" onClick={() => buy(c.id, c.price, c.name, c.line)}>
-                      <Piece />  Ouvrir pour {c.price}
-                    </button>
+                    <button type="button" className="btn btn--soft" onClick={() => offrir(c.id)}>Essai : l'ouvrir gratuitement</button>
                   )}
                 </div>
               </li>
             );
           })}
+          {!SECRETS.some((c) => cache(c.id)) ? <li className="coffre__vide">Rien pour l'instant. Ouvre le coffre pour découvrir ce qu'il cache !</li> : null}
         </ul>
       ) : (
         <ul className="specials">
-          {SPECIALS.map((c) => {
+          {SPECIALS.filter((c) => cache(c.id)).map((c) => {
             const mine = s.chest.includes(c.id);
             const Icon = c.icon;
             return (
               <li key={c.id} className={cx("spec", !mine && "spec--locked")} style={{ "--h1": c.hue[0], "--h2": c.hue[1] }}>
                 <div className="spec__art">{mine ? <Icon aria-hidden="true" /> : <LuLock aria-hidden="true" />}</div>
-                <h3>{mine ? c.name : "Carte secrète"}</h3>
+                <h3>{c.name}</h3>
+                <p className="spec__quirk">{c.quirk}</p>
+                <p className="spec__fact"><strong>Savais-tu ?</strong> {c.fact}</p>
                 {mine ? (
-                  <>
-                    <p className="spec__quirk">{c.quirk}</p>
-                    <p className="spec__fact"><strong>Savais-tu ?</strong> {c.fact}</p>
-                    <button type="button" className="btn btn--soft" onClick={() => say(`${c.name}. ${c.quirk} Savais-tu ? ${c.fact}`)}>Écouter</button>
-                  </>
+                  <button type="button" className="btn btn--soft" onClick={() => say(`${c.name}. ${c.quirk} Savais-tu ? ${c.fact}`)}>Écouter</button>
                 ) : (
-                  <button type="button" className="btn btn--soft" onClick={() => buy(c.id, c.price, c.name, "")}>
-                    <Piece />  Ouvrir pour {c.price}
-                  </button>
+                  <button type="button" className="btn btn--soft" onClick={() => offrir(c.id)}>Essai : l'ouvrir gratuitement</button>
                 )}
               </li>
             );
           })}
+          {!SPECIALS.some((c) => cache(c.id)) ? <li className="coffre__vide">Rien pour l'instant. Ouvre le coffre pour découvrir ce qu'il cache !</li> : null}
         </ul>
       )}
     </div>

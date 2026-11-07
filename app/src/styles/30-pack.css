@@ -84,7 +84,7 @@
 .reveal {
   --cw: max(190px, min(68vw, 300px, calc((100vh - 340px) * 5 / 7)));
   position: fixed; inset: 0; z-index: 60;
-  display: grid; grid-template-rows: auto 1fr; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
   color: var(--fg); outline: none;
   background: radial-gradient(120% 80% at 50% 0%, #182448 0%, #070b16 55%, #020308 100%);
   padding-top: max(10px, env(safe-area-inset-top, 0px));
@@ -131,7 +131,7 @@
 .reveal__count { font: 800 15px/1 var(--f-label); letter-spacing: 0.14em; color: var(--gold-hi); }
 .reveal__tools { display: flex; align-items: center; gap: 8px; }
 
-.reveal__stage { display: grid; justify-items: center; align-content: start; gap: 14px; padding-top: 8px; min-height: 0; cursor: pointer; -webkit-user-select: none; user-select: none; }
+.reveal__stage { display: grid; min-width: 0; justify-items: center; align-content: start; gap: 14px; padding-top: 8px; min-height: 0; cursor: pointer; -webkit-user-select: none; user-select: none; }
 .reveal__stage--pack { cursor: default; align-content: center; gap: 22px; padding-bottom: 6vh; }
 .reveal__pack {
   position: relative; border: 0; padding: 0; background: transparent; cursor: grab; touch-action: none;
@@ -197,9 +197,9 @@
 .walkout__clue strong { font: 900 26px/1 var(--f-display); text-transform: uppercase; letter-spacing: 0.02em; color: #fff; }
 @keyframes cluein { from { opacity: 0; transform: scale(1.6); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
 
-.reveal__pips { list-style: none; margin: 0; padding: 0 0 6px; display: flex; gap: 8px; justify-content: center; }
-.pip { width: 26px; height: 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.14); transition: background 0.3s, box-shadow 0.3s, width 0.3s; }
-.pip--now { width: 40px; background: rgba(255, 255, 255, 0.4); }
+.reveal__pips { list-style: none; margin: 0 auto; padding: 0 0 6px; display: flex; gap: 6px; justify-content: center; width: 100%; min-width: 0; max-width: calc(100vw - 32px); box-sizing: border-box; }
+.pip { flex: 0 1 26px; min-width: 4px; width: 26px; height: 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.14); transition: background 0.3s, box-shadow 0.3s, width 0.3s; }
+.pip--now { flex-basis: 40px; width: 40px; background: rgba(255, 255, 255, 0.4); }
 .pip--done { background: var(--pip, var(--gold)); box-shadow: 0 0 10px var(--pip, var(--gold)); }
 
 /* ------------------------------------------------------------------ summary after the pack */

@@ -42,3 +42,7 @@
 .approw + .approw { border-top: 1px solid var(--line); }
 .approw span { display: grid; gap: 2px; font-weight: 700; }
 .approw small { font-weight: 500; font-size: 12.5px; color: var(--muted); }
+
+/* Le coffre : rien à voir tant que rien n'est gagné */
+.coffre__vide { list-style: none; padding: 18px 14px; text-align: center; opacity: .8; }
+.coffre__open { width: 100%; justify-content: center; margin: 8px 0 4px; min-height: 48px; }

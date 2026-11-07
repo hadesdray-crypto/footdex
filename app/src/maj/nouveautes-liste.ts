@@ -4,6 +4,17 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-07",
+    titre: "Version 60 : paquets de 5 cartes minimum, coffre mystère, voix qui ne se coupent plus",
+    type: "appli",
+    points: [
+      "Paquets : toujours au moins 5 cartes. Exceptionnellement 10, et très rarement 15. Les anciens paquets de la réserve passent à 5 cartes. Les cartes déjà gagnées sont gardées.",
+      "Le coffre : on ne voit plus ce qu'il contient. On ouvre le coffre avec 100 pièces et on découvre ce qui sort (personnage, carte ou histoire). Ce qui a déjà été gagné reste dans « Personnages », « Cartes » et « Histoires ».",
+      "Les personnages ne s'interrompent plus quand ils parlent : une phrase commencée va jusqu'au bout, et les autres parlent après, sans la couper. La bulle reste tant que la voix parle.",
+      "Réglages des grands, menu Essais : un bouton pour tout voir et tout ouvrir dans le coffre, pour tester.",
+    ],
+  },
+  {
+    date: "2026-11-07",
     titre: "Version 59 : Ballon d'Or 2026 complété",
     type: "appli",
     points: [

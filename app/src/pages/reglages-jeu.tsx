@@ -5,6 +5,7 @@ import { RARITY } from "../cards";
 import { FBX, RARITY as FRAR } from "../fbx/art";
 import { ClipTest } from "../fbx/ui";
 import { update, useMascot } from "../mascot/state";
+import { setCoffreTout, useCoffreTout } from "./coffre";
 import { DEFAUT, type Odds, regler, remettreOrigine, totalOdds, useReglages } from "../reglages-jeu";
 
 function Nombre({ label, aide, value, min, max, step = 1, suffixe, onChange }: { label: string; aide?: string; value: number; min: number; max: number; step?: number; suffixe?: string; onChange: (n: number) => void }) {
@@ -108,6 +109,7 @@ export function Essais() {
   const [clipTest, setClipTest] = useState(false);
   const [msg, setMsg] = useState("");
   const m = useMascot();
+  const tout = useCoffreTout();
   const lance = (quoi: string, texte: string) => { window.dispatchEvent(new CustomEvent("footdex:essai", { detail: { quoi } })); setMsg(texte); };
   return (
     <div className="rg">
@@ -118,6 +120,12 @@ export function Essais() {
         <button type="button" className="btn btn--gold" onClick={() => setClipTest(true)}>Tester la figurine à clipser</button>
       </div>
       {msg ? <p className="note" role="status">{msg}</p> : null}
+      <p className="mm__label">Le coffre</p>
+      <div className="chips">
+        <button type="button" className={"chip" + (!tout ? " chip--on" : "")} aria-pressed={!tout} onClick={() => setCoffreTout(false)}>Caché, comme pour l'enfant</button>
+        <button type="button" className={"chip" + (tout ? " chip--on" : "")} aria-pressed={tout} onClick={() => setCoffreTout(true)}>Tout voir et tout ouvrir (essai)</button>
+      </div>
+      <p className="note">Pour l'enfant, le contenu du coffre reste caché : on ne le trouve qu'en ouvrant le coffre avec des pièces. Ici, tu peux tout voir et tout ouvrir gratuitement pour tester.</p>
       <p className="mm__label">Phrases des personnages</p>
       <div className="chips">
         <button type="button" className={"chip" + (!m.s.toutes ? " chip--on" : "")} aria-pressed={!m.s.toutes} onClick={() => update({ toutes: false })}>Seulement les bien audibles</button>
@@ -140,7 +148,7 @@ export function ReglagesJeu() {
 
 
       <Bloc titre="Les paquets">
-        <Nombre label="Cartes par paquet" aide="Entre 1 et 12. La dernière carte est toujours la meilleure." value={r.cartesParPaquet} min={1} max={12} onChange={(n) => regler({ cartesParPaquet: Math.round(n) })} />
+        <Nombre label="Cartes par paquet" aide="Entre 5 et 15. La dernière carte est toujours la meilleure." value={r.cartesParPaquet} min={5} max={15} onChange={(n) => regler({ cartesParPaquet: Math.round(n) })} />
         <Nombre label="Cartes jamais vues" aide="Part des tirages qui cherchent une carte que l'enfant n'a pas. Le reste est du pur hasard (doublons possibles)." value={r.nouvellesCartes} min={0} max={100} step={5} suffixe="%" onChange={(n) => regler({ nouvellesCartes: n })} />
         <Chances titre="Cartes 1 à la dernière −1" aide="Les cartes normales du paquet. Plus le poids est grand, plus ça sort souvent." odds={r.chancesNormal} onChange={(o) => regler({ chancesNormal: o })} />
         <Chances titre="Dernière carte (la meilleure)" aide="La carte du bout du paquet, toujours meilleure." odds={r.chancesDerniere} onChange={(o) => regler({ chancesDerniere: o })} />

@@ -372,7 +372,7 @@ export function drawPack(pools: Pools, chemin: number, owned: Record<string, unk
   // a good card is guaranteed from time to time, so nobody waits forever
   const floorLast: Rarity | null = r.garantieLegende && c.depuisLegende + 1 >= r.garantieLegende ? "legende" : r.garantieEclat && c.depuisEclat + 1 >= r.garantieEclat ? "eclat" : null;
   const out: Pulled[] = [];
-  const n = count ?? r.cartesParPaquet;
+  const n = Math.max(5, Math.min(15, count ?? r.cartesParPaquet));
   for (let slot = 0; slot < n; slot++) {
     const last = slot === n - 1 && n > 1;
     const card = drawOne(d, last ? SLOT_ODDS.last : SLOT_ODDS.normal, last ? floorLast : null) ?? drawOne(d, last ? SLOT_ODDS.last : SLOT_ODDS.normal, null) ?? drawOne(d, SLOT_ODDS.normal, null);
@@ -419,16 +419,19 @@ export function isBig(p: Pulled): boolean {
   return p.shiny || RARITY[p.card.rarity].rank >= 2;
 }
 
-/** The pack types of the reserve: from 1 to 5 cards, and, rarely, 7 or 10. */
+/** The pack types of the reserve: always at least 5 cards; exceptionally 10, and very rarely 15. */
 export const PACK_TYPES: Record<number, { name: string; tone: [string, string]; weight: number }> = {
-  1: { name: "Penalty", tone: ["#ff7a59", "#4a1608"], weight: 24 },
-  2: { name: "Corner", tone: ["#5ad1ff", "#06293d"], weight: 24 },
-  3: { name: "Contre-attaque", tone: ["#7be37f", "#0b3513"], weight: 22 },
-  4: { name: "Remontada", tone: ["#c58bff", "#2b0b4d"], weight: 16 },
-  5: { name: "Finale", tone: ["#ffd76a", "#4a2c06"], weight: 11 },
-  7: { name: "Ballon d'or", tone: ["#fff1a8", "#5a3a00"], weight: 2.6 },
-  10: { name: "Coupe du monde", tone: ["#ffffff", "#1b2a5a"], weight: 0.4 },
+  5: { name: "Finale", tone: ["#ffd76a", "#4a2c06"], weight: 90 },
+  10: { name: "Ballon d'or", tone: ["#fff1a8", "#5a3a00"], weight: 8 },
+  15: { name: "Coupe du monde", tone: ["#ffffff", "#1b2a5a"], weight: 2 },
 };
+/** An old pack of the reserve (1 to 4 cards, or 7) becomes a pack of the new sizes: nothing is lost, nothing is smaller than 5. */
+export function packSizeOk(n: number): number {
+  if (!Number.isFinite(n)) return 5;
+  if (n <= 5) return 5;
+  if (n <= 10) return 10;
+  return 15;
+}
 export function randomPackSize(): number {
   const sizes = Object.keys(PACK_TYPES).map(Number);
   const total = sizes.reduce((n, k) => n + PACK_TYPES[k].weight, 0);

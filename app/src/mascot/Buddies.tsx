@@ -1254,7 +1254,7 @@ function One({ b, index }: { b: Buddy; index: number }) {
           }
           else if (!getMascot().talking || force) speakAs(text, b, finish);
           else later(ms, finish);
-          later(ms + 2300, finish); // safety: no voice at all
+          later(ms * 2 + 4000, finish); // safety only: the real end of the voice comes first
         },
         { prio: force ? 1 : 0, ms },
       );
