@@ -4,6 +4,15 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-07",
+    titre: "Version 62 : tailles des paquets",
+    type: "appli",
+    points: [
+      "Les paquets du jour : 5 cartes la plupart du temps, 10 de temps en temps. Si tu en as plusieurs d'un coup, tu les ouvres un par un.",
+      "Les paquets achetés avec les pièces dans la boutique : 10 cartes, ou 15 cartes, avec toujours une carte de la rareté choisie.",
+    ],
+  },
+  {
+    date: "2026-11-07",
     titre: "Version 61 : plus jamais un paquet d'une seule carte, Footballinis seulement dans le coffre, nouveau coffre",
     type: "appli",
     points: [

@@ -400,11 +400,11 @@ export function drawGift(pools: Pools, chemin: number, kind: GiftKind, owned: Re
 }
 
 /** A guaranteed card always comes in a pack of 5: the guaranteed card and 4 more, all different. A pack is never a single card. */
-function withFour(star: Pulled, pools: Pools, chemin: number, owned: Record<string, unknown>): Pulled[] {
+function withFour(star: Pulled, pools: Pools, chemin: number, owned: Record<string, unknown>, n = 5): Pulled[] {
   const out: Pulled[] = [star];
-  for (let tries = 0; tries < 4 && out.length < 5; tries += 1) {
-    for (const p of drawPack(pools, chemin, { ...owned, [star.card.id]: 1 }, 5)) {
-      if (out.length < 5 && !out.some((o) => o.card.id === p.card.id)) out.push(p);
+  for (let tries = 0; tries < 8 && out.length < n; tries += 1) {
+    for (const p of drawPack(pools, chemin, { ...owned, [star.card.id]: 1 }, n)) {
+      if (out.length < n && !out.some((o) => o.card.id === p.card.id)) out.push(p);
     }
   }
   return out;
@@ -418,7 +418,8 @@ export function shopRarities(pools: Pools, chemin: number): Set<Rarity> {
 /** A card bought with stars: the rarity chosen, a card the child does not have whenever there is one. */
 export function drawRarity(pools: Pools, chemin: number, rarity: Rarity, owned: Record<string, unknown>): Pulled[] {
   const card = cardOf(drawContext(pools, chemin, owned), rarity, 1);
-  return card ? withFour({ card, shiny: random() < SHINY_CHANCE }, pools, chemin, owned) : [];
+  const n = random() < 0.6 ? 10 : 15; // a shop pack: 10 cards, or 15
+  return card ? withFour({ card, shiny: random() < SHINY_CHANCE }, pools, chemin, owned, n) : [];
 }
 
 /** Reveal order: the best card comes last. */
@@ -432,9 +433,9 @@ export function isBig(p: Pulled): boolean {
 
 /** The pack types of the reserve: always at least 5 cards; exceptionally 10, and very rarely 15. */
 export const PACK_TYPES: Record<number, { name: string; tone: [string, string]; weight: number }> = {
-  5: { name: "Finale", tone: ["#ffd76a", "#4a2c06"], weight: 90 },
-  10: { name: "Ballon d'or", tone: ["#fff1a8", "#5a3a00"], weight: 8 },
-  15: { name: "Coupe du monde", tone: ["#ffffff", "#1b2a5a"], weight: 2 },
+  5: { name: "Finale", tone: ["#ffd76a", "#4a2c06"], weight: 80 },
+  10: { name: "Ballon d'or", tone: ["#fff1a8", "#5a3a00"], weight: 20 },
+  15: { name: "Coupe du monde", tone: ["#ffffff", "#1b2a5a"], weight: 0 },
 };
 /** An old pack of the reserve (1 to 4 cards, or 7) becomes a pack of the new sizes: nothing is lost, nothing is smaller than 5. */
 export function packSizeOk(n: number): number {

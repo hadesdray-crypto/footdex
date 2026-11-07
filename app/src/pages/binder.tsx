@@ -323,7 +323,7 @@ function Shop({ pools, chemin, ready, onBuy }: { pools: ReturnType<typeof usePoo
           <span>pièces</span>
         </div>
         <p className="note">
-          Les pièces viennent des doublons (Base +2, Rare +5, Éclat +15, Légende et Moment +25, Brillante +40 en plus) et des récompenses du chemin. Chaque achat est un paquet de 5 cartes, avec une carte de la rareté choisie
+          Les pièces viennent des doublons (Base +2, Rare +5, Éclat +15, Légende et Moment +25, Brillante +40 en plus) et des récompenses du chemin. Chaque achat est un paquet de 10 ou 15 cartes, avec une carte de la rareté choisie
           que tu n'as pas encore, quand il en reste.
         </p>
         <div className="offers">
