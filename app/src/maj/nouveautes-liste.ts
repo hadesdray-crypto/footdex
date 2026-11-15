@@ -3,6 +3,17 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    date: "2026-11-15",
+    titre: "Version 63 : cartes et animations bien plus fluides",
+    type: "appli",
+    points: [
+      "Les cartes suivent le doigt sans saccade : le reflet de lumière glisse en douceur.",
+      "Le classeur, les paquets et l'accueil défilent sans à-coups : les brillances s'arrêtent le temps du défilement, puis repartent.",
+      "Quand une carte est en grand ou qu'un paquet s'ouvre, tout ce qui est derrière se fige pour laisser toute la place à l'écran.",
+      "L'apparence reste la même.",
+    ],
+  },
+  {
     date: "2026-11-07",
     titre: "Version 62 : 5, 10 ou 15 cartes par paquet",
     type: "appli",

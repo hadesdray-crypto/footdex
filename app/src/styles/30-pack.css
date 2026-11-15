@@ -6,7 +6,6 @@
   max-width: 100%;
   aspect-ratio: 5 / 8;
   container-type: inline-size;
-  filter: drop-shadow(0 30px 34px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 26px color-mix(in srgb, var(--glow) 45%, transparent));
 }
 .paquet__body {
   position: absolute; inset: 0; overflow: hidden; border-radius: 3.5cqi 3.5cqi 5cqi 5cqi;
@@ -14,7 +13,8 @@
     radial-gradient(110% 60% at 28% 12%, color-mix(in srgb, var(--p1) 70%, white) 0%, transparent 45%),
     radial-gradient(120% 80% at 50% 110%, rgba(0, 0, 0, 0.55), transparent 60%),
     linear-gradient(165deg, var(--p1) 0%, color-mix(in srgb, var(--p1) 45%, var(--p2)) 38%, var(--p2) 80%);
-  box-shadow: inset 0 0 0 1.2cqi rgba(255, 255, 255, 0.14), inset 0 0 0 1.8cqi rgba(0, 0, 0, 0.18);
+  /* L'ombre est ici (et non en « filter: drop-shadow ») : un filtre sur tout le paquet se recalculait à chaque image et faisait ramer. */
+  box-shadow: inset 0 0 0 1.2cqi rgba(255, 255, 255, 0.14), inset 0 0 0 1.8cqi rgba(0, 0, 0, 0.18), 0 30px 34px rgba(0, 0, 0, 0.6), 0 0 26px color-mix(in srgb, var(--glow) 45%, transparent);
 }
 .paquet__foil {
   position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay;

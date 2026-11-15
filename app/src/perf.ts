@@ -2,7 +2,21 @@
 // Elements come and go with the pages, so a MutationObserver hands the new ones to one IntersectionObserver.
 const WATCH = ".carte, .paquet, .btn--glow, .pathbar, .pathmap, .hero__cards, .ball, .fbc, .sd, .aurora, .mascot, .buddy";
 
+/** Pendant que le doigt fait défiler, les animations de fond s'arrêtent (classe is-scrolling), puis repartent. */
+function figerPendantDefilement() {
+  const root = document.documentElement;
+  let t = 0;
+  const stop = () => {
+    if (!root.classList.contains("is-scrolling")) root.classList.add("is-scrolling");
+    clearTimeout(t);
+    t = window.setTimeout(() => root.classList.remove("is-scrolling"), 180);
+  };
+  window.addEventListener("scroll", stop, { passive: true, capture: true });
+  window.addEventListener("touchmove", stop, { passive: true });
+}
+
 export function garderLegere() {
+  figerPendantDefilement();
   if (typeof IntersectionObserver === "undefined" || typeof MutationObserver === "undefined") return;
   const io = new IntersectionObserver(
     (list) => {

@@ -99,10 +99,16 @@
   -webkit-mask-image: radial-gradient(58% 44% at 50% 40%, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.25) 55%, #000 100%);
   mask-image: radial-gradient(58% 44% at 50% 40%, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.25) 55%, #000 100%);
 }
+/* Le reflet est un grand disque qui se déplace par transform (le téléphone ne redessine plus la carte à chaque mouvement du doigt). */
 .carte__glare {
-  z-index: 4; mix-blend-mode: overlay; opacity: calc(var(--glare) * 0.9);
-  background: radial-gradient(circle at var(--px) var(--py), rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0) 48%);
+  z-index: 4; mix-blend-mode: overlay; opacity: calc(var(--glare) * 0.9); overflow: hidden;
   transition: opacity 0.35s;
+}
+.carte__glare::before {
+  content: ""; position: absolute; inset: -50%;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0) 30%);
+  transform: translate3d(calc((var(--px) - 50%) * 0.5), calc((var(--py) - 50%) * 0.5), 0);
+  will-change: transform;
 }
 .carte.is-tilting .carte__holo { animation: none !important; }
 /* In long grids the foil stays still: only the big cards shimmer on their own (saves the phone's battery). */
@@ -389,8 +395,7 @@
 }
 .viewer__backdrop {
   position: fixed; inset: 0; border: 0; padding: 0; cursor: default;
-  background: radial-gradient(60% 50% at 50% 40%, color-mix(in srgb, var(--rc) 22%, rgba(5, 8, 16, 0.92)), rgba(3, 5, 10, 0.96));
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  background: radial-gradient(60% 50% at 50% 40%, color-mix(in srgb, var(--rc) 22%, rgba(5, 8, 16, 0.965)), rgba(3, 5, 10, 0.98));
 }
 .viewer__inner { position: relative; display: grid; gap: 18px; justify-items: center; width: min(100%, 860px); padding-block: 40px 10px; }
 .viewer__close { position: absolute; top: 0; right: 0; }

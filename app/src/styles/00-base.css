@@ -120,9 +120,9 @@ abbr { text-decoration: underline dotted; }
   -webkit-mask-image: linear-gradient(0deg, #000, transparent);
   mask-image: linear-gradient(0deg, #000, transparent);
 }
-@keyframes drift-a { to { transform: translate3d(14vmax, 10vmax, 0) scale(1.1); } }
-@keyframes drift-b { to { transform: translate3d(-12vmax, 14vmax, 0) scale(0.92); } }
-@keyframes drift-c { to { transform: translate3d(16vmax, -8vmax, 0) scale(1.08); } }
+@keyframes drift-a { to { transform: translate3d(14vmax, 10vmax, 0); } }
+@keyframes drift-b { to { transform: translate3d(-12vmax, 14vmax, 0); } }
+@keyframes drift-c { to { transform: translate3d(16vmax, -8vmax, 0); } }
 
 /* ------------------------------------------------------------------ shell */
 .app { min-height: 100vh; }
