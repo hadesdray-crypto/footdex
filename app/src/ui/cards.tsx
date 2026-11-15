@@ -244,6 +244,19 @@ export function cardRoute(card: CardRef): Route {
 }
 
 /** Locks the page scroll while an overlay is open, and closes it with Escape. */
+// La flèche retour d'Android ferme d'abord la fenêtre ouverte (carte en grand, paquet…), sans quitter la page.
+type Couche = { id: number; fermer: () => void; fermee: boolean };
+const couches: Couche[] = [];
+let coucheSeq = 0;
+let ignorerRetour = 0;
+if (typeof window !== "undefined") {
+  window.addEventListener("popstate", () => {
+    if (ignorerRetour > 0) { ignorerRetour -= 1; return; }
+    const haut = couches.pop();
+    if (haut) { haut.fermee = true; haut.fermer(); }
+  });
+}
+
 export function useOverlay(onClose: () => void) {
   const latest = useRef(onClose);
   latest.current = onClose;
@@ -253,9 +266,15 @@ export function useOverlay(onClose: () => void) {
     };
     window.addEventListener("keydown", onKey);
     document.body.classList.add("noscroll");
+    const couche: Couche = { id: ++coucheSeq, fermer: () => latest.current(), fermee: false };
+    try { history.pushState({ ...(history.state ?? {}), footdexCouche: couche.id }, ""); couches.push(couche); } catch { /* sans historique : la croix suffit */ }
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.classList.remove("noscroll");
+      if (!couches.length || couches.every((c) => c === couche)) document.body.classList.remove("noscroll");
+      const i = couches.indexOf(couche);
+      if (i >= 0) couches.splice(i, 1);
+      // fermée par la croix : on retire aussi la marche ajoutée dans l'historique (sauf si l'enfant a changé de page)
+      if (!couche.fermee && history.state?.footdexCouche === couche.id) { ignorerRetour += 1; history.back(); }
     };
   }, []);
 }

@@ -33,7 +33,7 @@ export function garderLesLiensExternes() {
       }
       ev.preventDefault();
       ev.stopPropagation();
-      say("Ça, c'est sur Internet. Un adulte peut l'allumer dans le Coin des parents, dans « Plus ».");
+      say("Ça, c'est sur Internet. Un adulte peut l'allumer dans Réglages, « Pour les grands ».");
     },
     true,
   );

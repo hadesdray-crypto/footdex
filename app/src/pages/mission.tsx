@@ -57,7 +57,7 @@ export function Mission() {
         <Section>
           <div className="mission__box">
             <p className="mission__big">🔑 Demande le code de la mission à ton père.</p>
-            {!r.codeMission.trim() ? <p className="note">Papa n'a pas encore choisi de code : il doit le faire dans le Coin des parents.</p> : null}
+            {!r.codeMission.trim() ? <p className="note">Papa n'a pas encore choisi de code : il doit le faire dans Réglages, « Pour les grands », « Réglages du jeu ».</p> : null}
             <input className="mission__code" value={saisi} aria-label="Code de la mission" inputMode="text" autoComplete="off" maxLength={12} onChange={(e: { target: { value: string } }) => { setSaisi(e.target.value); setErreur(""); }} />
             {erreur ? <p className="rg__total rg__total--bad">{erreur}</p> : null}
             <div className="chips">
@@ -181,7 +181,7 @@ export function Machine({ album }: { album: Album }) {
           {joueur?.anecdotes.map((x) => (
             <article key={x.title} className="journal__item"><h3>{x.title}</h3><p>{x.text}</p></article>
           ))}
-          {joueur ? <a className="btn btn--pitch" href={youtubeSearch(joueur.videoQuery)} target="_blank" rel="noreferrer">▶ Voir des vidéos (il faut internet)</a> : null}
+          {joueur ? <a className="btn btn--pitch" href={youtubeSearch(joueur.videoQuery)} target="_blank" rel="noreferrer">Voir des vidéos (il faut Internet)</a> : null}
           {!secrets.length && !joueur?.anecdotes.length ? <p className="note">Cette carte n'a pas encore de secret. D'autres arrivent bientôt !</p> : null}
           <div className="chips">
             <button type="button" className="btn btn--gold" onClick={() => { setPhase("choix"); setSel(null); }}>Mettre une autre carte</button>

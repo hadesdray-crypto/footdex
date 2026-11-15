@@ -52,7 +52,7 @@ export function Atelier() {
       <Chips label="Blessures" value={it.injuries} items={yesNo} onPick={(v) => setInter({ injuries: v })} />
       <p className="mm__label">Le Médecin</p>
       <Chips label="Le Médecin" value={it.docFast} items={[{ v: false, t: "Prend son temps" }, { v: true, t: "Pressé" }]} onPick={(v) => setInter({ docFast: v })} />
-      <button type="button" className="btn btn--soft" disabled={!hurt} onClick={heal}>{hurt ? "🩹 Soigner le personnage tout de suite" : "Le personnage n'est pas blessé"}</button>
+      <button type="button" className="btn btn--soft" disabled={!hurt} onClick={heal}>{hurt ? "Soigner le personnage tout de suite" : "Le personnage n'est pas blessé"}</button>
 
       <p className="mm__label">L'Arbitre carré passe sur le terrain</p>
       <Chips label="Visites de l'Arbitre" value={it.refVisits} items={yesNo} onPick={(v) => setInter({ refVisits: v })} />

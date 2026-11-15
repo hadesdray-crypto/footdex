@@ -36,7 +36,7 @@ export function Installer() {
               <li>Attends la fin du téléchargement, puis ouvre le fichier.</li>
               <li>Si le téléphone bloque : « Paramètres », active « Autoriser depuis cette source », puis reviens.</li>
               <li>Touche « Installer » (et « Installer quand même » si Play Protect le demande).</li>
-              <li>Pour garder tes cartes : avant, fais « Sauvegarder ma progression » dans Plus, Coin des parents.</li>
+              <li>Pour garder tes cartes : avant, fais « Sauvegarder ma progression » dans Réglages.</li>
             </>
           ) : (
             <li>Ouvre cette page sur un téléphone Android pour installer l'application complète. Sur iPhone : Partager, puis « Sur l'écran d'accueil ».</li>

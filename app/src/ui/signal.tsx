@@ -10,6 +10,8 @@ const KINDS: { id: Kind; label: string; hint: string }[] = [
   { id: "idee", label: "Une idée", hint: "Qu'est-ce qui rendrait l'almanach encore mieux ?" },
 ];
 const DAILY = 5;
+/** L'adresse mail qui reçoit les signalements : À COMPLÉTER (laisser vide tant qu'elle n'existe pas). Vide : le message se copie. */
+export const ADRESSE_SIGNALEMENTS = "";
 const DAY_KEY = "footdex.signal.jour";
 
 type Db = { doc(path: string): { set(data: Record<string, unknown>): Promise<void> } };
@@ -73,6 +75,11 @@ export function Signal() {
       const claude = (window as unknown as { claude?: { use?: (n: string) => Promise<unknown> } }).claude;
       const db = claude?.use ? ((await claude.use("db")) as Db | null) : null;
       if (!db) {
+        if (ADRESSE_SIGNALEMENTS) {
+          window.location.href = `mailto:${ADRESSE_SIGNALEMENTS}?subject=${encodeURIComponent(`Footdex : ${KINDS.find((k) => k.id === kind)?.label ?? ""}`)}&body=${encodeURIComponent(full)}`;
+          setState("sent");
+          return;
+        }
         setState("copy");
         return;
       }

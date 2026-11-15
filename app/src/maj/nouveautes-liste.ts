@@ -4,6 +4,17 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-15",
+    titre: "Version 64 : vérification complète",
+    type: "appli",
+    points: [
+      "Toute l'appli vérifiée sur 5 tailles d'écran (petit téléphone à grande tablette) : aucune erreur, rien qui dépasse.",
+      "Les messages indiquent le bon chemin vers les réglages des grands (Réglages, « Pour les grands »).",
+      "Dans les réglages du jeu, le coffre réglable s'appelle maintenant « Le coffre des Footballinis », comme dans l'appli.",
+      "Bouton « signaler » : il pourra envoyer directement par mail dès que l'adresse sera choisie.",
+    ],
+  },
+  {
+    date: "2026-11-15",
     titre: "Version 63 : cartes et animations bien plus fluides",
     type: "appli",
     points: [

@@ -59,7 +59,7 @@ export function SaisieCode({ titre, onOk }: { titre: string; onOk: () => void })
   }
   return (
     <div className="pcode">
-      <p className="pcode__title">🔒 {titre}</p>
+      <p className="pcode__title">{titre}</p>
       {oubli && rep.trim().replace(/\s/g, "") !== String(x * y) ? (
         <>
           <p className="note">Code oublié ? Pour un adulte : combien font {x} × {y} ?</p>
