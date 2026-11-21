@@ -4,6 +4,7 @@ import type { Look } from "./look";
 import { runnerSvg, type View } from "./runner";
 import { getMascot } from "./state";
 import { ballPos, kickBall, placeBall, setBallFloor } from "./ball";
+import { recaler, surEcranTourne } from "./recaler";
 
 export type Pose = "idle" | "run" | "walk" | "tired" | "push" | "kick" | "cheer" | "bow" | "kneel" | "juggle";
 export type Pt = { x: number; y: number };
@@ -73,6 +74,7 @@ export function createActor(look: Look, x: number, y: number, hooks: { onTap: ()
     },
     destroy: () => {
       me.dead = true;
+      stopEcran();
       goal?.end(false);
       goal = null;
       cancelAnimationFrame(raf);
@@ -134,6 +136,13 @@ export function createActor(look: Look, x: number, y: number, hooks: { onTap: ()
   el.addEventListener("click", (e) => {
     e.stopPropagation();
     hooks.onTap();
+  });
+  // the screen turned: he stays at the same place of the new screen
+  const stopEcran = surEcranTourne((d) => {
+    recaler(me, d);
+    if (goal && typeof goal.to !== "function") goal.to = recaler({ ...goal.to }, d);
+    place();
+    hooks.onMove(me.x, me.y);
   });
   paint();
   place();

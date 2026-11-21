@@ -1,5 +1,6 @@
 // A real ball: gravity, bounces, rolling. You can tap it, grab it, throw it across the screen. The characters play with it too.
 import { click } from "../sound";
+import { recalerX, recalerY, surEcranTourne } from "./recaler";
 
 type Sim = { el: HTMLElement; spin: HTMLElement; x: number; y: number; vx: number; vy: number; rot: number; held: boolean; floor: number | null; raf: number; last: number; r: number; lastBounce: number };
 
@@ -153,6 +154,14 @@ export function mountBall(x: number, y: number) {
   el.addEventListener("pointercancel", release);
   window.addEventListener("resize", wake);
 }
+// the screen turned: the ball stays at the same place of the new screen
+surEcranTourne((d) => {
+  if (!S) return;
+  S.x = recalerX(S.x, d, R);
+  S.y = Math.min(groundY(), recalerY(S.y, d, R + 56, 82 + R));
+  draw();
+  wake();
+});
 
 export function unmountBall() {
   if (!S) return;

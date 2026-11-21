@@ -18,3 +18,18 @@ for racine, _, fichiers in os.walk(RES):
 couleur = '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#070B16</color>\n</resources>\n'
 open(f"{RES}/values/ic_launcher_background.xml", "w").write(couleur)
 print("icônes remplacées")
+
+# L'écran tourne librement (portrait et paysage) : aucun blocage d'orientation dans le manifeste,
+# et l'activité n'est pas relancée quand on tourne (l'appli garde la page et ce que l'enfant faisait).
+import re
+MANIFESTE = "android/app/src/main/AndroidManifest.xml"
+if os.path.exists(MANIFESTE):
+    m = open(MANIFESTE, encoding="utf-8").read()
+    m = re.sub(r'\s+android:screenOrientation="[^"]*"', "", m)
+    def garder(x):
+        vals = set(x.group(1).split("|"))
+        vals |= {"orientation", "screenSize", "smallestScreenSize", "screenLayout", "keyboardHidden"}
+        return 'android:configChanges="' + "|".join(sorted(vals)) + '"'
+    m = re.sub(r'android:configChanges="([^"]*)"', garder, m, count=1)
+    open(MANIFESTE, "w", encoding="utf-8").write(m)
+    print("orientation libre")

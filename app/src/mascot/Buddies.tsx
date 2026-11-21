@@ -5,6 +5,7 @@
 // The Zombie walks after them; they keep away from him like a cat-and-mouse game: gently when he is far,
 // screaming and running when he is close. And little scenes now and then: the Zombie sneezes his head off,
 // hide-and-seek, the Doctor's check-up, the Papi falls asleep, the stadium cat, the Mexican wave…
+import { recaler, recalerX, recalerY, surEcranTourne } from "./recaler";
 import { useEffect, useRef, useState } from "react";
 import { Fig } from "./Fig";
 import { CARAC } from "./caractere";
@@ -1122,6 +1123,16 @@ async function ola() {
 
 // ------------------------------------------------------------------ 8. the stadium cat
 let cat: { el: HTMLElement; x: number; y: number; dir: 1 | -1; state: "walk" | "hiss" } | null = null;
+// the screen turned: every friend, the zombie's head and the cat move to the same place of the new screen
+surEcranTourne((d) => {
+  for (const b of bodies.values()) {
+    recaler(b, d);
+    if (b.goal) { b.goal.x = recalerX(b.goal.x, d); b.goal.y = recalerY(b.goal.y, d); }
+  }
+  if (head) { head.x = recalerX(head.x, d, 14); head.y = recalerY(head.y, d); }
+  if (cat) cat.y = recalerY(cat.y, d);
+  spotAt = -1e9;
+});
 const CAT_SVG = `<svg viewBox="0 0 60 44" width="46" height="34" aria-hidden="true"><path d="M8 30 Q2 20 6 10" fill="none" stroke="#3b3b4a" stroke-width="4" stroke-linecap="round" class="cat__tail"/><ellipse cx="26" cy="28" rx="16" ry="10" fill="#4a4a5c"/><path d="M14 36 v6 M20 37 v6 M32 37 v6 M38 36 v6" stroke="#4a4a5c" stroke-width="4" stroke-linecap="round"/><circle cx="44" cy="18" r="10" fill="#4a4a5c"/><path d="M36 12 L38 2 L44 9Z M46 9 L52 2 L53 13Z" fill="#4a4a5c"/><circle cx="41" cy="17" r="2.4" fill="#ffd76a"/><circle cx="48" cy="17" r="2.4" fill="#ffd76a"/><circle cx="41" cy="17" r="1" fill="#111"/><circle cx="48" cy="17" r="1" fill="#111"/><path d="M44 21 l1.5 1.5 l1.5 -1.5" stroke="#ff9db4" stroke-width="1.4" fill="none"/><path d="M50 21 h8 M50 23 l7 2 M38 21 h-7" stroke="#cfd4dc" stroke-width="0.8"/></svg>`;
 async function catScene() {
   if (cat || sceneOn) return;
