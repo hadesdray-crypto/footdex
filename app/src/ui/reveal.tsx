@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { Piece } from "./Piece";
 import { createPortal } from "react-dom";
 import { LuFastForward, LuGift, LuX } from "react-icons/lu";
-import { CARDS_PER_CHEMIN, CHEMINS, RARITY, cheminOf, isBig, type CardRef, type Pulled } from "../cards";
+import { CARDS_PER_CHEMIN, CHEMINS, RARITY, cheminOf, isBig, type Pulled } from "../cards";
 import { RARITY_COLORS, burst, rain, reducedMotion, sparkle, vibrate } from "../fx";
 import { go } from "../router";
 import { onCard, setBusy } from "../mascot/state";
-import { coins, crowd, fanfare, flip, riser, tear, thump } from "../sound";
-import { type PackKind, type PackResult, useStore } from "../store";
+import { coins, crowd, fanfare, flip, tear, thump, tick, whoosh } from "../sound";
+import { type PackKind, type PackResult, getState, useStore } from "../store";
 import { cx, fmt } from "../util";
 import { Carte, cardRoute, useOverlay } from "./cards";
 import { PathBar, RewardIcon, rewardText } from "./chemin";
@@ -25,26 +25,69 @@ export type Opening = {
 };
 
 type Phase = "pack" | "open" | "cards" | "recap";
+/** Direction of the finger: r = vers la droite, l = vers la gauche, u = vers le haut, d = vers le bas. */
+type Dir = "r" | "l" | "u" | "d";
 
 function glowOf(p: Pulled): string {
   if (p.shiny) return "#ff7ae0";
   return RARITY[p.card.rarity].rank >= 1 ? RARITY[p.card.rarity].color : "#dfe7ff";
 }
 
-/** The whole opening: the pack, the tear, the cards one by one, the big entrance for great cards, then the summary. */
+/** « Spéciale » : tout ce qui est au-dessus d'une carte de base (rare, éclat, légende, moment) ou brillante. Le dos ne dit que ça. */
+function special(p: Pulled): boolean {
+  return p.shiny || RARITY[p.card.rarity].rank >= 1;
+}
+
+/** Ce qu'on découvre au retournement : rare, ultra rare (éclat, légende, moment) ou ultra spéciale (brillante). */
+function tierOf(p: Pulled): "base" | "rare" | "ultra" | "brillante" {
+  if (p.shiny) return "brillante";
+  const rank = RARITY[p.card.rarity].rank;
+  return rank >= 2 ? "ultra" : rank >= 1 ? "rare" : "base";
+}
+
+/** Moins d'effets quand la tablette rame (classe posée par l'arbitre de fluidité) ou quand le téléphone demande moins d'animations. */
+function light(): boolean {
+  return reducedMotion() || document.documentElement.classList.contains("fluide-leger");
+}
+
+/** La vibration du paquet reste même en mode allégé : c'est un signal, pas une animation. */
+function buzz(pattern: number | number[]) {
+  try {
+    if ("vibrate" in navigator) navigator.vibrate(pattern);
+  } catch {
+    /* pas de vibreur */
+  }
+}
+
+/** Force de la vibration quand une carte arrive en haut du tas, selon le nombre de cartes avant la prochaine spéciale. */
+const NEAR = [260, 150, 80, 40, 20];
+
+function dirOf(dx: number, dy: number): Dir {
+  if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? "r" : "l";
+  return dy < 0 ? "u" : "d";
+}
+
+/** The whole opening: the pack torn along its top, the cards bursting out into a neat pile, turned one by one, then the summary. */
 export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose: () => void; onGift?: () => void }) {
   const { pulled, result, kind } = opening;
-  const [phase, setPhase] = useState<Phase>(kind === "boutique" ? "cards" : "pack");
+  const shop = kind === "boutique";
+  const [phase, setPhase] = useState<Phase>(shop ? "cards" : "pack");
   const [index, setIndex] = useState(0);
   const [shown, setShown] = useState(false);
-  const [walk, setWalk] = useState(0);
   const [glory, setGlory] = useState(false);
+  const [dir, setDir] = useState<Dir>("r");
+  const [entering, setEntering] = useState<"boom" | "deal" | null>(shop ? "deal" : null);
+  const [leaving, setLeaving] = useState<{ p: Pulled; dir: Dir; key: number } | null>(null);
+  const [flash, setFlash] = useState<{ tier: string; key: number } | null>(null);
   const timers = useRef<number[]>([]);
+  const lock = useRef(0);
+  const gesture = useRef<{ x: number; y: number } | null>(null);
+  const swiped = useRef(false);
   const cardBox = useRef<HTMLDivElement | null>(null);
   const root = useRef<HTMLDivElement | null>(null);
-  const reduced = reducedMotion();
   const best = pulled[pulled.length - 1];
   const current = pulled[Math.min(index, pulled.length - 1)];
+  const dos = getState().back;
   useOverlay(onClose);
 
   const clear = () => {
@@ -57,15 +100,33 @@ export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose
   useEffect(() => {
     root.current?.focus();
     setBusy(true);
+    if (shop) {
+      lock.current = Date.now() + 450;
+      later(light() ? 0 : 520, () => {
+        setEntering(null);
+        announce(0);
+      });
+    }
     return () => {
       clear();
       setBusy(false);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function center(): [number, number] {
     const r = cardBox.current?.getBoundingClientRect();
     return r ? [r.left + r.width / 2, r.top + r.height / 2] : [window.innerWidth / 2, window.innerHeight / 2];
+  }
+
+  /** Une carte arrive en haut du tas : plus la prochaine spéciale est proche, plus le téléphone vibre fort. */
+  function announce(i: number) {
+    for (let j = i; j < pulled.length; j++) {
+      if (special(pulled[j])) {
+        buzz(NEAR[Math.min(j - i, NEAR.length - 1)]);
+        return;
+      }
+    }
   }
 
   function celebrate(p: Pulled) {
@@ -78,73 +139,95 @@ export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose
     vibrate([25, 50, 90]);
   }
 
-  function turn(big: boolean) {
+  function turn() {
+    const big = isBig(current);
     clear();
-    setWalk(0);
     setShown(true);
     flip(current.card.rarity);
     onCard({ name: current.card.name, rarity: current.card.rarity, shiny: current.shiny });
+    const tier = tierOf(current);
+    if (tier !== "base") setFlash({ tier, key: index });
     if (big) {
       setGlory(true);
-      requestAnimationFrame(() => celebrate(current));
+      later(light() ? 0 : 320, () => celebrate(current));
     } else if (RARITY[current.card.rarity].rank >= 1) {
-      later(260, () => cardBox.current && sparkle(cardBox.current, RARITY[current.card.rarity].color, 24));
+      later(300, () => cardBox.current && sparkle(cardBox.current, RARITY[current.card.rarity].color, 30));
     }
   }
 
-  function reveal() {
-    if (isBig(current) && !reduced) {
-      setWalk(1);
-      later(500, () => {
-        setWalk(2);
-        thump();
-        vibrate(12);
-      });
-      later(1200, () => {
-        setWalk(3);
-        thump();
-        vibrate(12);
-      });
-      later(1900, () => {
-        setWalk(4);
-        thump();
-        vibrate(12);
-        riser(1.1);
-      });
-      later(3050, () => turn(true));
-    } else turn(isBig(current));
+  /** Retourner la carte du dessus, dans le sens du geste. */
+  function reveal(d: Dir) {
+    lock.current = Date.now() + (light() ? 200 : 650);
+    setDir(d);
+    // the direction is set first (no transition), then the card turns at the next frame
+    requestAnimationFrame(() => requestAnimationFrame(() => turn()));
   }
 
-  function advance() {
+  function advance(d: Dir = "r") {
     setGlory(false);
+    setFlash(null);
     if (index + 1 >= pulled.length) {
-      setPhase("recap");
+      lock.current = Date.now() + 1000;
+      // a moment later, so the end of the gesture does not land on a card of the summary
+      later(60, () => setPhase("recap"));
       return;
     }
+    lock.current = Date.now() + (light() ? 150 : 380);
+    if (!light()) {
+      setLeaving({ p: current, dir: d === "l" ? "l" : d === "u" ? "u" : "r", key: index });
+      later(560, () => setLeaving(null));
+      whoosh();
+    }
     setShown(false);
+    setDir("r");
     setIndex(index + 1);
+    announce(index + 1);
   }
 
-  function onStage() {
-    if (phase !== "cards") return;
-    if (walk > 0) turn(true);
-    else if (!shown) reveal();
-    else advance();
+  function act(d: Dir) {
+    if (phase !== "cards" || entering || Date.now() < lock.current) return;
+    if (!shown) reveal(d);
+    else advance(d);
   }
 
-  function openPack() {
+  /** Le paquet est déchiré : une vibration par carte spéciale cachée dedans. */
+  function torn() {
     if (phase !== "pack") return;
     setPhase("open");
-    tear();
-    vibrate(15);
-    later(reduced ? 60 : 1150, () => setPhase("cards"));
+    const n = pulled.filter(special).length;
+    if (n > 0) {
+      const pattern: number[] = [];
+      for (let i = 0; i < n; i++) pattern.push(110, 170);
+      pattern.pop();
+      later(250, () => buzz(pattern));
+    }
+  }
+
+  /** BOUM : les cartes jaillissent du paquet et retombent en tas. */
+  function pull() {
+    if (phase !== "open") return;
+    setPhase("cards");
+    const soft = light();
+    setEntering(soft ? null : "boom");
+    lock.current = Date.now() + (soft ? 150 : 1150);
+    thump();
+    if (!soft) {
+      requestAnimationFrame(() => {
+        const [x, y] = center();
+        burst(x, y + 40, ["#ffffff", "#ffe49a", glowOf(best) === "#dfe7ff" ? "#9fb4ff" : "#ffe49a"], 70, 0.9);
+      });
+      later(1150, () => {
+        setEntering(null);
+        announce(0);
+      });
+    } else announce(0);
   }
 
   function showAll() {
     const rest = pulled.slice(shown ? index + 1 : index);
     clear();
-    setWalk(0);
     setGlory(false);
+    setFlash(null);
     setPhase("recap");
     const big = rest.filter(isBig).pop();
     if (big) {
@@ -156,14 +239,15 @@ export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose
 
   const r = RARITY[current.card.rarity];
   const fresh = result.fresh.has(current.card.id);
-  const big = isBig(current);
-  const hintColor = !shown && RARITY[current.card.rarity].rank >= 1 ? glowOf(current) : undefined;
+  const spe = special(current);
+  const under = Math.min(3, pulled.length - index - 1);
+  const tier = tierOf(current);
 
   return createPortal(
     <div
       ref={root}
       tabIndex={-1}
-      className={cx("reveal", `reveal--${phase}`, walk > 0 && "reveal--walk", walk > 0 && `reveal--walk-${walk}`, glory && "reveal--glory", glory && current.shiny && "reveal--shiny")}
+      className={cx("reveal", `reveal--${phase}`, glory && "reveal--glory", glory && current.shiny && "reveal--shiny")}
       role="dialog"
       aria-modal="true"
       aria-label={`Ouverture : ${opening.title}`}
@@ -174,6 +258,7 @@ export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose
         <span className="reveal__beam reveal__beam--r" />
         <span className="reveal__burst" />
       </div>
+      {flash ? <span key={flash.key} className={cx("rv-flash", `rv-flash--${flash.tier}`)} aria-hidden="true" /> : null}
 
       <header className="reveal__bar">
         <p className="reveal__title">{opening.title}</p>
@@ -191,28 +276,83 @@ export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose
 
       {phase === "pack" || phase === "open" ? (
         <div className="reveal__stage reveal__stage--pack">
-          <TearPack size={kind === "jour" ? pulled.length : undefined} kind={kind} chemin={opening.chemin} glow={glowOf(best)} hot={isBig(best)} torn={phase === "open"} onOpen={openPack} />
-          <p className="reveal__hint" aria-live="polite">
-            {phase === "pack" ? "Glisse ton doigt sur le paquet pour le déchirer, ou touche-le." : "Le paquet s'ouvre…"}
-          </p>
+          <TearPack
+            size={kind === "jour" ? pulled.length : undefined}
+            kind={kind}
+            chemin={opening.chemin}
+            glow={glowOf(best)}
+            hot={isBig(best)}
+            open={phase === "open"}
+            backs={Math.min(3, pulled.length)}
+            dos={dos}
+            onTorn={torn}
+            onPull={pull}
+          />
         </div>
       ) : null}
 
       {phase === "cards" ? (
-        <div className="reveal__stage" onClick={onStage}>
-          <div className="reveal__deck">
-            {Array.from({ length: Math.min(3, pulled.length - index - 1) }, (_, k) => (
-              <span key={k} className="reveal__under" style={{ "--k": k + 1 }} aria-hidden="true" />
+        <div className="reveal__stage rv-stage" onClick={(e: MouseEvent) => !(e.target as HTMLElement).closest("button") && act("r")}>
+          <div
+            className={cx("reveal__deck rv-deck", entering && `rv-deck--${entering}`)}
+            onPointerDown={(e: PointerEvent) => {
+              gesture.current = { x: e.clientX, y: e.clientY };
+              swiped.current = false;
+              try {
+                (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+              } catch {
+                /* not supported */
+              }
+            }}
+            onPointerUp={(e: PointerEvent) => {
+              const g = gesture.current;
+              gesture.current = null;
+              if (!g) return;
+              const dx = e.clientX - g.x;
+              const dy = e.clientY - g.y;
+              // a simple touch is handled by the click that follows (so it cannot land on what appears next)
+              if (Math.hypot(dx, dy) < 14) return;
+              swiped.current = true;
+              act(dirOf(dx, dy));
+            }}
+            onPointerCancel={() => {
+              gesture.current = null;
+            }}
+            onClick={(e: MouseEvent) => {
+              e.stopPropagation();
+              if (swiped.current) {
+                swiped.current = false;
+                return;
+              }
+              act("r");
+            }}
+          >
+            {entering === "boom" ? (
+              <div className="rv-ghost" aria-hidden="true">
+                <PackArt size={kind === "jour" ? pulled.length : undefined} kind={kind} chemin={opening.chemin} />
+              </div>
+            ) : null}
+            {Array.from({ length: under }, (_, k) => under - k).map((k) => (
+              <Dos key={index + k} dos={dos} className="rv-under" style={{ "--k": k }} />
             ))}
-            <div ref={cardBox} key={index} className={cx("reveal__card", !shown && hintColor && "reveal__card--hint")} style={hintColor ? { "--hint": hintColor } : undefined}>
+            <div
+              ref={cardBox}
+              key={index}
+              className={cx("rv-top", `rv-top--${dir}`, shown && "is-shown", !shown && spe && "rv-top--special", shown && `rv-top--${tier}`)}
+              style={{ "--k": 0 }}
+            >
+              <span className="rv-top__aura" aria-hidden="true" />
               <Carte card={current.card} shiny={current.shiny} flipped={shown} fresh={shown && fresh} size="xl" tilt={shown} play={shown} />
             </div>
+            {leaving ? (
+              <div key={`l${leaving.key}`} className={cx("rv-leave", `rv-leave--${leaving.dir}`)} aria-hidden="true">
+                <Carte card={leaving.p.card} shiny={leaving.p.shiny} size="xl" tilt={false} />
+              </div>
+            ) : null}
           </div>
 
           <div className="reveal__caption" aria-live="polite">
-            {walk > 0 ? (
-              <Walkout card={current.card} step={walk - 1} />
-            ) : shown ? (
+            {shown ? (
               <>
                 <p className="reveal__rarity">
                   {current.shiny ? "Brillante · " : ""}
@@ -225,10 +365,12 @@ export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose
                 </p>
               </>
             ) : (
-              <p className="reveal__hint">{big && reduced ? "Une grande carte !" : "Touche la carte pour la retourner."}</p>
+              <p className={cx("reveal__hint", spe && "rv-hint--special")}>
+                {spe ? "Une carte spéciale t'attend ! Touche-la ou glisse ton doigt dessus pour la retourner." : "Touche la carte ou glisse ton doigt dessus pour la retourner."}
+              </p>
             )}
-            <button type="button" className={cx("btn", shown ? "btn--gold" : "btn--glass")}>
-              {walk > 0 ? "Retourner tout de suite" : !shown ? "Retourner la carte" : index + 1 >= pulled.length ? "Voir le résumé" : "Carte suivante"}
+            <button type="button" className={cx("btn", shown ? "btn--gold" : "btn--glass", "rv-btn")} onClick={() => act("r")}>
+              {!shown ? "Retourner la carte" : index + 1 >= pulled.length ? "Voir le résumé" : "Carte suivante"}
             </button>
           </div>
 
@@ -250,70 +392,276 @@ export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose
   );
 }
 
-function TearPack({ kind, chemin, glow, hot, torn, onOpen, size }: { size?: number; kind: PackKind; chemin: number; glow: string; hot: boolean; torn: boolean; onOpen: () => void }) {
-  const [progress, setProgress] = useState(0);
-  const start = useRef<{ x: number; y: number } | null>(null);
-  const button = useRef<HTMLButtonElement | null>(null);
+/** The back of a card, alone (cards still in the pack, the rest of the pile). */
+function Dos({ dos, className, style }: { dos: string; className?: string; style?: Record<string, string | number> }) {
   return (
-    <button
-      ref={button}
-      type="button"
-      className={cx("reveal__pack", hot && "reveal__pack--hot")}
-      aria-label="Ouvrir le paquet"
-      disabled={torn}
-      onPointerDown={(e: PointerEvent) => {
-        start.current = { x: e.clientX, y: e.clientY };
-        try {
-          (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-        } catch {
-          /* not supported */
-        }
-      }}
-      onPointerMove={(e: PointerEvent) => {
-        if (!start.current) return;
-        const width = button.current?.offsetWidth ?? 240;
-        const p = Math.min(1, Math.abs(e.clientX - start.current.x) / (width * 0.7));
-        setProgress(p);
-        if (p >= 1) {
-          start.current = null;
-          onOpen();
-        }
-      }}
-      onPointerUp={(e: PointerEvent) => {
-        const s = start.current;
-        start.current = null;
-        if (!s) return;
-        const moved = Math.hypot(e.clientX - s.x, e.clientY - s.y);
-        if (moved < 12 || progress > 0.4) onOpen();
-        else setProgress(0);
-      }}
-      onPointerCancel={() => {
-        start.current = null;
-        setProgress(0);
-      }}
-      onClick={(e: MouseEvent) => {
-        if (e.detail === 0) onOpen();
-      }}
-    >
-      <PackArt size={size} kind={kind} chemin={chemin} glow={glow} tear={torn ? 1 : progress} torn={torn} />
-      <span className="reveal__swipe" aria-hidden="true" />
-    </button>
+    <div className={cx("rv-dos", className)} style={style} aria-hidden="true">
+      <div className={cx("back", `back--${dos}`)}>
+        <span className="carte__monogram">F</span>
+        <span className="carte__backword">FOOTDEX</span>
+      </div>
+    </div>
   );
 }
 
-function Walkout({ card, step }: { card: CardRef; step: number }) {
-  const labels = card.kind === "moment" ? ["Compétition", "Date", "Stade"] : ["Pays", "Poste", "Club"];
+/** Where the foil is cut: a little below the crimped strip, in % of the pack height. */
+const CUT = 10;
+const TOOTH = 4;
+const JAG = 1.1;
+
+function jagged(from: number, to: number): string[] {
+  // the teeth sit on a fixed grid, so the pack and the torn strip always match
+  const half = TOOTH / 2;
+  const yg = (g: number) => CUT + (Math.abs(g) % 2 === 1 ? JAG : -JAG);
+  const y = (x: number) => {
+    const g = Math.floor(x / half);
+    const k = x / half - g;
+    return yg(g) * (1 - k) + yg(g + 1) * k;
+  };
+  const pt = (x: number) => `${x.toFixed(2)}% ${y(x).toFixed(2)}%`;
+  const pts = [pt(from)];
+  if (from < to) for (let g = Math.floor(from / half) + 1; g * half < to; g++) pts.push(pt(g * half));
+  else for (let g = Math.ceil(from / half) - 1; g * half > to; g--) pts.push(pt(g * half));
+  pts.push(pt(to));
+  return pts;
+}
+
+function TearPack({
+  kind,
+  chemin,
+  glow,
+  hot,
+  open,
+  size,
+  backs,
+  dos,
+  onTorn,
+  onPull,
+}: {
+  size?: number;
+  kind: PackKind;
+  chemin: number;
+  glow: string;
+  hot: boolean;
+  open: boolean;
+  backs: number;
+  dos: string;
+  onTorn: () => void;
+  onPull: () => void;
+}) {
+  const lean = useRef<HTMLDivElement | null>(null);
+  const body = useRef<HTMLDivElement | null>(null);
+  const flapEl = useRef<HTMLDivElement | null>(null);
+  const cards = useRef<HTMLDivElement | null>(null);
+  const g = useRef<{ x: number; y: number; dir: number; moved: number; open: boolean; up: number } | null>(null);
+  const t = useRef(0);
+  const side = useRef(1);
+  const done = useRef(false);
+  const pulled = useRef(false);
+  const sounded = useRef(false);
+  const tapped = useRef(false);
+  const frame = useRef(0);
+
+  useEffect(() => () => cancelAnimationFrame(frame.current), []);
+
+  function paint(k: number, dir: number) {
+    const b = body.current;
+    const f = flapEl.current;
+    if (!b || !f) return;
+    // the clip goes well past the edges, so the shadow and the glow of the pack stay whole
+    if (k <= 0) {
+      b.style.clipPath = "";
+      f.style.visibility = "hidden";
+      return;
+    }
+    const w = k * 100;
+    if (dir > 0) {
+      b.style.clipPath = `polygon(${w.toFixed(2)}% -30%, 130% -30%, 130% 140%, -30% 140%, -30% -30%, 0% -30%, ${jagged(0, w).join(", ")})`;
+      f.style.clipPath = `polygon(0% 0%, ${w.toFixed(2)}% 0%, ${jagged(w, 0).join(", ")})`;
+      f.style.transformOrigin = `${w.toFixed(2)}% ${CUT}%`;
+      f.style.transform = `rotate(${(4 + 14 * k).toFixed(2)}deg) translateY(-${(2 * k).toFixed(2)}%)`;
+    } else {
+      const x0 = 100 - w;
+      b.style.clipPath = `polygon(-30% -30%, ${x0.toFixed(2)}% -30%, ${jagged(x0, 100).join(", ")}, 100% -30%, 130% -30%, 130% 140%, -30% 140%)`;
+      f.style.clipPath = `polygon(${x0.toFixed(2)}% 0%, 100% 0%, ${jagged(100, x0).join(", ")})`;
+      f.style.transformOrigin = `${x0.toFixed(2)}% ${CUT}%`;
+      f.style.transform = `rotate(-${(4 + 14 * k).toFixed(2)}deg) translateY(-${(2 * k).toFixed(2)}%)`;
+    }
+    f.style.visibility = "visible";
+  }
+
+  function setLean(e: PointerEvent | null) {
+    const el = lean.current;
+    if (!el) return;
+    if (!e || light()) {
+      el.style.transform = "";
+      return;
+    }
+    const r = el.getBoundingClientRect();
+    const px = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    const py = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+    el.style.transform = `perspective(900px) rotateX(${((0.5 - py) * 12).toFixed(2)}deg) rotateY(${((px - 0.5) * 14).toFixed(2)}deg) scale(0.985)`;
+  }
+
+  /** Finir la déchirure (après le doigt, ou toute seule après un simple toucher), puis la bande tombe. */
+  function finish(dir = side.current) {
+    if (done.current) return;
+    done.current = true;
+    side.current = dir;
+    if (!sounded.current) {
+      sounded.current = true;
+      tear();
+    }
+    const end = () => {
+      paint(1, dir);
+      flapEl.current?.classList.add("is-fallen");
+      setLean(null);
+      onTorn();
+    };
+    if (light()) return end();
+    const from = t.current;
+    const t0 = performance.now();
+    const ms = 160 + (1 - from) * 340;
+    const step = (now: number) => {
+      const k = Math.min(1, (now - t0) / ms);
+      t.current = from + (1 - from) * (1 - Math.pow(1 - k, 2));
+      paint(t.current, dir);
+      if (k < 1) frame.current = requestAnimationFrame(step);
+      else end();
+    };
+    frame.current = requestAnimationFrame(step);
+  }
+
+  function lift(dy: number) {
+    const c = cards.current;
+    if (c) c.style.transform = dy ? `translateY(${dy.toFixed(1)}px)` : "";
+  }
+
+  function shiver() {
+    const c = cards.current;
+    if (!c || light()) return;
+    c.classList.remove("is-shiver");
+    void c.offsetWidth;
+    c.classList.add("is-shiver");
+    tick();
+  }
+
+  function doPull() {
+    if (pulled.current) return;
+    pulled.current = true;
+    onPull();
+  }
+
   return (
-    <ol className="walkout">
-      {card.clues.map((clue, i) =>
-        i < step ? (
-          <li key={i} className="walkout__clue">
-            <span>{labels[i]}</span>
-            <strong>{clue}</strong>
-          </li>
-        ) : null,
-      )}
-    </ol>
+    <>
+      <div
+        className={cx("reveal__pack", "tp", hot && "reveal__pack--hot", open && "tp--open")}
+        style={{ "--n": backs }}
+        onPointerDown={(e: PointerEvent) => {
+          g.current = { x: e.clientX, y: e.clientY, dir: 0, moved: 0, open, up: 0 };
+          tapped.current = false;
+          try {
+            (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+          } catch {
+            /* not supported */
+          }
+          setLean(e);
+          if (open) shiver();
+        }}
+        onPointerMove={(e: PointerEvent) => {
+          const s = g.current;
+          if (!s) return;
+          const dx = e.clientX - s.x;
+          const dy = e.clientY - s.y;
+          s.moved = Math.max(s.moved, Math.hypot(dx, dy));
+          setLean(e);
+          if (s.open) {
+            if (pulled.current) return;
+            const up = Math.max(-70, Math.min(0, dy));
+            s.up = Math.min(s.up, dy);
+            lift(up * 0.6);
+            if (dy < -55) doPull();
+            return;
+          }
+          if (done.current) return;
+          if (!s.dir && Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 0.6) s.dir = dx > 0 ? 1 : -1;
+          if (!s.dir) return;
+          side.current = s.dir;
+          const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+          const raw = s.dir > 0 ? (e.clientX - r.left) / r.width : (r.right - e.clientX) / r.width;
+          t.current = Math.max(t.current, Math.min(1, Math.max(0, raw)));
+          if (!sounded.current && t.current > 0.08) {
+            sounded.current = true;
+            tear();
+          }
+          paint(t.current, s.dir);
+          if (t.current >= 0.9) finish(s.dir);
+        }}
+        onPointerUp={() => {
+          const s = g.current;
+          g.current = null;
+          setLean(null);
+          if (!s) return;
+          // a gesture that started on the closed pack does not take the cards out
+          if (s.moved < 14) {
+            // a simple touch: handled by the click that follows
+            tapped.current = true;
+            lift(0);
+            return;
+          }
+          if (s.open) {
+            lift(0);
+            if (s.up < -30) doPull();
+            return;
+          }
+          if (done.current) return;
+          if (t.current > 0.3) finish(s.dir || 1);
+          else {
+            t.current = 0;
+            paint(0, 1);
+          }
+        }}
+        onClick={() => {
+          if (!tapped.current) return;
+          tapped.current = false;
+          if (open) doPull();
+          else finish(1);
+        }}
+        onPointerCancel={() => {
+          g.current = null;
+          setLean(null);
+          lift(0);
+          if (!done.current) {
+            t.current = 0;
+            paint(0, 1);
+          }
+        }}
+        aria-hidden="true"
+      >
+        <div className="tp__lean" ref={lean}>
+          <div className="tp__breath">
+            <div className="tp__cards" ref={cards}>
+              {Array.from({ length: backs }, (_, k) => (
+                <Dos key={k} dos={dos} className="tp__card" style={{ "--k": k }} />
+              ))}
+            </div>
+            <div className="tp__body" ref={body}>
+              <PackArt size={size} kind={kind} chemin={chemin} glow={glow} />
+            </div>
+            <div className="tp__flap" ref={flapEl}>
+              <PackArt size={size} kind={kind} chemin={chemin} glow={glow} />
+            </div>
+          </div>
+        </div>
+        {!open ? <span className="reveal__swipe" aria-hidden="true" /> : null}
+      </div>
+      <p className="reveal__hint" aria-live="polite">
+        {open ? "Tire les cartes vers le haut, ou touche-les." : "Glisse ton doigt le long du haut du paquet pour le déchirer, ou touche-le."}
+      </p>
+      <button type="button" className="btn btn--gold rv-btn" onClick={() => (open ? doPull() : finish(1))}>
+        {open ? "Sortir les cartes" : "Ouvrir le paquet"}
+      </button>
+    </>
   );
 }
 

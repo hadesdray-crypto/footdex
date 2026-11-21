@@ -1,0 +1,173 @@
+/* ------------------------------------------------------------------ ouverture des paquets
+   Le paquet respire, penche vers le doigt, se déchire le long du haut ; les cartes jaillissent puis
+   retombent en tas ; on retourne la carte du dessus dans le sens du geste. Seulement transform et opacity
+   pendant les animations : fluide sur une petite tablette. Allégé sous html.fluide-leger et prefers-reduced-motion. */
+
+.reveal__stage--pack { gap: 14px; }
+.rv-btn { min-height: 52px; min-width: min(240px, 80vw); font-size: 17px; }
+
+/* --- le paquet fermé */
+.tp {
+  --pw: min(60vw, 250px, calc((100vh - 360px) * 5 / 8));
+  width: var(--pw); max-width: 100%; aspect-ratio: 5 / 8;
+  margin-top: calc(var(--pw) * 0.3);
+  isolation: isolate; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none;
+}
+@supports (height: 100dvh) { .tp { --pw: min(60vw, 250px, calc((100dvh - 360px) * 5 / 8)); } }
+.tp .paquet, .reveal__pack--hot.tp .paquet { --pw: 100%; width: 100%; animation: none; }
+.reveal__pack--hot.tp .paquet::before { display: none; }
+.reveal__pack--hot.tp::before {
+  content: ""; position: absolute; inset: -16%; z-index: -1; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--glow, #ffe49a) 75%, transparent), transparent 72%);
+  animation: hotpulse 1.1s ease-in-out infinite alternate; will-change: opacity;
+}
+.tp__lean { position: absolute; inset: 0; transition: transform 0.22s var(--ease); will-change: transform; }
+.tp__breath { position: absolute; inset: 0; animation: tpbreath 3.4s ease-in-out infinite; }
+@keyframes tpbreath { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.028); } }
+.tp--open .tp__breath { animation-duration: 4.6s; }
+.tp__body, .tp__flap { position: absolute; inset: 0; }
+.tp__body { z-index: 2; }
+.tp__flap { z-index: 3; visibility: hidden; pointer-events: none; }
+.tp__flap .paquet__foil, .tp__flap .paquet__ball { animation: none; }
+.tp__flap .paquet__body { box-shadow: 0 0.8cqi 1.6cqi rgba(0, 0, 0, 0.45); }
+/* la bande arrachée tombe */
+.tp__flap.is-fallen { animation: tpfall 0.85s cubic-bezier(0.45, 0, 0.8, 0.6) forwards; }
+@keyframes tpfall { 0% { translate: 0 0; opacity: 1; } 100% { translate: 6% 170%; rotate: 28deg; opacity: 0; } }
+
+/* --- les cartes dans le paquet (cachées tant que le paquet est fermé) */
+.tp__cards { position: absolute; left: 8%; right: 8%; top: -16%; z-index: 1; opacity: 0; transition: transform 0.18s var(--ease); }
+.tp--open .tp__cards { opacity: 1; animation: tprise 0.55s 0.1s var(--ease) backwards; }
+@keyframes tprise { from { opacity: 0; transform: translateY(26%); } to { opacity: 1; transform: none; } }
+.tp__card { position: absolute; left: 0; right: 0; top: 0; translate: calc(var(--k) * 2.5%) calc(var(--k) * 3.5%); z-index: calc(5 - var(--k)); }
+.tp__cards.is-shiver .tp__card { animation: tpshiver 0.45s ease-in-out; animation-delay: calc(var(--k) * 30ms); }
+@keyframes tpshiver {
+  0%, 100% { transform: none; }
+  20% { transform: translateY(-5%) rotate(-1.6deg); }
+  40% { transform: translateY(-4%) rotate(1.4deg); }
+  60% { transform: translateY(-5%) rotate(-1deg); }
+  80% { transform: translateY(-2%) rotate(0.6deg); }
+}
+.tp--open .reveal__swipe { display: none; }
+
+/* --- un dos de carte seul */
+.rv-dos { aspect-ratio: 5 / 7; container-type: inline-size; }
+.rv-dos > .back { position: absolute; inset: 0; }
+.rv-dos .back::after { display: none; }
+
+/* --- le tas */
+.rv-stage { cursor: default; }
+.rv-deck { touch-action: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.rv-under { position: absolute; inset: 0; z-index: 1; translate: calc(var(--k) * 3px) calc(var(--k) * 4px); }
+.rv-top { position: relative; z-index: 2; animation: rvrise 0.32s var(--ease) both; }
+@keyframes rvrise { from { translate: 3px 4px; } to { translate: 0 0; } }
+.rv-top__aura { position: absolute; inset: -12%; z-index: -1; border-radius: 50%; pointer-events: none; opacity: 0; background: radial-gradient(closest-side, color-mix(in srgb, var(--rc) 70%, transparent), transparent 74%); }
+
+/* le retournement suit le geste : la direction est posée d'abord (sans transition), puis la carte pivote */
+.rv-top .carte--back .carte__flip { transition: none; }
+.rv-top--r .carte--back .carte__flip, .rv-top--l .carte--back .carte__flip { transform: rotateY(180deg); }
+.rv-top--u .carte--back .carte__flip, .rv-top--d .carte--back .carte__flip { transform: rotateX(180deg); }
+.rv-top--u .carte__face--back, .rv-top--d .carte__face--back { transform: rotateX(180deg); }
+.rv-top.is-shown .carte__flip { transition: transform 0.7s cubic-bezier(0.2, 0.75, 0.25, 1); }
+.rv-top--r.is-shown .carte__flip { transform: rotateY(360deg); }
+.rv-top--l.is-shown .carte__flip { transform: rotateY(0deg); }
+.rv-top--u.is-shown .carte__flip { transform: rotateX(360deg); }
+.rv-top--d.is-shown .carte__flip { transform: rotateX(0deg); }
+
+/* le dos d'une carte spéciale : lueur, bord brillant, et il tremble tout seul d'impatience (même couleur pour toutes les spéciales : on ne sait pas laquelle) */
+.rv-top--special .rv-top__aura { background: radial-gradient(closest-side, rgba(255, 228, 154, 0.8), rgba(255, 228, 154, 0.25) 55%, transparent 76%); animation: rvaura 1.2s ease-in-out infinite alternate; will-change: opacity; }
+@keyframes rvaura { from { opacity: 0.45; } to { opacity: 1; } }
+.rv-top--special::after {
+  content: ""; position: absolute; inset: -3px; z-index: 3; pointer-events: none; border-radius: calc(var(--cw) * 0.06 + 3px);
+  border: 3px solid #ffe49a; box-shadow: 0 0 16px rgba(255, 228, 154, 0.9), inset 0 0 12px rgba(255, 228, 154, 0.6);
+  animation: rvaura 0.9s ease-in-out infinite alternate; will-change: opacity;
+}
+.rv-top--special .back::after { animation-duration: 2.2s; }
+.rv-top--special .carte { animation: rvhate 1.9s ease-in-out infinite; }
+@keyframes rvhate {
+  0%, 64%, 100% { transform: none; }
+  68% { transform: translateY(-1.5%) rotate(-2.4deg); }
+  72% { transform: translateY(-1.5%) rotate(2.4deg); }
+  76% { transform: translateY(-1%) rotate(-2deg); }
+  80% { transform: translateY(-1%) rotate(1.6deg); }
+  84% { transform: rotate(-0.8deg); }
+  88% { transform: none; }
+}
+.rv-hint--special { color: #ffe49a; }
+
+/* au retournement : chaque niveau a son effet */
+.rv-top--rare .rv-top__aura { animation: rvbloom 1s ease-out both; }
+.rv-top--ultra .rv-top__aura { inset: -30%; animation: rvbloom 1.2s ease-out both; }
+.rv-top--brillante .rv-top__aura { inset: -32%; background: radial-gradient(closest-side, rgba(255, 255, 255, 0.85), rgba(255, 122, 224, 0.6) 35%, rgba(138, 243, 255, 0.4) 60%, transparent 78%); animation: rvbloom 1.3s ease-out both; }
+@keyframes rvbloom { 0% { opacity: 0; transform: scale(0.4); } 30% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.6; transform: scale(1); } }
+.rv-top--ultra .carte, .rv-top--brillante .carte { animation: glorypop 0.8s 0.3s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
+.rv-flash { position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0; animation: rvflash 0.9s 0.25s ease-out both; }
+.rv-flash--rare { background: radial-gradient(60% 45% at 50% 40%, color-mix(in srgb, var(--rc) 60%, transparent), transparent 70%); --fl: 0.8; }
+.rv-flash--ultra { background: radial-gradient(70% 55% at 50% 40%, #fff 0%, color-mix(in srgb, var(--rc) 75%, transparent) 35%, transparent 75%); --fl: 0.95; }
+.rv-flash--brillante { background: radial-gradient(75% 60% at 50% 40%, #fff 0%, rgba(255, 122, 224, 0.75) 30%, rgba(138, 243, 255, 0.55) 52%, rgba(255, 226, 122, 0.3) 66%, transparent 80%); --fl: 1; animation-duration: 1.2s; }
+@keyframes rvflash { 0% { opacity: 0; } 22% { opacity: var(--fl, 0.8); } 100% { opacity: 0; } }
+
+/* BOUM : les cartes jaillissent du paquet, tremblent, puis retombent en tas bien rangé */
+.rv-deck--boom .rv-top, .rv-deck--boom .rv-under {
+  --bx: calc((var(--k) - 1.4) * 16%); --br: calc((var(--k) - 1.4) * 8deg);
+  animation: rvboom 1.05s cubic-bezier(0.25, 0.8, 0.3, 1) both; animation-delay: calc(var(--k) * 45ms);
+}
+@keyframes rvboom {
+  0% { transform: translateY(75%) scale(0.78); opacity: 0; }
+  10% { opacity: 1; }
+  34% { transform: translate(var(--bx), -34%) rotate(var(--br)) scale(1.05); }
+  46% { transform: translate(calc(var(--bx) * 0.5), -16%) rotate(calc(var(--br) * -0.5)) scale(1.02); }
+  54% { transform: translate(calc(var(--bx) * 0.3), -8%) rotate(3deg); }
+  62% { transform: translate(calc(var(--bx) * 0.2), -6%) rotate(-3deg); }
+  70% { transform: translate(0, -3%) rotate(2deg); }
+  78% { transform: translateY(-1%) rotate(-1deg); }
+  100% { transform: none; opacity: 1; }
+}
+@keyframes rvboomsoft { from { transform: translateY(20%); opacity: 0; } to { transform: none; opacity: 1; } }
+.rv-ghost { position: absolute; left: 4%; width: 92%; top: 30%; z-index: 0; pointer-events: none; clip-path: inset(10% -20% -20% -20%); animation: rvghost 0.6s 0.05s ease-in both; }
+.rv-ghost .paquet { --pw: 100%; width: 100%; }
+.rv-ghost .paquet__foil, .rv-ghost .paquet__ball { animation: none; }
+@keyframes rvghost { 0% { transform: none; opacity: 1; } 100% { transform: translateY(60%) scale(0.9); opacity: 0; } }
+.rv-deck--deal .rv-top { animation: dealin 0.5s var(--ease) both; }
+
+/* la carte retournée glisse sur le côté */
+.rv-leave { position: absolute; inset: 0; z-index: 5; pointer-events: none; animation: rvleave-r 0.55s cubic-bezier(0.45, 0, 0.7, 0.5) forwards; }
+.rv-leave--l { animation-name: rvleave-l; }
+.rv-leave--u { animation-name: rvleave-u; }
+@keyframes rvleave-r { to { transform: translateX(125%) rotate(12deg); opacity: 0; } }
+@keyframes rvleave-l { to { transform: translateX(-125%) rotate(-12deg); opacity: 0; } }
+@keyframes rvleave-u { to { transform: translateY(-110%) rotate(-5deg); opacity: 0; } }
+
+/* --- allégé : tablette qui rame (classe posée par l'arbitre de fluidité) */
+html.fluide-leger .reveal .tp__breath,
+html.fluide-leger .reveal .paquet__foil,
+html.fluide-leger .reveal .paquet__ball,
+html.fluide-leger .reveal .reveal__burst,
+html.fluide-leger .reveal .reveal__beam,
+html.fluide-leger .reveal .back::after,
+html.fluide-leger .rv-top--special .carte,
+html.fluide-leger .tp__cards.is-shiver .tp__card,
+html.fluide-leger .reveal__pack--hot.tp::before { animation: none !important; }
+html.fluide-leger .reveal .reveal__beam { filter: none; }
+html.fluide-leger .rv-top--special .rv-top__aura, html.fluide-leger .rv-top--special::after { animation: none; opacity: 0.9; }
+html.fluide-leger .rv-top--special::after { box-shadow: none; }
+html.fluide-leger .reveal .paquet__body { box-shadow: inset 0 0 0 1.2cqi rgba(255, 255, 255, 0.14), 0 8px 12px rgba(0, 0, 0, 0.45); }
+html.fluide-leger .reveal .paquet__brand, html.fluide-leger .reveal .paquet__ball { filter: none; }
+html.fluide-leger .rv-dos .back { box-shadow: inset 0 0 0 2cqi #b98a2e; }
+html.fluide-leger .tp__lean { transition: none; }
+html.fluide-leger .rv-top.is-shown .carte__flip { transition-duration: 0.45s; }
+html.fluide-leger .rv-deck--boom .rv-top, html.fluide-leger .rv-deck--boom .rv-under { animation-name: rvboomsoft; animation-duration: 0.4s; }
+html.fluide-leger .rv-top--ultra .carte, html.fluide-leger .rv-top--brillante .carte { animation: none; }
+html.fluide-leger .rv-flash { animation-duration: 0.5s; }
+
+/* --- moins d'animations demandées par le téléphone */
+@media (prefers-reduced-motion: reduce) {
+  .reveal__pack.tp, .tp__breath, .tp--open .tp__cards, .tp__flap.is-fallen, .rv-top, .rv-top--special .carte, .tp__cards.is-shiver .tp__card,
+  .rv-deck--boom .rv-top, .rv-deck--boom .rv-under, .rv-deck--deal .rv-top, .rv-ghost, .rv-leave,
+  .rv-top--ultra .carte, .rv-top--brillante .carte, .reveal__pack--hot.tp::before, .reveal .paquet__foil, .reveal .paquet__ball { animation: none !important; }
+  .tp__flap.is-fallen { opacity: 0; }
+  .tp__lean { transition: none; }
+  .rv-top--special .rv-top__aura, .rv-top--special::after { animation: none; opacity: 0.9; }
+  .rv-top--rare .rv-top__aura, .rv-top--ultra .rv-top__aura, .rv-top--brillante .rv-top__aura { animation: none; opacity: 0.7; }
+  .rv-top.is-shown .carte__flip { transition-duration: 0.2s; }
+  .rv-flash { animation-duration: 0.6s; --fl: 0.5; }
+}
