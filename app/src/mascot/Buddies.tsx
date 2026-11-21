@@ -10,7 +10,8 @@ import { useEffect, useRef, useState } from "react";
 import { Fig } from "./Fig";
 import { CARAC } from "./caractere";
 import { LORE_HINTS, OLD_STORIES, PERSOS, pick, type Mode } from "./lines";
-import { doctorHeadBack, refereeStops, refereeMovesOver } from "./terrain";
+import { doctorHeadBack, refereeFluidite, refereeStops, refereeMovesOver } from "./terrain";
+import { brancherArbitre, maxCopains, noterSorti, scenesCoupees, useFluidite, type Etape } from "../fluidite";
 import { DOCTOR_LOOK, getMascot, play, say, sayFx, speakAs, takeTurn, turnsBusy, update, useMascot, zopt, type Buddy } from "./state";
 import { fallApart } from "./zombie";
 import { ballPlaymates, ensureBall, hasBallEl, kickBallTo, looseBall, putLooseBall, removeBall, returnBall } from "./player";
@@ -1565,9 +1566,10 @@ function One({ b, index }: { b: Buddy; index: number }) {
 
 export function Buddies() {
   const m = useMascot();
+  useFluidite();
   const mode = PERSOS[m.s.perso].mode;
-  // the main character is not his own friend
-  const list = m.s.buddies.filter((b) => b !== mode);
+  // the main character is not his own friend; and never more friends than this tablet can show smoothly
+  const list = m.s.buddies.filter((b) => b !== mode).slice(0, maxCopains());
   // the main character is afraid of a zombie friend too (the closer, the bigger the fright)
   const zombieHere = list.includes("zombie") && mode !== "zombie";
   useEffect(() => {
@@ -1617,7 +1619,7 @@ export function Buddies() {
       timers.push(
         window.setTimeout(() => {
           const st = getMascot();
-          if (!document.hidden && !st.busy && !st.s.rest && !document.querySelector(".mm, .wd, .reveal, .chm, .subst")) {
+          if (!document.hidden && !st.busy && !st.s.rest && !scenesCoupees() && !document.querySelector(".mm, .wd, .reveal, .chm, .subst")) {
             const has = (k: Buddy) => !!bodies.get(k) && !bodies.get(k)?.hidden;
             const options: (() => Promise<unknown> | void)[] = [];
             if (has("zombie") && zopt().sneeze) options.push(sneezeScene);
@@ -1639,7 +1641,7 @@ export function Buddies() {
       timers.push(
         window.setTimeout(() => {
           const st = getMascot();
-          if (zopt().cat && !document.hidden && !st.s.rest && !document.querySelector(".mm, .wd, .reveal, .chm, .subst")) void catScene();
+          if (zopt().cat && !document.hidden && !st.s.rest && !scenesCoupees() && !document.querySelector(".mm, .wd, .reveal, .chm, .subst")) void catScene();
           catLoop();
         }, (360000 + Math.random() * 360000) * (bodies.has("zombie") ? 0.5 : 1)),
       );
@@ -1692,12 +1694,19 @@ export function BuddyPicker() {
   const m = useMascot();
   const mode = PERSOS[m.s.perso].mode;
   const all: Buddy[] = ["philippe", "statue", "excite", "poli", "joueur", "pointu", "zombie", "medecin"];
-  const on = m.s.buddies;
+  const fl = useFluidite();
+  const cap = Math.min(3, maxCopains());
+  const on = m.s.buddies.filter((b) => b !== mode).slice(0, cap);
   const toggle = (b: Buddy) => {
-    const next = on.includes(b) ? on.filter((x) => x !== b) : [...on, b].slice(-3);
+    if (cap <= 0) return;
+    const next = on.includes(b) ? on.filter((x) => x !== b) : [...on, b].slice(-cap);
     update({ buddies: next });
   };
   return (
+    <>
+    {cap < 3 ? (
+      <p className="note">{cap <= 0 ? "Sur cette tablette, il reste seul à l'écran pour que tout reste fluide." : `Sur cette tablette : ${cap === 1 ? "un copain" : "deux copains"} au maximum, pour que tout reste fluide.`} {fl.manuel ? "Un grand l'a choisi." : "C'est l'arbitre de fluidité qui l'a décidé."} Les grands peuvent le changer dans « L'atelier des personnages ».</p>
+    ) : null}
     <div className="chips" role="group" aria-label="Copains à l'écran">
       {all
         .filter((b) => b !== mode)
@@ -1707,5 +1716,72 @@ export function BuddyPicker() {
           </button>
         ))}
     </div>
+    </>
   );
 }
+
+// ------------------------------------------------------------------ the fluidity referee takes away what makes the tablet slow
+
+const NOMBRE = ["", "un", "deux", "trois", "quatre"];
+const BUDDIES_ALL: Buddy[] = ["philippe", "statue", "excite", "poli", "joueur", "pointu", "zombie", "medecin"];
+const LIGNES_EFFETS = [
+  "Ça rame un peu ! J'éteins les lumières et les paillettes.",
+  "Trop de brillances pour cette tablette : j'éteins les lumières !",
+  "Hop, on coupe les effets de lumière : la tablette va respirer.",
+];
+const LIGNES_SCENES = [
+  "C'est encore lent : plus de petits spectacles entre copains, on joue simple !",
+  "Les petites scènes entre copains, c'est fini pour cette tablette !",
+];
+const lignesCopains = (n: number, nom: string) =>
+  n <= 1
+    ? ["Tout seul sur le terrain : là, ça va être fluide !", `${nom}, sur le banc ! Un seul joueur sur cette tablette.`]
+    : [`Non, pas plus de ${NOMBRE[n]} sur le terrain !`, `Là, on n'est pas sur une tablette de champion : ${NOMBRE[n]} joueurs maximum.`, `Trop de monde, ça rame ! ${nom}, sur le banc !`];
+const visibles = () => [...bodies.values()].filter((b) => !b.hidden && !b.entering);
+
+/** One friend walks off the screen (the last one who came), then leaves the pitch for good. */
+async function sortirCopain(b: Body) {
+  await sayW(b, pick(["D'accord, monsieur l'arbitre…", "Oh non… J'y vais.", "Bon, je vais sur le banc."]));
+  const right = b.x > window.innerWidth / 2;
+  if (b.mode === "held" || b.mode === "fly") { b.mode = "free"; b.vx = 0; b.vz = 0; b.z = 0; }
+  await goTo(b, right ? window.innerWidth - 18 : 18, b.y, 220, { stop: 8, timeout: 5000 });
+  b.el.style.transition = "translate .9s ease-in";
+  b.el.style.translate = `${right ? 220 : -220}px 0`;
+  await wait(950);
+  const st = getMascot().s;
+  noterSorti(b.key);
+  update({ buddies: st.buddies.filter((k) => k !== b.key) });
+}
+
+brancherArbitre(async (etape: Etape, nouveauMax: number) => {
+  if (etape === 1) {
+    return refereeFluidite(pick(LIGNES_EFFETS), async () => {
+      document.documentElement.classList.add("fluide-leger");
+    });
+  }
+  if (etape === 2) {
+    // nobody on the screen to play scenes: no need to bother the child, it is done quietly
+    if (!visibles().length) return true;
+    return refereeFluidite(pick(LIGNES_SCENES), async () => {});
+  }
+  const list = visibles();
+  const b = list[list.length - 1];
+  if (!b) return false;
+  return refereeFluidite(pick(lignesCopains(nouveauMax, BUDDY_NAME(b.key))), async (r) => {
+    if (b.hidden || bodies.get(b.key) !== b) return;
+    // he turns to the friend and points him the way out while he leaves
+    r.front(false);
+    r.face(b.x - r.x || 1);
+    void r.pose("point", 6000);
+    await sortirCopain(b);
+  });
+}, () => visibles().length, (cles) => {
+  // the friends sent off by the referee come back, as many as there is room for now
+  const st = getMascot().s;
+  const mode = PERSOS[st.perso].mode;
+  const now = st.buddies.filter((b) => b !== mode);
+  const room = Math.max(0, Math.min(3, maxCopains()) - now.length);
+  const back = cles.filter((k): k is Buddy => (BUDDIES_ALL as string[]).includes(k) && !now.includes(k as Buddy) && k !== mode).slice(0, room);
+  if (back.length) update({ buddies: [...st.buddies, ...back] });
+  return back;
+});

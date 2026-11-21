@@ -1,0 +1,21 @@
+/* L'arbitre de fluidité a trouvé que la tablette rame : les effets lourds sont coupés (classe « fluide-leger » sur la page).
+   Le style reste le même ; seuls les mouvements sans fin, les flous et les ombres recalculées à chaque image s'arrêtent. */
+
+/* le ciel du fond ne dérive plus */
+html.fluide-leger .aurora span { animation: none !important; will-change: auto; }
+/* les boutons qui brillent en boucle, les reflets des cartes et des paquets restent fixes */
+html.fluide-leger .btn--glow, html.fluide-leger .btn--glow::after,
+html.fluide-leger .carte__holo, html.fluide-leger .carte__glare,
+html.fluide-leger .carte::after, html.fluide-leger .carte *::after,
+html.fluide-leger .back::after, html.fluide-leger .paquet__foil,
+html.fluide-leger .tab__icon, html.fluide-leger .tab__icon::before,
+html.fluide-leger .pathbar__fill, html.fluide-leger .ztrunk__slot { animation: none !important; }
+/* les flous derrière les barres et les fenêtres : un fond plus opaque à la place */
+html.fluide-leger .topbar, html.fluide-leger .tabbar { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background: rgba(7, 11, 22, 0.95); }
+html.fluide-leger .mm__backdrop, html.fluide-leger .signal__backdrop, html.fluide-leger .btn--glass,
+html.fluide-leger .tray, html.fluide-leger .carte__zoom button { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html.fluide-leger .mm__backdrop, html.fluide-leger .signal__backdrop { background: rgba(3, 5, 10, 0.86); }
+/* les ombres floues des personnages qui bougent (recalculées à chaque image) */
+html.fluide-leger :is(.buddy, .act svg, .fbp svg, .vis svg, .mascot__fab, .mascot__ball, .mascot__kick, .rball, .fball__spin svg, .thief__prop, .zpiece, .ztrunk) { filter: none !important; }
+/* les lueurs du chemin */
+html.fluide-leger :is(.pathmap__done, .pathmap__start circle, .pathmap__node--done, .pathmap__mile--done .pathmap__disc) { filter: none !important; }
