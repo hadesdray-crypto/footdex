@@ -38,8 +38,15 @@ function ctx(voice = false): AudioContext | null {
       const limiter = audio.createDynamicsCompressor();
       limiter.threshold.value = -10;
       limiter.ratio.value = 12;
+      limiter.attack.value = 0.001;
       gain.connect(limiter);
-      limiter.connect(audio.destination);
+      // plafond doux : les sons forts restent forts sans grésiller dans le haut-parleur
+      const ceiling = audio.createWaveShaper();
+      const curve = new Float32Array(1024);
+      for (let i = 0; i < curve.length; i++) curve[i] = Math.tanh(((i / (curve.length - 1)) * 2 - 1) * 1.6) / Math.tanh(1.6) * 0.97;
+      ceiling.curve = curve;
+      limiter.connect(ceiling);
+      ceiling.connect(audio.destination);
       master = gain;
     }
     if (audio.state === "suspended") void audio.resume().catch(() => undefined);
@@ -205,21 +212,21 @@ export function flip(rarity: string) {
   filter.frequency.exponentialRampToValueAtTime(3600, t + 0.13);
   const gain = a.createGain();
   gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.exponentialRampToValueAtTime(0.16, t + 0.04);
+  gain.gain.exponentialRampToValueAtTime(0.3, t + 0.04);
   gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
   src.connect(filter);
   filter.connect(gain);
   gain.connect(out(a));
   src.start(t, Math.random() * 0.5, 0.2);
-  if (rarity === "base") return note(880, 0.1, 0.12, 0.025, "sine");
+  if (rarity === "base") return note(880, 0.1, 0.12, 0.05, "sine");
   if (rarity === "rare") {
-    note(660, 0.08, 0.14, 0.035);
-    note(990, 0.15, 0.2, 0.035);
+    note(660, 0.08, 0.14, 0.065);
+    note(990, 0.15, 0.2, 0.065);
     return;
   }
-  note(660, 0.08, 0.12, 0.035);
-  note(880, 0.15, 0.14, 0.035);
-  note(1320, 0.22, 0.3, 0.04, "sine");
+  note(660, 0.08, 0.12, 0.065);
+  note(880, 0.15, 0.14, 0.065);
+  note(1320, 0.22, 0.3, 0.075, "sine");
 }
 
 /** A drum hit, for each clue of a big reveal. */
@@ -640,4 +647,141 @@ export function chocEcran(verre = false) {
   // the crack: dry high snaps one after the other, then small bits of glass that tinkle
   for (let i = 0; i < 7; i += 1) burst(a, t + 0.02 + i * 0.03 + Math.random() * 0.02, 3200 + Math.random() * 3800, 2.5, 0.16 - i * 0.012, 0.025, "bandpass");
   for (let i = 0; i < 5; i += 1) note(2600 + Math.random() * 2400, 0.22 + i * 0.07 + Math.random() * 0.04, 0.12, 0.012, "sine");
+}
+
+// ------------------------------------------------------------------ ouverture des paquets (v66)
+// Des sons plus présents pour chaque étape : froissement, déchirure qui suit le doigt, bande qui tombe,
+// cartes qui frottent, BOUM de sortie, tas qui se range, battement de cœur des cartes spéciales, retournement.
+
+/** Un souffle de bruit filtré qui glisse d'une fréquence à l'autre (frottement, envol, glissade). */
+function sweep(a: AudioContext, at: number, length: number, from: number, to: number, volume: number, q = 1, type: BiquadFilterType = "bandpass") {
+  const src = a.createBufferSource();
+  src.buffer = noiseOf(a);
+  const filter = a.createBiquadFilter();
+  filter.type = type;
+  filter.Q.value = q;
+  filter.frequency.setValueAtTime(from, at);
+  filter.frequency.exponentialRampToValueAtTime(to, at + length);
+  const gain = a.createGain();
+  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.exponentialRampToValueAtTime(volume, at + Math.min(0.04, length / 3));
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
+  src.connect(filter);
+  filter.connect(gain);
+  gain.connect(out(a));
+  src.start(at, Math.random() * 0.4, length + 0.05);
+}
+
+/** Le plastique du paquet qu'on touche : un froissement brillant. */
+export function crinkle(power = 1) {
+  const a = ctx();
+  if (!a) return;
+  const t = a.currentTime;
+  const n = Math.round(10 + 8 * power);
+  for (let i = 0; i < n; i++) {
+    const at = t + Math.random() * 0.16;
+    burst(a, at, 2600 + Math.random() * 4200, 2.2, (0.09 + Math.random() * 0.14) * power, 0.008 + Math.random() * 0.014);
+  }
+  sweep(a, t, 0.18, 3000, 6000, 0.05 * power, 0.8, "highpass");
+}
+
+/** Un morceau de déchirure, joué pendant que le doigt avance (k = où on en est, de 0 à 1). */
+export function ripGrain(k: number) {
+  const a = ctx();
+  if (!a) return;
+  const t = a.currentTime;
+  for (let i = 0; i < 9; i++) {
+    const at = t + i * 0.006 + Math.random() * 0.004;
+    burst(a, at, 700 + k * 2400 + Math.random() * 1600, 1.3, 0.14 + Math.random() * 0.16, 0.01 + Math.random() * 0.014);
+  }
+  sweep(a, t, 0.07, 900 + k * 1500, 2600 + k * 2000, 0.09, 1.2);
+}
+
+/** La fin de la déchirure : un grand « rrrrip », un petit claquement, puis la bande qui tombe. */
+export function ripFinish() {
+  const a = ctx();
+  if (!a) return;
+  const t = a.currentTime;
+  for (let i = 0; i < 70; i++) {
+    const k = i / 70;
+    const at = t + i * 0.0055 + Math.random() * 0.003;
+    burst(a, at, 900 + k * 3800 + Math.random() * 900, 1.2, 0.12 + Math.random() * 0.2 * (1 - k * 0.4), 0.012 + Math.random() * 0.012);
+  }
+  sweep(a, t, 0.4, 700, 4200, 0.16, 0.9);
+  // le « clac » du plastique libéré
+  burst(a, t + 0.39, 1800, 1.6, 0.4, 0.05);
+  body(a, t + 0.39, 320, 120, 0.25, 0.08);
+  // la bande qui tombe en tournoyant, puis touche le sol
+  sweep(a, t + 0.45, 0.35, 2400, 700, 0.07, 1.4);
+  burst(a, t + 0.82, 1200, 1, 0.12, 0.04);
+}
+
+/** Les cartes qu'on touche dans le paquet : elles frottent les unes contre les autres. */
+export function rustle() {
+  const a = ctx();
+  if (!a) return;
+  const t = a.currentTime;
+  sweep(a, t, 0.16, 1800, 3400, 0.14, 1.1);
+  for (let i = 0; i < 5; i++) burst(a, t + 0.02 + i * 0.025, 2600 + Math.random() * 1200, 2, 0.12, 0.012);
+}
+
+/** BOUM : les cartes jaillissent du paquet (coup sourd, envol, cartes qui claquent). */
+export function burstOut() {
+  const a = ctx();
+  if (!a) return;
+  const t = a.currentTime;
+  body(a, t, 120, 38, 0.9, 0.5);
+  burst(a, t, 220, 0.7, 0.35, 0.2, "lowpass");
+  sweep(a, t + 0.02, 0.45, 500, 4800, 0.2, 0.9);
+  for (let i = 0; i < 14; i++) burst(a, t + 0.05 + i * 0.028 + Math.random() * 0.01, 2200 + Math.random() * 1800, 2.4, 0.16 + Math.random() * 0.1, 0.012);
+  note(523, 0.08, 0.25, 0.05, "triangle");
+  note(784, 0.16, 0.3, 0.05, "triangle");
+}
+
+/** Le tas qui se range : les cartes retombent l'une sur l'autre, puis un petit « tac ». */
+export function settle() {
+  const a = ctx();
+  if (!a) return;
+  const t = a.currentTime;
+  for (let i = 0; i < 10; i++) burst(a, t + i * 0.035 + Math.random() * 0.01, 1800 + Math.random() * 1500, 2.2, 0.14 - i * 0.008, 0.012);
+  burst(a, t + 0.4, 900, 1.2, 0.3, 0.05);
+  body(a, t + 0.4, 260, 110, 0.3, 0.07);
+}
+
+/** Le cœur qui bat : une fois par carte spéciale cachée dans le paquet (en même temps que la vibration). */
+export function heartbeat(count = 1, gapMs = 280) {
+  const a = ctx();
+  if (!a) return;
+  const t = a.currentTime;
+  for (let i = 0; i < count; i++) {
+    const at = t + (i * gapMs) / 1000;
+    body(a, at, 95, 45, 0.85, 0.18);
+    body(a, at + 0.13, 80, 40, 0.55, 0.16);
+  }
+}
+
+/** Une carte spéciale arrive sur le dessus, encore de dos : un scintillement magique. */
+export function shimmer(power = 1) {
+  const a = ctx();
+  if (!a) return;
+  const scale = [1047, 1319, 1568, 2093, 2637];
+  for (let i = 0; i < 5; i++) note(scale[i], 0.05 + i * 0.07, 0.35, 0.03 * power, "sine");
+  sweep(a, a.currentTime, 0.6, 5000, 9000, 0.04 * power, 0.7, "highpass");
+}
+
+/** Le claquement net de la carte qu'on retourne (avant la musique de rareté de flip()). */
+export function snap() {
+  const a = ctx();
+  if (!a) return;
+  const t = a.currentTime;
+  sweep(a, t, 0.12, 900, 3800, 0.22, 1.2);
+  burst(a, t + 0.11, 2600, 1.8, 0.32, 0.025);
+  body(a, t + 0.11, 420, 180, 0.18, 0.05);
+}
+
+/** La carte qui glisse sur le côté. */
+export function slide() {
+  const a = ctx();
+  if (!a) return;
+  sweep(a, a.currentTime, 0.28, 2600, 900, 0.14, 0.9);
 }

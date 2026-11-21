@@ -4,6 +4,18 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-21",
+    titre: "Version 66 : les paquets font du bruit !",
+    type: "appli",
+    points: [
+      "Quand tu touches le paquet, le plastique se froisse. Quand tu le déchires, on entend la déchirure suivre ton doigt, puis un grand « rrrip » et la bande qui tombe.",
+      "Les cartes frottent quand tu les touches dans le paquet. BOUM quand elles jaillissent, puis on les entend retomber en tas.",
+      "Un cœur bat une fois par carte spéciale cachée dans le paquet. Quand une spéciale arrive sur le dessus, elle scintille.",
+      "Chaque carte claque quand tu la retournes, avec sa musique selon sa rareté, et glisse quand elle part sur le côté.",
+      "Tous les sons de l'appli sont plus nets : les sons forts ne grésillent plus.",
+    ],
+  },
+  {
+    date: "2026-11-21",
     titre: "Version 65 : nouveaux paquets, l'Arbitre de la tablette, Réparer l'appli",
     type: "appli",
     points: [

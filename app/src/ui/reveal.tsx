@@ -6,7 +6,7 @@ import { CARDS_PER_CHEMIN, CHEMINS, RARITY, cheminOf, isBig, type Pulled } from 
 import { RARITY_COLORS, burst, rain, reducedMotion, sparkle, vibrate } from "../fx";
 import { go } from "../router";
 import { onCard, setBusy } from "../mascot/state";
-import { coins, crowd, fanfare, flip, tear, thump, tick, whoosh } from "../sound";
+import { burstOut, coins, crinkle, crowd, fanfare, flip, heartbeat, ripFinish, ripGrain, rustle, settle, shimmer, slide, snap } from "../sound";
 import { type PackKind, type PackResult, getState, useStore } from "../store";
 import { cx, fmt } from "../util";
 import { Carte, cardRoute, useOverlay } from "./cards";
@@ -124,6 +124,11 @@ export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose
     for (let j = i; j < pulled.length; j++) {
       if (special(pulled[j])) {
         buzz(NEAR[Math.min(j - i, NEAR.length - 1)]);
+        // la spéciale est sur le dessus : le cœur bat et ça scintille
+        if (j === i) {
+          heartbeat(1);
+          later(220, () => shimmer());
+        }
         return;
       }
     }
@@ -143,7 +148,8 @@ export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose
     const big = isBig(current);
     clear();
     setShown(true);
-    flip(current.card.rarity);
+    snap();
+    later(90, () => flip(current.card.rarity));
     onCard({ name: current.card.name, rarity: current.card.rarity, shiny: current.shiny });
     const tier = tierOf(current);
     if (tier !== "base") setFlash({ tier, key: index });
@@ -176,7 +182,7 @@ export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose
     if (!light()) {
       setLeaving({ p: current, dir: d === "l" ? "l" : d === "u" ? "u" : "r", key: index });
       later(560, () => setLeaving(null));
-      whoosh();
+      slide();
     }
     setShown(false);
     setDir("r");
@@ -199,7 +205,10 @@ export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose
       const pattern: number[] = [];
       for (let i = 0; i < n; i++) pattern.push(110, 170);
       pattern.pop();
-      later(250, () => buzz(pattern));
+      later(250, () => {
+        buzz(pattern);
+        heartbeat(n, 280);
+      });
     }
   }
 
@@ -210,17 +219,21 @@ export function Reveal({ opening, onClose, onGift }: { opening: Opening; onClose
     const soft = light();
     setEntering(soft ? null : "boom");
     lock.current = Date.now() + (soft ? 150 : 1150);
-    thump();
+    burstOut();
     if (!soft) {
       requestAnimationFrame(() => {
         const [x, y] = center();
         burst(x, y + 40, ["#ffffff", "#ffe49a", glowOf(best) === "#dfe7ff" ? "#9fb4ff" : "#ffe49a"], 70, 0.9);
       });
+      later(820, () => settle());
       later(1150, () => {
         setEntering(null);
         announce(0);
       });
-    } else announce(0);
+    } else {
+      settle();
+      announce(0);
+    }
   }
 
   function showAll() {
@@ -459,6 +472,7 @@ function TearPack({
   const done = useRef(false);
   const pulled = useRef(false);
   const sounded = useRef(false);
+  const grain = useRef(0);
   const tapped = useRef(false);
   const frame = useRef(0);
 
@@ -508,10 +522,8 @@ function TearPack({
     if (done.current) return;
     done.current = true;
     side.current = dir;
-    if (!sounded.current) {
-      sounded.current = true;
-      tear();
-    }
+    sounded.current = true;
+    ripFinish();
     const end = () => {
       paint(1, dir);
       flapEl.current?.classList.add("is-fallen");
@@ -543,7 +555,7 @@ function TearPack({
     c.classList.remove("is-shiver");
     void c.offsetWidth;
     c.classList.add("is-shiver");
-    tick();
+    rustle();
   }
 
   function doPull() {
@@ -567,6 +579,7 @@ function TearPack({
           }
           setLean(e);
           if (open) shiver();
+          else if (!done.current) crinkle(0.7);
         }}
         onPointerMove={(e: PointerEvent) => {
           const s = g.current;
@@ -590,9 +603,10 @@ function TearPack({
           const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
           const raw = s.dir > 0 ? (e.clientX - r.left) / r.width : (r.right - e.clientX) / r.width;
           t.current = Math.max(t.current, Math.min(1, Math.max(0, raw)));
-          if (!sounded.current && t.current > 0.08) {
-            sounded.current = true;
-            tear();
+          // la déchirure s'entend sous le doigt, morceau par morceau
+          if (t.current - grain.current >= 0.06 && t.current < 0.9) {
+            grain.current = t.current;
+            ripGrain(t.current);
           }
           paint(t.current, s.dir);
           if (t.current >= 0.9) finish(s.dir);
