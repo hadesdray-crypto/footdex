@@ -7,6 +7,7 @@ import { PERSOS } from "./lines";
 import { CARAC } from "./caractere";
 import { interOf, setInter, setInterOf, setZopt, useMascot, type PersoInter } from "./state";
 import { heal, onWounds, wounds } from "./wounds";
+import { activerArbitre, choisirMax, imagesParSecondeMesurees, MAX_PERSONNAGES, puissance, remettreAZero, useFluidite } from "../fluidite";
 
 const TALK = ["Muet", "Peu", "Normal", "Beaucoup"] as const;
 
@@ -58,6 +59,32 @@ export function Atelier() {
       <Chips label="Visites de l'Arbitre" value={it.refVisits} items={yesNo} onPick={(v) => setInter({ refVisits: v })} />
       <p className="mm__label">Son caractère</p>
       <Chips label="Caractère de l'Arbitre" value={it.refMood} items={[{ v: 0, t: "Gentil (pas de carton)" }, { v: 1, t: "Normal" }, { v: 2, t: "Sévère" }]} onPick={(v) => setInter({ refMood: v as 0 | 1 | 2 })} />
+    </div>
+  );
+}
+
+/** « Arbitre de fluidité » : he watches whether the tablet is slow, and takes away what makes it slow. */
+export function ArbitreFluidite() {
+  const f = useFluidite();
+  const [, setT] = useState(0);
+  // the measure goes on: the number shown is refreshed every two seconds while this screen is open
+  useEffect(() => {
+    const i = window.setInterval(() => setT((n) => n + 1), 2000);
+    return () => window.clearInterval(i);
+  }, []);
+  const ips = imagesParSecondeMesurees();
+  const p = puissance();
+  const fait = ["Rien n'a été enlevé : tout est allumé.", "Les effets de lumière et les paillettes sont éteints.", "Les lumières sont éteintes et les petites scènes entre copains sont coupées.", "Les lumières sont éteintes, les petites scènes coupées, et des copains sont sortis du terrain."][f.etape];
+  return (
+    <div className="atelier">
+      <p className="atelier__q">Quand la tablette rame, l'Arbitre entre sur le terrain, siffle, dit pourquoi et enlève ce qui la ralentit : d'abord les lumières, puis les petites scènes, puis un copain à la fois. Tant que tout est fluide, il ne vient jamais.</p>
+      <p className="mm__label">Il surveille la tablette</p>
+      <Chips label="Arbitre de fluidité" value={f.actif} items={[{ v: true, t: "Activé" }, { v: false, t: "Désactivé" }]} onPick={activerArbitre} />
+      <p className="mm__label">Personnages à l'écran au maximum (le personnage principal compris)</p>
+      <Chips label="Personnages à l'écran au maximum" value={f.max} items={Array.from({ length: MAX_PERSONNAGES }, (_, i) => ({ v: i + 1, t: String(i + 1) }))} onPick={choisirMax} />
+      <p className="note">{f.manuel ? "Choisi à la main : l'arbitre ne le change plus." : "Choisi par l'arbitre (touche un chiffre pour le choisir toi-même)."} {fait}</p>
+      <p className="note">{ips ? `En ce moment : environ ${ips} images par seconde (au-dessus de 36, c'est fluide ; le mieux, c'est 60).` : "La mesure commence quelques secondes après l'ouverture de l'appli."}{p.coeurs ? ` Cette tablette : ${p.coeurs} cœurs${p.memoire ? `, ${p.memoire} Go de mémoire` : ""}.` : ""}</p>
+      <button type="button" className="btn btn--soft" onClick={remettreAZero}>Remettre à zéro (tout rallumer, l'arbitre cherche de nouveau)</button>
     </div>
   );
 }

@@ -9,7 +9,7 @@ import { LuSwatchBook, LuLock, LuCopy, LuMic, LuRefreshCw, LuSettings, LuShieldC
 import { CodeParent } from "../maj/code";
 import { voirBienvenue } from "../maj/Bienvenue";
 import { EST_APK, VERSION_APK } from "../maj/env";
-import { Atelier, ZombieOptions } from "../mascot/Atelier";
+import { ArbitreFluidite, Atelier, ZombieOptions } from "../mascot/Atelier";
 import { Fig } from "../mascot/Fig";
 import { Bruitages } from "../mascot/Bruitages";
 import { BuddyPicker } from "../mascot/Buddies";
@@ -24,6 +24,7 @@ import { SKINS, changerApparence, remettreApparence, useApparence } from "../app
 import { onSoundChange, setSound, soundOn } from "../sound";
 import { BackLink, Door, PageTitle, Section } from "../ui/bits";
 import { cx } from "../util";
+import { maxCopains, useFluidite } from "../fluidite";
 import { Internet, Journal, Sauvegarde, TempsParJour, Version } from "./parents";
 import { Essais, ReglagesJeu } from "./reglages-jeu";
 
@@ -145,8 +146,10 @@ export function RegVoix() {
 }
 
 export function RegCopains() {
+  useFluidite();
+  const n = Math.min(3, maxCopains());
   return (
-    <Ecran titre="Ses copains" kicker="Deux au maximum, à côté de lui">
+    <Ecran titre="Ses copains" kicker={n <= 0 ? "Il reste seul pour que tout soit fluide" : `${["", "Un", "Deux", "Trois"][n]} au maximum, à côté de lui`}>
       <Section>
         <p className="note">Ils parlent avec leur voix, réagissent quand il est lancé… Touche-les pour qu'ils parlent, glisse-les pour les déplacer.</p>
         <BuddyPicker />
@@ -246,7 +249,7 @@ export function RegGrands() {
       <div className="doors doors--list">
         <Door to={{ page: "reg-ecran" }} kicker="Les grands" title="Temps d'écran et Internet" figure="Limiter le temps, couper les liens" icon={LuLock} />
         <Door to={{ page: "reg-jeu" }} kicker="Les grands" title="Réglages du jeu" figure="Paquets, chances, coffre, mission" icon={LuSettings} />
-        <Door to={{ page: "reg-atelier" }} kicker="Les grands" title="L'atelier des personnages" figure="Combien chacun parle et bouge" icon={LuUserRound} />
+        <Door to={{ page: "reg-atelier" }} kicker="Les grands" title="L'atelier des personnages" figure="Combien chacun parle et bouge, l'arbitre de fluidité" icon={LuUserRound} />
         <Door to={{ page: "reg-dev" }} kicker="Développeur" title="Essais" figure="Lancer à la main le chapardeur, la fête, la figurine à clipser" tone="gold" icon={LuZap} />
       </div>
     </Ecran>
@@ -274,6 +277,9 @@ export function RegAtelier() {
   return (
     <Ecran titre="L'atelier des personnages" kicker="Code parent" retour={GRANDS} nomRetour="Réglages des grands" grands>
       <p className="note">Combien chaque personnage parle et bouge, s'il peut être lancé, les blessures, le Médecin et l'Arbitre.</p>
+      <Section title="Arbitre de fluidité" kicker="Pour que la tablette ne rame pas">
+        <ArbitreFluidite />
+      </Section>
       <Atelier />
     </Ecran>
   );

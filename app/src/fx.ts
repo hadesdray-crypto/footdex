@@ -28,6 +28,9 @@ export function reducedMotion(): boolean {
   }
 }
 
+/** The fluidity referee turned the heavy effects off on this tablet: far fewer confetti, no sparkles. */
+const leger = () => typeof document !== "undefined" && document.documentElement.classList.contains("fluide-leger");
+
 function ensureCanvas(): boolean {
   if (canvas && ctx && document.body.contains(canvas)) return true;
   canvas = document.createElement("canvas");
@@ -101,6 +104,7 @@ function start() {
 /** A burst of confetti and stars from a point of the screen. */
 export function burst(x: number, y: number, colors: string[], count = 140, power = 1) {
   if (reducedMotion() || !ensureCanvas()) return;
+  if (leger()) count = Math.min(40, Math.ceil(count * 0.3));
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
     const speed = (2 + Math.random() * 9) * power;
@@ -125,6 +129,7 @@ export function burst(x: number, y: number, colors: string[], count = 140, power
 /** Confetti raining from the top, for a new path. */
 export function rain(colors: string[], count = 160) {
   if (reducedMotion() || !ensureCanvas()) return;
+  if (leger()) count = Math.min(40, Math.ceil(count * 0.25));
   for (let i = 0; i < count; i++) {
     particles.push({
       x: Math.random() * window.innerWidth,
@@ -146,7 +151,7 @@ export function rain(colors: string[], count = 160) {
 
 /** Little sparkles around an element, for rare cards on screen. */
 export function sparkle(el: Element, color: string, count = 18) {
-  if (reducedMotion() || !ensureCanvas()) return;
+  if (reducedMotion() || leger() || !ensureCanvas()) return;
   const r = el.getBoundingClientRect();
   for (let i = 0; i < count; i++) {
     particles.push({

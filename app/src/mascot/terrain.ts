@@ -2,7 +2,7 @@
 // the Square Referee asks for a substitute, and sometimes turns up for no reason… and shows a card if you misbehave.
 import { pick, PERSOS } from "./lines";
 import { CARAC } from "./caractere";
-import { emit, getMascot, inter, setAway, setEvac, update } from "./state";
+import { emit, getMascot, inter, setAway, setEvac, turnsBusy, update } from "./state";
 import { compterSoin } from "./histoires";
 import { enter, sackFor, type Visitor } from "./visitor";
 
@@ -280,6 +280,42 @@ export async function refereeMovesOver(where: Where, line: string, after: () => 
     r.destroy();
     referee = null;
   }
+}
+
+// ------------------------------------------------------------------ the fluidity referee
+
+/** The tablet is slow: the Referee comes in, whistles, says why in one short sentence, and takes away what makes it slow.
+ *  He waits for a quiet moment (nobody talking, no window open): he never cuts anybody in the middle of a sentence.
+ *  `act` is what he takes away (it runs while he points). Returns false if he could not come (the screen stayed busy). */
+export async function refereeFluidite(line: string, act: (r: Visitor) => Promise<void>): Promise<boolean> {
+  const quiet = () => !referee && !doctor && !busyScreen() && !turnsBusy() && !getMascot().talking && !document.hidden;
+  const until = Date.now() + 20000;
+  while (!quiet() && Date.now() < until) await new Promise((ok) => window.setTimeout(ok, 300));
+  if (!quiet()) return false;
+  const m = document.querySelector(".mascot__fab")?.getBoundingClientRect();
+  const y = m ? Math.min(window.innerHeight - 90, m.bottom - 2) : window.innerHeight * 0.7;
+  const mx = m ? m.left + m.width / 2 : window.innerWidth / 2;
+  const r = enter("arbitre", mx, y);
+  referee = r;
+  try {
+    const tx = clampX(mx + (r.x < mx ? -100 : 100));
+    await r.walk({ x: Math.max(40, Math.min(window.innerWidth - 40, tx)), y }, 300);
+    r.face(mx - r.x || 1);
+    r.front(true);
+    await r.pose("whistle", 800);
+    r.say("TUUUT !", 900);
+    await r.wait(400);
+    r.say(line, 3200);
+    if (location.search.includes("essai-terrain")) ((window as unknown as { __arbitreDit?: string[] }).__arbitreDit ??= []).push(line);
+    await Promise.all([r.pose("point", 2200), r.talked()]);
+    await act(r);
+    await r.wait(500);
+    await r.leave();
+  } finally {
+    r.destroy();
+    referee = null;
+  }
+  return true;
 }
 
 // ------------------------------------------------------------------ broken leg: off the pitch, and a substitute

@@ -1,5 +1,10 @@
 // Keeps the app light: an animation that nobody can see is paused (the cards that shine, the glowing buttons…).
 // Elements come and go with the pages, so a MutationObserver hands the new ones to one IntersectionObserver.
+import { surveillerFluidite } from "./fluidite";
+
+/** Test rapide de fluidité (environ 2 s et demie) : règle et retient le maximum de personnages pour cette tablette. */
+export { testerFluidite } from "./fluidite";
+
 const WATCH = ".carte, .paquet, .btn--glow, .pathbar, .pathmap, .hero__cards, .ball, .fbc, .sd, .aurora, .mascot, .buddy";
 
 /** Pendant que le doigt fait défiler, les animations de fond s'arrêtent (classe is-scrolling), puis repartent. */
@@ -17,6 +22,8 @@ function figerPendantDefilement() {
 
 export function garderLegere() {
   figerPendantDefilement();
+  // l'arbitre de fluidité : il compte les images par seconde et allège la page si ça rame
+  surveillerFluidite();
   if (typeof IntersectionObserver === "undefined" || typeof MutationObserver === "undefined") return;
   const io = new IntersectionObserver(
     (list) => {
