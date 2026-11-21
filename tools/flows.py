@@ -60,11 +60,17 @@ with sync_playwright() as p:
         page.wait_for_selector(".page")
         page.wait_for_load_state("networkidle")
 
+    def tear_and_pull():
+        # one touch tears the pack, a second one takes the cards out
+        page.locator(".reveal__pack").click()
+        page.wait_for_selector(".tp--open", timeout=5000)
+        page.locator(".reveal__pack").click()
+
     def open_and_finish(button, close="Fermer"):
         page.get_by_role("button", name=button).first.click()
         page.wait_for_selector(".reveal")
         if page.locator(".reveal__pack").count():
-            page.locator(".reveal__pack").click()
+            tear_and_pull()
         page.wait_for_selector(".reveal__deck", timeout=5000)
         page.get_by_role("button", name="Tout montrer").click()
         page.wait_for_selector(".recap")
@@ -76,7 +82,7 @@ with sync_playwright() as p:
     page.wait_for_selector(".reveal__pack")
     page.wait_for_timeout(500)
     shot("flow-01-paquet")
-    page.locator(".reveal__pack").click()
+    tear_and_pull()
     page.wait_for_selector(".reveal__deck")
     page.wait_for_timeout(600)
     shot("flow-02-pile")
@@ -116,7 +122,7 @@ with sync_playwright() as p:
     check(s["opened"] == 102 and s["claimed"] == 100 and any(g["kind"] == "eclat" for g in s["gifts"]), f"palier 100 : {s['opened']} cartes, claimed {s['claimed']}, cadeaux {s['gifts']}")
     page.get_by_role("button", name="Ouvrir mon cadeau").click()
     page.wait_for_selector(".reveal__pack")
-    page.locator(".reveal__pack").click()
+    tear_and_pull()
     page.wait_for_selector(".reveal__deck")
     page.locator(".reveal__stage").click(position={"x": 20, "y": 20})
     page.wait_for_timeout(3600)

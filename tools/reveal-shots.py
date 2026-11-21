@@ -65,6 +65,9 @@ with sync_playwright() as p:
     page.mouse.up()
     page.wait_for_timeout(450)
     shot("ouverture")
+    # the cards are in the open pack: one touch takes them out
+    page.wait_for_selector(".tp--open")
+    page.locator(".reveal__pack").click()
     page.wait_for_selector(".reveal__deck")
     page.wait_for_timeout(700)
     shot("pile")
