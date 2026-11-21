@@ -261,7 +261,58 @@ export function garderAbimee(cle: string, texte: string) {
 export type Demarrage = { plantage: boolean; reparees: string[]; abimeesSansCopie: string[] };
 export const demarrage: Demarrage = { plantage: false, reparees: [], abimeesSansCopie: [] };
 
+/** Remise à zéro demandée pour la version 65 (une seule fois) : tout ce qui se gagne retourne dans le coffre.
+ *  Gardés : les pièces d'or, les paquets en réserve, les réglages, Philippe. Les copies de secours d'avant sont vidées,
+ *  sinon « Réparer l'appli » ramènerait les anciennes cartes. */
+const CLE_REMISE = "footdex.remise.v65";
+function remiseAZero() {
+  if (lire(CLE_REMISE) === "fait") return;
+  const json = (k: string): Record<string, unknown> | null => {
+    try {
+      const v = JSON.parse(lire(k) ?? "null");
+      return v && typeof v === "object" ? (v as Record<string, unknown>) : null;
+    } catch {
+      return null;
+    }
+  };
+  const etat = json("footdex.etat.v3");
+  if (etat) {
+    const gifts = Array.isArray(etat.gifts) ? etat.gifts : [];
+    ecrire(
+      "footdex.etat.v3",
+      JSON.stringify({
+        ...etat,
+        cards: {}, order: 0, claimed: 0, chest: [], book: {}, log: [], backs: ["dos-0"], back: "dos-0",
+        // les paquets cadeaux venus du coffre ou des paliers de la collection repartent avec elle
+        gifts: gifts.filter((g) => {
+          const from = String((g as { from?: unknown })?.from ?? "");
+          return !from.startsWith("Palier") && !from.includes("coffre");
+        }),
+      }),
+    );
+  }
+  const col = json("footdex.collection");
+  if (col) ecrire("footdex.collection", JSON.stringify({ ...col, cards: {}, figs: {}, figsC: {}, styles: [], chests: 0 }));
+  const mas = json("footdex.mascotte.v1");
+  if (mas) {
+    // plus aucun copain ni habit gagné : seul Philippe, dans sa tenue de base, reste
+    const { look: _l, looks: _ls, buddies: _b, buddyPos: _p, ...reste } = mas;
+    // perso 6 = Philippe dans la liste des personnages ; sa tenue est celle de caractere.ts (CARAC.philippe.tenue)
+    const tenue = { body: 6, skin: 1, hair: 2, hairColor: 0, outfit: 11, acc: [] };
+    ecrire("footdex.mascotte.v1", JSON.stringify({ ...reste, perso: 6, look: tenue, buddies: [], looks: { philippe: tenue }, buddyPos: {} }));
+  }
+  for (const k of ["footdex.histoires.v1", "footdex.histoires.armees.v1", "footdex.soins.v1", CLE_VITE, CLE_ABIME, CLE_A_RESTAURER]) effacer(k);
+  try {
+    if (typeof indexedDB !== "undefined") indexedDB.deleteDatabase("footdex-secours");
+  } catch {
+    /* rien */
+  }
+  ecrire(CLE_REMISE, "fait");
+}
+
 function garderAuDemarrage() {
+  // 0. La remise à zéro de la version 65, une seule fois, avant tout le reste.
+  remiseAZero();
   // 1. Une réparation demandée avant le redémarrage : on la finit avant que l'appli lise ses sauvegardes.
   try {
     const a = JSON.parse(lire(CLE_A_RESTAURER) ?? "null") as Record<string, string> | null;
