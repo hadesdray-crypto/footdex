@@ -15,6 +15,12 @@ export const bonCode = (c: string) => (storageGet(CLE) || hash(DEFAUT)) === hash
 let ouvertJusqua = 0; // once typed, the code stays open for 10 minutes
 export const dejaOuvert = () => Date.now() < ouvertJusqua;
 const abonnes = new Set<() => void>();
+/** On quitte les écrans des grands : il faudra retaper le code pour y revenir. */
+export function fermerCode() {
+  if (!ouvertJusqua) return;
+  ouvertJusqua = 0;
+  abonnes.forEach((f) => f());
+}
 const ouvrir = () => {
   ouvertJusqua = Date.now() + 10 * 60 * 1000;
   abonnes.forEach((f) => f());

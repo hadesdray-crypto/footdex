@@ -16,6 +16,8 @@ const dev = process.argv.includes("--dev");
 // Three builds of the same code: the claude.ai page, the website (offline copy), the Android app (APK).
 const VERSION = new Date().toISOString().slice(0, 16).replace("T", " ");
 const APK_VERSION = Number(process.env.APK_VERSION || 0);
+// La liste des fichiers de données, pour l'écran « Réparer l'appli » (il vérifie que chacun se lit bien).
+const FICHIERS_DONNEES = readdirSync(join(APP, "public/data")).filter((f) => f.endsWith(".json")).sort().map((f) => `data/${f}`);
 async function bundle(kind) {
 const js = await build({
   entryPoints: [join(APP, "src/main.tsx")],
@@ -33,6 +35,7 @@ const js = await build({
     __APK__: kind === "apk" ? "true" : "false",
     __APK_VERSION__: JSON.stringify(APK_VERSION),
     __VERSION_APP__: JSON.stringify(VERSION),
+    __FICHIERS_DONNEES__: JSON.stringify(FICHIERS_DONNEES),
   },
   nodePaths: [join(ROOT, "node_modules"), "/opt/npm-tools/node_modules"],
   logLevel: "warning",

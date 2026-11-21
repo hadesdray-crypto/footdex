@@ -3,6 +3,7 @@ declare const __HORS_LIGNE__: boolean;
 declare const __APK__: boolean;
 declare const __APK_VERSION__: number;
 declare const __VERSION_APP__: string;
+declare const __FICHIERS_DONNEES__: string[];
 
 /** The site on GitHub Pages: it keeps an offline copy (service worker). */
 export const HORS_LIGNE = __HORS_LIGNE__;
@@ -10,6 +11,8 @@ export const HORS_LIGNE = __HORS_LIGNE__;
 export const EST_APK = __APK__;
 export const VERSION_APK = __APK_VERSION__;
 export const VERSION_APP = __VERSION_APP__;
+/** Les fichiers de données de l'appli (data/*.json), écrits à la construction. */
+export const FICHIERS_DONNEES: string[] = __FICHIERS_DONNEES__;
 
 export const DEPOT = "https://github.com/hadesdray-crypto/footdex";
 export const SITE = "https://hadesdray-crypto.github.io/footdex/";

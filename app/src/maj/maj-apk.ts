@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import { appeler, ecouter, moduleDisponible } from "../natif";
 import { DEPOT, EST_APK, LIEN_APK, VERSION_APK } from "./env";
+import { finLancement } from "./secours";
 
 const API = "https://api.github.com/repos/hadesdray-crypto/footdex/releases/latest";
 const CLE_TERMINEE = "footdex.maj.apk";
@@ -40,6 +41,9 @@ function publier(e: Partial<EtatMaj>) {
   etat = { ...etat, ...e };
   abonnes.forEach((f) => f(etat));
 }
+
+/** L'état des mises à jour, sans abonnement (pour l'écran « Réparer l'appli »). */
+export const etatMajApk = () => etat;
 
 export function useMajApk() {
   const [e, setE] = useState(etat);
@@ -109,6 +113,7 @@ export async function redemarrerApk() {
   } catch {
     /* rien */
   }
+  finLancement(); // un redémarrage voulu n'est pas un plantage
   await u.set({ id: bundle.id });
 }
 

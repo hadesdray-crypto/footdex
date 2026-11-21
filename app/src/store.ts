@@ -116,6 +116,27 @@ export function getState(): State {
   return state;
 }
 
+/** Lit une sauvegarde (texte) comme le fait l'appli : null si elle est abîmée. */
+export function lireEtat(texte: string | null): State | null {
+  return sane(safeParse(texte));
+}
+
+/** Après une réparation : relit la sauvegarde du téléphone. False si elle ne se lit pas (rien ne change alors). */
+export function rechargerEtat(): boolean {
+  const lu = sane(safeParse(storageGet(KEY)));
+  if (!lu) return false;
+  state = lu;
+  emit();
+  scheduleRemote();
+  return true;
+}
+
+/** Réécrit la progression en mémoire dans le téléphone (si l'écriture avait échoué). True si c'est bien écrit. */
+export function reecrireEtat(): boolean {
+  storageSet(KEY, JSON.stringify(state));
+  return storageGet(KEY) === JSON.stringify(state);
+}
+
 // ------------------------------------------------------------- remote copy (claude.ai)
 
 type DocRef = { get(): Promise<{ exists: boolean; data(): Record<string, unknown> | undefined }>; set(data: Record<string, unknown>): Promise<void> };

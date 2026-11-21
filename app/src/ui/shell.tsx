@@ -12,6 +12,7 @@ import { refereeCard } from "../mascot/terrain";
 import { HistoireScene } from "../mascot/HistoireScene";
 import { Bienvenue } from "../maj/Bienvenue";
 import { MiseAJour } from "../maj/MiseAJour";
+import { ProposerReparation } from "../maj/Reparer";
 import { TempsEcran } from "../maj/TempsEcran";
 import { Link } from "./bits";
 import { Signal } from "./signal";
@@ -26,7 +27,7 @@ const TABS: { to: Route; label: string; icon: typeof LuHouse; match: string[] }[
   },
   { to: { page: "paquets" }, label: "Paquets", icon: LuPackageOpen, match: ["paquets"] },
   { to: { page: "collection" }, label: "Collection", icon: LuLibrary, match: ["collection", "classeur"] },
-  { to: { page: "moi" }, label: "Réglages", icon: LuUserRound, match: ["moi", "reglages", "personnage", "parents", "reg-personnage", "reg-voix", "reg-copains", "reg-bruitages", "reg-sons", "reg-apparence", "reg-maj", "reg-sauvegarde", "reg-grands", "reg-ecran", "reg-jeu", "reg-atelier", "reg-dev"] },
+  { to: { page: "moi" }, label: "Réglages", icon: LuUserRound, match: ["moi", "reglages", "personnage", "parents", "reg-personnage", "reg-voix", "reg-copains", "reg-bruitages", "reg-sons", "reg-apparence", "reg-maj", "reg-sauvegarde", "reg-grands", "reg-ecran", "reg-jeu", "reg-atelier", "reg-dev", "reg-reparer"] },
 ];
 
 export function Shell({ page, pageKey, album, children }: { page: string; pageKey: string; album: Album; children: ReactNode }) {
@@ -125,6 +126,7 @@ export function Shell({ page, pageKey, album, children }: { page: string; pageKe
       </main>
       <Mascot album={album} page={page} />
       <MiseAJour />
+      <ProposerReparation page={page} />
       <Bienvenue />
       <HistoireScene />
       <TempsEcran />

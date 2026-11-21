@@ -7,7 +7,7 @@ function toutLire(): Record<string, string> {
   const out: Record<string, string> = {};
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && k.startsWith(PREFIXE) && !k.startsWith("footdex.maj.")) out[k] = localStorage.getItem(k) ?? "";
+    if (k && k.startsWith(PREFIXE) && !k.startsWith("footdex.maj.") && !k.startsWith("footdex.secours.")) out[k] = localStorage.getItem(k) ?? "";
   }
   return out;
 }

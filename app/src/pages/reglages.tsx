@@ -1,7 +1,7 @@
 // Les paramètres, refaits : UN seul point d'entrée (le bouton engrenage / l'onglet « Moi »), puis UN écran par sujet.
 //   Paramètres
 //   ├─ Mon personnage : qui est-ce · sa voix · ses copains · ses bruitages
-//   ├─ L'appli : les sons · les mises à jour · la sauvegarde
+//   ├─ L'appli : les sons · les mises à jour · la sauvegarde · réparer l'appli (sans code)
 //   └─ Pour les grands (code) : temps d'écran et Internet · réglages du jeu · atelier · essais (développeur)
 // Chaque écran a une flèche de retour (celle d'Android aussi) et ne montre que ce dont il parle.
 import { type ReactNode, useState, useSyncExternalStore } from "react";
@@ -18,6 +18,7 @@ import { PERSOS } from "../mascot/lines";
 import { VoicePanel } from "../mascot/Mascot";
 import { choosePerso, hideBubble, sample, stopTalking, update, useMascot } from "../mascot/state";
 import { VoicePicker } from "../mascot/VoicePicker";
+import { Reparation } from "../maj/Reparer";
 import { Wardrobe } from "../mascot/Wardrobe";
 import type { Route } from "../router";
 import { SKINS, changerApparence, remettreApparence, useApparence } from "../apparence";
@@ -76,6 +77,7 @@ export function Reglages() {
           <Door to={{ page: "reg-sons" }} kicker="L'appli" title="Les sons" figure={sound ? "Allumés" : "Coupés"} icon={LuVolume2} />
           <Door to={{ page: "reg-maj" }} kicker="L'appli" title="Mises à jour et nouveautés" figure={EST_APK ? `Version 1.${VERSION_APK}` : "Chercher une mise à jour"} icon={LuRefreshCw} />
           <Door to={{ page: "reg-sauvegarde" }} kicker="L'appli" title="Sauvegarder ma progression" figure="Pour changer de téléphone sans rien perdre" icon={LuCopy} />
+          <Door to={{ page: "reg-reparer" }} kicker="L'appli" title="Réparer l'appli" figure="Un bouton : je vérifie tout et je répare" tone="gold" icon={LuSettings} />
         </div>
         <div className="chips">
           <button type="button" className="btn btn--soft" onClick={voirBienvenue}>Revoir la visite de l'appli</button>
@@ -234,6 +236,15 @@ export function RegSauvegarde() {
   return (
     <Ecran titre="Sauvegarder ma progression" kicker="Cartes, pièces, personnage">
       <Sauvegarde />
+    </Ecran>
+  );
+}
+
+/** Réparer l'appli : pour tout le monde, sans code. */
+export function RegReparer() {
+  return (
+    <Ecran titre="Réparer l'appli" kicker="Un bouton, et je vérifie tout">
+      <Reparation />
     </Ecran>
   );
 }

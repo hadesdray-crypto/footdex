@@ -3,6 +3,7 @@
 // the child sees « Nouvelle mise à jour ! » and chooses. Until then, the old version keeps working.
 import { useEffect, useState } from "react";
 import { HORS_LIGNE } from "./env";
+import { finLancement } from "./secours";
 
 export type EtatHorsLigne = { possible: boolean; majDisponible: boolean; verification: "" | "en-cours" | "a-jour" | "hors-ligne" };
 
@@ -69,10 +70,16 @@ export function accepterMiseAJour() {
   } catch {
     /* nothing */
   }
+  finLancement(); // un redémarrage voulu n'est pas un plantage
   const enAttente = enregistrement?.waiting;
   if (enAttente) enAttente.postMessage("mettre-a-jour");
   else location.reload();
 }
+
+/** L'état de la copie hors connexion, sans abonnement (pour l'écran « Réparer l'appli »). */
+export const etatHorsLigne = () => dernier;
+/** Vrai quand le site a bien sa copie hors connexion (et peut donc chercher une mise à jour). */
+export const horsLigneActif = () => !!enregistrement;
 
 export function useHorsLigne() {
   const [etat, setEtat] = useState(dernier);

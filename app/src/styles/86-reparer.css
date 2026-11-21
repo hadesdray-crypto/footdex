@@ -1,0 +1,39 @@
+/* « Réparer l'appli » : même thème que le reste (nuit, or, pelouse). */
+.repar { display: grid; gap: 14px; min-width: 0; }
+.repar__haut { grid-template-columns: auto 1fr; align-items: center; gap: 14px; }
+.repar__haut .mfw { flex: none; }
+.repar__intro { min-width: 0; }
+.repar__dit { font-size: 15px; line-height: 1.5; color: var(--fg-2); }
+.repar__phrase { font: 900 26px/1.1 var(--f-display); text-transform: uppercase; letter-spacing: .02em; color: var(--gold-hi); overflow-wrap: anywhere; }
+.repar__go { width: 100%; font-size: 1.2rem; min-height: 64px; }
+.repar__bar { height: 20px; }
+.repar__pct { text-align: center; font: 900 24px/1 var(--f-display); color: var(--gold-hi); margin-top: -6px; }
+.repar__etapes { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.repar__etape { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 12px 12px; border-radius: var(--r-md); background: var(--glass); border: 1px solid var(--line); animation: fadein .25s ease both; min-width: 0; }
+.repar__num { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 800 15px/1 var(--f-label); background: var(--night-3); border: 2px solid var(--line-2); color: var(--fg-2); }
+.repar__corps { display: grid; gap: 2px; min-width: 0; font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.repar__corps strong { font-size: 15px; color: var(--fg); }
+.repar__mot { font: 800 13px/1 var(--f-label); letter-spacing: .08em; text-transform: uppercase; padding: 6px 9px; border-radius: 99px; background: var(--night-3); color: var(--fg-2); white-space: nowrap; }
+.repar__etape.is-en-cours { border-color: var(--gold); }
+.repar__etape.is-en-cours .repar__num { border-color: var(--gold); animation: reparPulse 1s ease-in-out infinite; }
+.repar__etape.is-en-cours .repar__mot { color: var(--gold-hi); }
+.repar__etape.is-ok .repar__num, .repar__etape.is-repare .repar__num { border-color: var(--pitch); color: var(--pitch-hi); }
+.repar__etape.is-ok .repar__mot { color: var(--pitch-hi); }
+.repar__etape.is-repare .repar__mot { background: var(--pitch-deep); color: #fff; }
+.repar__etape.is-attention { border-color: var(--bad); }
+.repar__etape.is-attention .repar__num { border-color: var(--bad); color: var(--bad); }
+.repar__etape.is-attention .repar__mot { color: var(--bad); }
+.repar__fin .majbar__actions .btn { flex: 1 1 160px; }
+.repar__question { font-size: 18px; font-weight: 700; color: var(--fg); }
+@keyframes reparPulse { 50% { box-shadow: 0 0 0 6px rgba(246, 196, 83, .25); } }
+@media (max-width: 380px) {
+  .repar__haut { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .repar__etape { grid-template-columns: 26px 1fr; }
+  .repar__mot { grid-column: 2; justify-self: start; }
+}
+
+/* La fenêtre de mise à jour : la question et ses gros boutons restent toujours visibles en bas. */
+.majfull__ask { border-top: 1px solid var(--line); background: var(--night-2); }
+.majfull__ask .majfull__actions { border-top: 0; padding-top: 4px; }
+.majfull__q { margin: 0; padding: 12px 14px 4px; text-align: center; font: 900 22px/1.1 var(--f-display); text-transform: uppercase; color: var(--fg); }
+.majfull__nouveau { display: grid; gap: 4px; width: 100%; }

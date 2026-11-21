@@ -1,3 +1,5 @@
+// La garde du démarrage passe AVANT tout le reste : elle vérifie les sauvegardes avant qu'on les lise.
+import "./maj/secours";
 import { useEffect } from "react";
 import { Machine, Mission } from "./pages/mission";
 import { createRoot } from "react-dom/client";
@@ -6,7 +8,7 @@ import { Binder } from "./pages/binder";
 import { Coffre } from "./pages/coffre";
 import { Collection } from "./pages/collection";
 import { Jeux } from "./pages/jeux";
-import { Reglages, RegAtelier, RegBruitages, RegCopains, RegDev, RegEcran, RegGrands, RegJeu, RegMaj, RegPersonnage, RegSauvegarde, RegSons, RegApparence, RegVoix } from "./pages/reglages";
+import { Reglages, RegAtelier, RegBruitages, RegCopains, RegDev, RegEcran, RegGrands, RegJeu, RegMaj, RegPersonnage, RegReparer, RegSauvegarde, RegSons, RegApparence, RegVoix } from "./pages/reglages";
 import { Decouvrir } from "./pages/rubriques";
 import { demarrerHorsLigne } from "./maj/hors-ligne";
 import { demarrerMajApk } from "./maj/maj-apk";
@@ -15,6 +17,8 @@ import { garderLegere } from "./perf";
 import { appliquerApparence } from "./apparence";
 import { demarrerTempsEcran } from "./maj/temps-ecran";
 import { garderLesLiensExternes } from "./maj/parents";
+import { fermerCode } from "./maj/code";
+import { quandAlbumOuvert } from "./maj/Reparer";
 import { Carte } from "./pages/carte";
 import { Defi, GrandDefi } from "./pages/defi";
 import { Fiche } from "./pages/fiche";
@@ -73,6 +77,7 @@ function Page({ route, album }: { route: Route; album: Album }) {
     case "reg-jeu": return <RegJeu />;
     case "reg-atelier": return <RegAtelier />;
     case "reg-dev": return <RegDev />;
+    case "reg-reparer": return <RegReparer />;
     case "mission": return <Mission />;
     case "machine": return <Machine album={album} />;
     case "plus": return <Decouvrir album={album} />;
@@ -84,12 +89,25 @@ const TITLES: Record<string, string> = {
   mission: "Mission de Papa", machine: "La machine à secrets",
   accueil: "Footdex", joueurs: "Joueurs", paquets: "Paquets", classeur: "Classeur", matchs: "Matchs", scores: "Scores", coupes: "Coupes",
   clubs: "Clubs", saison: "Saison 2026-2027", lexique: "Lexique", defi: "Défi du jour", "grand-defi": "Grand défi", histoires: "Histoires",
-  videos: "Vidéos", sources: "Sources", carte: "La carte", coffre: "Le coffre", collection: "Ma collection", jeux: "Les jeux", parents: "Pour les grands", reglages: "Paramètres", plus: "Découvrir", decouvrir: "Découvrir", moi: "Paramètres", personnage: "Mon personnage", "reg-personnage": "Mon personnage", "reg-voix": "Sa voix", "reg-copains": "Ses copains", "reg-bruitages": "Ses bruitages", "reg-sons": "Les sons", "reg-maj": "Mises à jour", "reg-sauvegarde": "Sauvegarde", "reg-grands": "Pour les grands", "reg-ecran": "Temps d'écran", "reg-jeu": "Réglages du jeu", "reg-atelier": "Atelier", "reg-dev": "Essais",
+  videos: "Vidéos", sources: "Sources", carte: "La carte", coffre: "Le coffre", collection: "Ma collection", jeux: "Les jeux", parents: "Pour les grands", reglages: "Paramètres", plus: "Découvrir", decouvrir: "Découvrir", moi: "Paramètres", personnage: "Mon personnage", "reg-personnage": "Mon personnage", "reg-voix": "Sa voix", "reg-copains": "Ses copains", "reg-bruitages": "Ses bruitages", "reg-sons": "Les sons", "reg-maj": "Mises à jour", "reg-sauvegarde": "Sauvegarde", "reg-grands": "Pour les grands", "reg-ecran": "Temps d'écran", "reg-jeu": "Réglages du jeu", "reg-atelier": "Atelier", "reg-dev": "Essais", "reg-reparer": "Réparer l'appli",
 };
+
+/** Les écrans des grands : le code reste ouvert seulement tant qu'on y est. */
+const PAGES_GRANDS = new Set(["parents", "reg-grands", "reg-ecran", "reg-jeu", "reg-atelier", "reg-dev"]);
 
 function App() {
   const route = useRoute();
   const { data: album, error, retry } = useLoad(() => loadAlbum(), []);
+
+  // L'album est ouvert : l'appli a bien démarré (sinon, la prochaine fois, on proposera de la réparer).
+  useEffect(() => {
+    if (album) quandAlbumOuvert();
+  }, [album]);
+
+  // Le code des grands se referme dès qu'on quitte leurs écrans (le bouton retour ne les rouvre pas sans code).
+  useEffect(() => {
+    if (!PAGES_GRANDS.has(route.page)) fermerCode();
+  }, [route.page]);
 
   useEffect(() => {
     const name = route.page === "fiche" ? album?.byId.get(route.id)?.display : TITLES[route.page];

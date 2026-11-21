@@ -185,6 +185,17 @@ export function fetchJson<T>(path: string): Promise<T> {
   return pending;
 }
 
+/** Les fichiers déjà demandés pendant cette ouverture de l'appli. */
+export const jsonDemandes = () => [...cache.keys()];
+/** Oublie un fichier gardé en mémoire : il sera relu la prochaine fois. */
+export function oublierJson(path: string) {
+  cache.delete(path);
+}
+/** Met en mémoire un fichier relu ailleurs (réparation) : les pages l'utiliseront directement. */
+export function remplirJson(path: string, value: unknown) {
+  cache.set(path, Promise.resolve(value));
+}
+
 let albumPromise: Promise<Album> | null = null;
 
 export function loadAlbum(): Promise<Album> {
