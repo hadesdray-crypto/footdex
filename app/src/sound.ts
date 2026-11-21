@@ -627,3 +627,17 @@ export function meow() {
   o.start(t);
   o.stop(t + 0.6);
 }
+
+/** The ball hits the screen when it turns: a big leather « boum », and with `verre` the glass that cracks (for the joke). */
+export function chocEcran(verre = false) {
+  const a = ctx();
+  if (!a) return;
+  const t = a.currentTime + 0.001;
+  burst(a, t, 700, 0.6, 0.5, 0.09, "lowpass");
+  burst(a, t, 2400, 0.9, 0.14, 0.02);
+  body(a, t, 120, 42, 0.75, 0.22);
+  if (!verre) return;
+  // the crack: dry high snaps one after the other, then small bits of glass that tinkle
+  for (let i = 0; i < 7; i += 1) burst(a, t + 0.02 + i * 0.03 + Math.random() * 0.02, 3200 + Math.random() * 3800, 2.5, 0.16 - i * 0.012, 0.025, "bandpass");
+  for (let i = 0; i < 5; i += 1) note(2600 + Math.random() * 2400, 0.22 + i * 0.07 + Math.random() * 0.04, 0.12, 0.012, "sine");
+}

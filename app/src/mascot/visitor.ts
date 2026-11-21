@@ -5,6 +5,7 @@ import { DOCTOR_LOOK, takeTurn, visitorSpeak } from "./state";
 import { depthZ } from "./depth";
 import { figSvg, type Look } from "./look";
 import { sideHeadSvg } from "./runner";
+import { recaler, recalerX, surEcranTourne } from "./recaler";
 
 /** The referees: they come one at a time, each with his own face. */
 export const REFEREES: { name: string; look: Look }[] = [
@@ -363,6 +364,16 @@ function frame(now: number) {
   all.forEach((v) => v.step(dt));
   raf = all.size ? requestAnimationFrame(frame) : 0;
 }
+
+// the screen turned: each visitor (and where he was going) moves to the same place of the new screen
+surEcranTourne((d) => {
+  all.forEach((v) => {
+    recaler(v, d, 30);
+    const a = v.act;
+    if (a.k === "walk") a.to = { x: recalerX(a.to.x, d, 30), y: recaler({ ...a.to }, d, 30).y };
+    v.step(0);
+  });
+});
 
 /** A visitor comes in from the side nearest to `x`. */
 export function enter(kind: Kind, x: number, y: number): Visitor {

@@ -14,6 +14,7 @@ import { demarrerHorsLigne } from "./maj/hors-ligne";
 import { demarrerMajApk } from "./maj/maj-apk";
 import { garderEcranAllume } from "./maj/ecran-allume";
 import { garderLegere } from "./perf";
+import { demarrerOrientation } from "./orientation";
 import { appliquerApparence } from "./apparence";
 import { demarrerTempsEcran } from "./maj/temps-ecran";
 import { garderLesLiensExternes } from "./maj/parents";
@@ -144,6 +145,7 @@ if ((window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).
 garderEcranAllume();
 appliquerApparence();
 garderLegere();
+demarrerOrientation();
 collectPacks();
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") collectPacks(); });
 if (root) createRoot(root).render(<App />);

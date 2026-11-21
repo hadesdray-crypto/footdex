@@ -4,6 +4,7 @@
 //   ├─ L'appli : les sons · les mises à jour · la sauvegarde · réparer l'appli (sans code)
 //   └─ Pour les grands (code) : temps d'écran et Internet · réglages du jeu · atelier · essais (développeur)
 // Chaque écran a une flèche de retour (celle d'Android aussi) et ne montre que ce dont il parle.
+import { setBallonEcran, useBallonEcran } from "../orientation";
 import { type ReactNode, useState, useSyncExternalStore } from "react";
 import { LuSwatchBook, LuLock, LuCopy, LuMic, LuRefreshCw, LuSettings, LuShieldCheck, LuShirt, LuUserRound, LuUsers, LuVolume2, LuZap } from "react-icons/lu";
 import { CodeParent } from "../maj/code";
@@ -251,6 +252,16 @@ export function RegReparer() {
 
 // ------------------------------------------------------------------ pour les grands (code)
 
+function BallonEcran() {
+  const on = useBallonEcran();
+  return (
+    <label className="toggle">
+      <input type="checkbox" checked={on} onChange={(e: Event) => setBallonEcran((e.target as HTMLInputElement).checked)} />
+      <span>Animation du ballon quand on tourne l'écran</span>
+    </label>
+  );
+}
+
 export function RegGrands() {
   return (
     <Ecran titre="Réglages des grands" kicker="Code parent" grands>
@@ -260,6 +271,7 @@ export function RegGrands() {
         <Door to={{ page: "reg-atelier" }} kicker="Les grands" title="L'atelier des personnages" figure="Combien chacun parle et bouge" icon={LuUserRound} />
         <Door to={{ page: "reg-dev" }} kicker="Développeur" title="Essais" figure="Lancer à la main le chapardeur, la fête, la figurine à clipser" tone="gold" icon={LuZap} />
       </div>
+      <BallonEcran />
     </Ecran>
   );
 }

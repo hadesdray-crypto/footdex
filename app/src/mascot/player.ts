@@ -1,4 +1,5 @@
 import { depthZ } from "./depth";
+import { recaler, recalerX, recalerY, surEcranTourne } from "./recaler";
 import { hasCast, sideArmCast, sideHead, sideShinCast, wounds } from "./wounds";
 // The footballer and HIS ball: one being, two bodies, drawn and moved together every frame.
 // - The ground is the line under his feet. The ball lives on that ground: it rolls, flies and bounces on it.
@@ -52,6 +53,16 @@ let raf = 0;
 let last = 0;
 let park: { x: number; y: number } | null = null; // where the ball waits when he is in his corner
 let onStolen: (() => void) | null = null;
+// the screen turned: the Jongleur, his ball and its resting place move to the same place of the new screen
+surEcranTourne((d) => {
+  if (pl) {
+    recaler(pl, d);
+    if (pl.act.k === "fly") pl.act.ground = recalerY(pl.act.ground, d);
+  }
+  if (ball) { ball.x = recalerX(ball.x, d, 12); ball.y = recalerY(ball.y, d); }
+  if (park) park = recaler({ ...park }, d);
+  wake();
+});
 
 const scaleAt = (y: number) => Math.max(0.78, Math.min(1.2, 0.76 + 0.46 * (y / window.innerHeight)));
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -61,7 +72,7 @@ const top = () => 140;
 const bottom = () => window.innerHeight - 80;
 
 // ------------------------------------------------------------------ the ball (always exists for the Jongleur)
-const BALL_SVG =
+export const BALL_SVG =
   '<svg viewBox="0 0 100 100" width="100%" height="100%"><circle cx="50" cy="50" r="47" fill="#fff" stroke="#10131c" stroke-width="5"/><path d="M50 31 l17 12 -6.5 20 h-21 l-6.5 -20Z" fill="#10131c"/><path d="M50 31 V5 M67 43 L91 35 M60.5 63 L76 86 M39.5 63 L24 86 M33 43 L9 35" stroke="#10131c" stroke-width="5"/><circle cx="36" cy="30" r="12" fill="#fff" opacity=".35"/></svg>';
 
 export function ensureBall(x: number, y: number) {

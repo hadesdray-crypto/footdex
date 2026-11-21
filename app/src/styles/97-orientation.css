@@ -1,0 +1,83 @@
+/* Portrait or landscape: the same pages, laid out for the way the screen is held.
+   Only the layout changes here (sizes, columns, places): colours and materials stay those of the app. */
+
+/* ------------------------------------------------------------------ the ball that hits the screen when it turns */
+.tourne { position: fixed; inset: 0; z-index: 9500; overflow: hidden; pointer-events: auto; will-change: transform; }
+.tourne__voile {
+  position: absolute; inset: -20px;
+  background:
+    radial-gradient(70% 60% at 50% 45%, rgba(122, 162, 255, 0.16), transparent 70%),
+    radial-gradient(90% 50% at 50% 110%, rgba(52, 211, 153, 0.14), transparent 70%),
+    var(--night);
+}
+.tourne__ballon {
+  position: absolute; left: 50%; top: 50%; width: 74vmin; height: 74vmin;
+  transform: translate(-50%, -50%) scale(0.06); opacity: 0; will-change: transform, opacity;
+}
+.tourne__spin { width: 100%; height: 100%; will-change: transform; }
+.tourne__spin svg { display: block; width: 100%; height: 100%; }
+.tourne__onde {
+  position: absolute; left: 50%; top: 50%; width: 90vmin; height: 90vmin; border-radius: 50%;
+  border: 6px solid rgba(238, 242, 251, 0.7); transform: translate(-50%, -50%) scale(0.5); opacity: 0;
+}
+.tourne--simple .tourne__ballon, .tourne--simple .tourne__onde { display: none; }
+
+/* the joke: the glass « cracks » (drawn over everything, a finger goes through it) */
+.fissures { position: fixed; inset: 0; z-index: 9400; pointer-events: none; transition: opacity 1.8s ease-in; }
+.fissures svg { width: 100%; height: 100%; display: block; }
+.fissures--repare { opacity: 0; }
+
+/* ------------------------------------------------------------------ phone held sideways: little height, a lot of width */
+@media (orientation: landscape) and (max-height: 520px) {
+  html.native { --bas: max(env(safe-area-inset-bottom, 0px), 20px); }
+  /* thinner top bar */
+  .topbar__inner { padding-block: 5px; }
+  .brand__word { font-size: 22px; }
+  .brand__sub { display: none; }
+  .topbar__tools { gap: 6px; }
+  .topbar__tools .iconbtn { width: 34px; height: 34px; }
+  .topbar__tools .iconbtn svg { width: 17px; height: 17px; }
+  .starpill { min-height: 34px; font-size: 15px; }
+  /* thinner tab bar: the icon next to its name */
+  .tabbar ul { max-width: 760px; }
+  .tab { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 4px 2px; }
+  .tab--on:not(.tab--pack) .tab__icon::after { bottom: -5px; }
+  .tab--pack .tab__icon { width: 44px; height: 44px; margin-top: -14px; }
+  .tab--pack .tab__icon svg { width: 22px; height: 22px; }
+  .page { padding-top: 12px; padding-bottom: calc(76px + var(--bas)); gap: 14px; }
+  /* the big titles follow the height of the screen, not only its width */
+  .display, .pagetitle h1, .fiche__name, .clubhero h1 { font-size: clamp(30px, min(10vw, 13vh), 76px); }
+  .hero__title { font-size: clamp(30px, min(10.5vw, 13vh), 78px); }
+  .matchpage__title { font-size: clamp(28px, min(9vw, 12vh), 64px); }
+  .quiz__prompt { font-size: clamp(22px, min(6.4vw, 8vh), 40px); }
+  /* home: the text on the left, the cards on the right */
+  .hero { grid-template-columns: 1.15fr 0.85fr; align-items: center; gap: 18px; padding: 20px 22px; }
+  .hero__text { order: 1; }
+  .hero__cards { order: 2; height: 230px; }
+  .hero__card--center { width: 130px; }
+  .hero__card--left, .hero__card--right { width: 108px; }
+  .hero__card--left { --x: -78px; }
+  .hero__card--right { --x: 78px; }
+  /* a player's page: the card on the left, his name and buttons on the right */
+  .fiche__hero { grid-template-columns: 190px minmax(0, 1fr); gap: 22px; align-items: center; padding: 20px 22px; }
+  .fiche__card { width: 190px; }
+  /* packs: the text and the buttons on the left, the pack on the right */
+  .packhero { grid-template-columns: 1.2fr 0.8fr; grid-template-areas: "text pack" "actions pack"; align-items: center; }
+  .packhero__actions { justify-items: start; }
+  .packhero__pack .paquet { --pw: 150px; }
+  .pathpanel__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
+  /* a card seen in big: side by side with its text, the whole card in the screen */
+  .viewer__inner { grid-template-columns: auto minmax(0, 1fr); align-items: center; justify-items: start; gap: 26px; padding-block: 20px 6px; }
+  .viewer__card { width: calc((100vh - 70px) * 5 / 7); width: calc((100dvh - 70px) * 5 / 7); min-width: 150px; }
+  .viewer__text { text-align: left; justify-items: start; }
+  .viewer__actions { justify-content: flex-start; }
+  .viewer__name { font-size: clamp(26px, 7vh, 54px); }
+  /* the sheets that rise from the bottom (character menu, error report): wider, so less to scroll */
+  .mm__sheet, .signal__sheet { width: min(100%, 680px); }
+}
+
+/* ------------------------------------------------------------------ big screens held sideways: use the width */
+@media (orientation: landscape) and (min-width: 1500px) {
+  .page, .topbar__inner { max-width: 1440px; }
+  .tabbar ul { max-width: 720px; }
+}
