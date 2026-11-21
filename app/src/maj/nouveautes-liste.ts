@@ -3,6 +3,22 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    date: "2026-11-21",
+    titre: "Version 65 : nouveaux paquets, l'Arbitre de la tablette, Réparer l'appli",
+    type: "appli",
+    points: [
+      "Nouveau départ : toutes les cartes, les Footballinis, les personnages et les histoires sont retournés dans le coffre. À toi de tout regagner ! Tes pièces et tes paquets en réserve sont gardés.",
+      "Pour ouvrir un paquet, glisse ton doigt le long du haut : il se déchire pour de vrai. Un simple toucher marche aussi.",
+      "Tire les cartes vers le haut : BOUM, elles jaillissent puis se rangent en tas. Tu les retournes une par une, en touchant ou d'un coup de doigt.",
+      "Une carte spéciale a un dos qui brille et qui tremble. La tablette vibre une fois par carte spéciale cachée dans le paquet, et de plus en plus fort quand tu t'en approches.",
+      "Chaque carte rare, ultra rare ou brillante a son propre éclat de lumière quand tu la retournes.",
+      "Si la tablette rame, l'Arbitre entre, siffle et explique : il éteint les lumières, arrête les petites scènes, puis envoie un copain sur le banc. Il ne revient pas à chaque fois.",
+      "Tourne la tablette : un ballon tape la vitre et l'appli se range toute seule, en hauteur comme en largeur. Parfois l'écran fait semblant de se casser… et le Médecin vient le réparer !",
+      "Nouveau bouton « Réparer l'appli » dans les Paramètres : l'appli vérifie tout et répare toute seule. Tes cartes et tes pièces sont copiées en secours.",
+      "Les mises à jour sont plus simples : la fenêtre montre ce qui est nouveau, tu touches OK, tu vois le chargement, et c'est fini.",
+    ],
+  },
+  {
     date: "2026-11-15",
     titre: "Version 64 : vérification complète",
     type: "appli",
