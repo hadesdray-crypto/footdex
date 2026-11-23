@@ -670,3 +670,24 @@ body:has(.viewer, .reveal, .majfull) .page .back::after { animation-play-state: 
 .boitec__fond { margin-top: 12px; padding: 14px; border-radius: 18px; border: 4px solid #4a2a0f; background: repeating-linear-gradient(90deg, #3a2210 0 60px, #33200f 60px 120px); box-shadow: inset 0 10px 30px #000a; }
 .boitec__vide { display: flex; gap: 8px; align-items: center; justify-content: center; padding: 30px 10px; color: #f3e2b8; text-align: center; }
 .boitec__vide svg { flex: none; }
+
+/* l'étagère en colonne : chaque objet sur sa planche */
+.etagere { padding: 10px 12px 6px; margin: 0 0 14px; }
+.etagere__title { margin: 4px 4px 10px; font: 900 clamp(1.6rem, 6vw, 2.6rem)/1 var(--f-display); letter-spacing: 0.02em; text-transform: uppercase; color: var(--fg); }
+.etagere__planche { position: relative; display: grid; justify-items: center; padding: 12px 0 26px; }
+.etagere__planche + .etagere__planche { margin-top: 6px; }
+.etagere__planche .etagere__item { width: min(52vw, 230px); }
+.etagere__planche .etagere__item--boite { width: min(62vw, 270px); }
+.etagere__planche .etagere__plank { left: 4%; right: 4%; bottom: 10px; }
+.etagere__planche .couv--small .cover__title { font-size: 1.7rem; }
+.etagere__planche .couv--small .cover--fbx .cover__title { font-size: 1.3rem; }
+.etagere__planche .couv--small .cover__sub { font-size: 0.8rem; }
+.etagere__planche .couv--small .cover__count { font-size: 0.95rem; }
+.etagere__planche .couv--small .cover__badge { width: 50px; height: 50px; }
+.etagere__planche .boite--small .boite__plate strong { font-size: 1rem; }
+.etagere__planche .boite--small .boite__plate em { font-size: 0.8rem; }
+.etagere__planche .boite--small .boite__plate small { font-size: 0.72rem; }
+.etagere__planche .etagere__tip { bottom: -24px; }
+.fbxbook__extra { display: grid; gap: 6px; margin: 8px 0; }
+.fbxbook__liste { padding: 10px; border-radius: 16px; background: var(--fond, transparent); }
+.boitec__bientot { margin: 16px 0 4px; font-weight: 800; color: #ffe9a8; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.85rem; }

@@ -3,16 +3,18 @@ import { createPortal } from "react-dom";
 // (le classeur des joueurs et celui des Footballinis), et le classeur des Footballinis.
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { LuArrowLeft, LuArrowRight, LuChevronsLeft, LuMaximize2, LuMinimize2, LuSettings2, LuX } from "react-icons/lu";
-import { FBX } from "../fbx/art";
+import { FBX, RARITY } from "../fbx/art";
 import { FbxCard } from "../fbx/ui";
-import { useCollec } from "../fbx/store";
+import { dupValue, tradeDuplicates, useCollec } from "../fbx/store";
+import { say } from "../mascot/state";
+import { Piece } from "../ui/Piece";
 import { vibrate } from "../fx";
 import { go } from "../router";
-import { click, rustle } from "../sound";
+import { click, coins, rustle } from "../sound";
 import { useStore } from "../store";
 import { Ball } from "../ui/pack";
 import { cx } from "../util";
-import { ANNEAUX, COUVS, FONDS, PAPIERS, changerClasseur, reglagesClasseur, remettreClasseur, type Quel, type Reglages, useClasseur } from "../vue-classeur";
+import { ANNEAUX, COUVS, FONDS, PAPIERS, changerClasseur, remettreClasseur, type Quel, type Reglages, useClasseur } from "../vue-classeur";
 import { BoiteContenu, BoiteVisuel, useNombreObjets } from "./boite";
 
 export type Theme = "joueurs" | "fbx";
@@ -185,29 +187,26 @@ export function Etagere() {
         /* le classeur s'ouvrira sur sa couverture */
       }
       go({ page: "classeur" });
-    } else if (reglagesClasseur("fbx").vue === "liste") {
-      // affichage « liste » choisi : la grille des Footballinis, juste en dessous
-      document.querySelector(".colx__grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
     } else setFbxOpen(true);
   }
 
   return (
     <>
       <div className="etagere">
-        <p className="etagere__title">Mes classeurs et ma boîte</p>
-        <div className="etagere__row">
-          {(["joueurs", "fbx"] as Theme[]).map((t) => (
-            <div key={t} className={cx("etagere__item", sorti === t && "is-out")}>
-              <Couverture theme={t} count={count(t)} small onTap={() => tap(t)} onOpen={() => open(t)} />
+        <h1 className="etagere__title">Ma collection</h1>
+        {(["joueurs", "fbx", "boite"] as Rayon[]).map((t) => (
+          <div key={t} className="etagere__planche">
+            <div className={cx("etagere__item", t === "boite" && "etagere__item--boite", sorti === t && "is-out")}>
+              {t === "boite" ? (
+                <BoiteVisuel small count={objets} onTap={() => tap("boite")} onOpen={() => open("boite")} />
+              ) : (
+                <Couverture theme={t} count={count(t)} small onTap={() => tap(t)} onOpen={() => open(t)} />
+              )}
               {sorti === t ? <span className="etagere__tip">Touche encore</span> : null}
             </div>
-          ))}
-          <div className={cx("etagere__item etagere__item--boite", sorti === "boite" && "is-out")}>
-            <BoiteVisuel small count={objets} onTap={() => tap("boite")} onOpen={() => open("boite")} />
-            {sorti === "boite" ? <span className="etagere__tip">Touche encore</span> : null}
+            <span className="etagere__plank" aria-hidden="true" />
           </div>
-        </div>
-        <span className="etagere__plank" aria-hidden="true" />
+        ))}
       </div>
 
       {zoom ? createPortal(
@@ -239,6 +238,15 @@ function ClasseurFbx({ onClose }: { onClose: () => void }) {
   const [zoom, setZoom] = useState<string | null>(null);
   const [turn, setTurn] = useState<"" | "next" | "prev">("");
   const [regl, setRegl] = useState(false);
+  const dupCards = FBX.reduce((a, f) => a + Math.max(0, (c.cards[f.id] ?? 0) - 1) * dupValue(f.rar), 0);
+  function tradeAll() {
+    let gain = 0;
+    for (const f of FBX) gain += tradeDuplicates(f.id);
+    if (gain) {
+      coins(6);
+      say(`Tes doublons sont échangés : ${gain} pièces d'or !`);
+    }
+  }
 
   useEffect(() => {
     const m = () => setTwo(window.innerWidth >= 760 && window.innerWidth > window.innerHeight);
@@ -292,6 +300,17 @@ function ClasseurFbx({ onClose }: { onClose: () => void }) {
         <span className="livre__count">{FBX.filter((f) => c.cards[f.id]).length} / {FBX.length} trouvées</span>
       </div>
       {regl ? <ReglagesClasseur quel="fbx" /> : null}
+      <div className="fbxbook__extra">
+        {dupCards ? <button type="button" className="btn btn--soft" onClick={tradeAll}><Piece /> Échanger mes doublons contre {dupCards} pièces</button> : null}
+        <p className="note colx__legend">{RARITY.map((x) => <span key={x.name} style={{ color: x.color }}>{"★".repeat(x.stars)} {x.name}</span>)}</p>
+      </div>
+      {r.vue === "liste" ? (
+        <div className="colx__grid fbxbook__liste">
+          {FBX.map((f) => (
+            <FbxCard key={f.id} id={f.id} owned={!!c.cards[f.id]} count={c.cards[f.id] ?? 0} onClick={() => { if (c.cards[f.id]) { click("soft"); setZoom(f.id); } }} />
+          ))}
+        </div>
+      ) : (
       <div className="table">
         <div className={cx("classeur", "classeur--fbx", two ? "classeur--two" : "classeur--one", turn && `turn-${turn}`, r.classes)} onPointerDown={swipe}>
           {shown.map((p, i) => (
@@ -322,7 +341,8 @@ function ClasseurFbx({ onClose }: { onClose: () => void }) {
           </span>
         </div>
       </div>
-      <p className="livre__help">Touche une carte trouvée pour la voir en grand. Glisse ton doigt sur la page pour la tourner.</p>
+      )}
+      <p className="livre__help">Touche une carte trouvée pour la voir en grand.{r.vue === "liste" ? "" : " Glisse ton doigt sur la page pour la tourner."}</p>
       {zoom ? (
         <div className="chm" role="dialog" aria-modal="true" onClick={() => setZoom(null)}>
           <div className="chm__box chm__box--card">

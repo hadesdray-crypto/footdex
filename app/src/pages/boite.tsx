@@ -1,9 +1,9 @@
 // La boîte à objets : tout ce qu'on a gagné qui n'est pas une carte — figurines, personnages, histoires, objets du coffre.
 // Elle est rangée sur l'étagère de « Ma collection », à côté des classeurs.
-import { useState } from "react";
-import { LuChevronsUp, LuLock, LuX } from "react-icons/lu";
+import { type ReactNode, useState } from "react";
+import { LuChevronsUp, LuClapperboard, LuLock, LuMusic, LuTrophy, LuX } from "react-icons/lu";
 import { FBX } from "../fbx/art";
-import { useCollec } from "../fbx/store";
+import { tradeFigDuplicates, useCollec } from "../fbx/store";
 import { FigZoom, Figurine } from "../fbx/ui";
 import type { Edition } from "../fbx/Standee";
 import { vibrate } from "../fx";
@@ -12,7 +12,7 @@ import { CARAC } from "../mascot/caractere";
 import { HISTOIRES, armer, carteId, desarmer, lancerHistoire, useArmees, useVues } from "../mascot/histoires";
 import { PERSOS } from "../mascot/lines";
 import { DOCTOR_LOOK, say, update, useMascot } from "../mascot/state";
-import { click, crinkle } from "../sound";
+import { click, coins, crinkle } from "../sound";
 import { useStore } from "../store";
 import { cx } from "../util";
 import { SECRETS, SPECIALS } from "./coffre";
@@ -179,6 +179,9 @@ export function BoiteContenu({ onClose }: { onClose: () => void }) {
                   <button type="button" className="colx__figbtn" aria-label="Voir la figurine en grand" onClick={() => setFigZoom({ id: f.id, v: f.v })}>
                     <Figurine id={f.id} edition={f.v} owned count={f.n} size={140} spin={false} />
                   </button>
+                  {f.n > 1 ? (
+                    <button type="button" className="btn btn--ghost btn--small" onClick={() => { const g = tradeFigDuplicates(f.id, f.v); if (g) { coins(4); say(`${g} pièces d'or !`); } }}>Échanger le doublon</button>
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -228,7 +231,9 @@ export function BoiteContenu({ onClose }: { onClose: () => void }) {
               ))}
             </ul>
           ) : vide("Pas encore d'histoire. Elles sont cachées dans le coffre.")
-        ) : objets.length ? (
+        ) : (
+          <>
+          {objets.length ? (
           <ul className="specials">
             {objets.map((x) => {
               const Icon = x.icon;
@@ -243,8 +248,27 @@ export function BoiteContenu({ onClose }: { onClose: () => void }) {
               );
             })}
           </ul>
-        ) : (
-          vide("Pas encore d'objet. Ouvre le coffre pour en trouver !")
+          ) : (
+            vide("Pas encore d'objet. Ouvre le coffre pour en trouver !")
+          )}
+          <div className="colx__soon">
+            <p className="boitec__bientot">Bientôt dans la boîte</p>
+            {(
+              [
+                [<LuMusic key="m" />, "Musiques", "De courts morceaux de musique à collectionner."],
+                [<LuClapperboard key="c" />, "Clips", "De petits clips vidéo rigolos."],
+                [<LuTrophy key="t" />, "Séquences de match", "Les plus beaux buts, à revoir."],
+              ] as [ReactNode, string, string][]
+            ).map(([i, t, d]) => (
+              <div key={t} className="colx__soonitem">
+                <span aria-hidden="true">{i}</span>
+                <strong>{t}</strong>
+                <em>{d}</em>
+                <LuLock aria-hidden="true" />
+              </div>
+            ))}
+          </div>
+          </>
         )}
       </div>
       {figZoom ? <FigZoom id={figZoom.id} v={figZoom.v} count={(figZoom.v === "c" ? c.figsC : c.figs)[figZoom.id] ?? 1} onClose={() => setFigZoom(null)} /> : null}

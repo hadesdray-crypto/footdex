@@ -4,6 +4,17 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-23",
+    titre: "Version 72 : « Ma collection », c'est ton étagère",
+    type: "appli",
+    points: [
+      "Quand tu vas dans « Collection », tu arrives sur ton étagère : le classeur des joueurs, puis celui des Footballinis, puis ta boîte à objets, chacun sur sa planche.",
+      "Les cartes Footballinis sont dans leur classeur, avec le bouton pour échanger les doublons contre des pièces et la légende des étoiles. Dans ses réglages, « La liste » les montre toutes d'un coup.",
+      "Dans la boîte à objets, une figurine en double a son bouton « Échanger le doublon ». Ce qui arrive bientôt (musiques, clips, séquences de match) est en bas de l'onglet Objets.",
+      "Le coffre des Footballinis est juste sous l'étagère.",
+    ],
+  },
+  {
+    date: "2026-11-23",
     titre: "Version 71 : tes classeurs à ta façon, et la boîte à objets",
     type: "appli",
     points: [
