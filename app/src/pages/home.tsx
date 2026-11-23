@@ -239,11 +239,11 @@ export function Home({ album }: { album: Album }) {
         </picture>
         <div className="scoreboard">
           <div>
-            <strong>49 945</strong>
+            <strong>49 947</strong>
             <span>matchs entre pays, depuis 1872</span>
           </div>
           <div>
-            <strong>22 842</strong>
+            <strong>22 883</strong>
             <span>matchs de Ligue 1 et de Ligue 2</span>
           </div>
           <div>

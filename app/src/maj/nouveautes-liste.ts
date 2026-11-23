@@ -3,6 +3,19 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    date: "2026-11-23",
+    titre: "Mise à jour du lundi : les nouvelles du foot",
+    type: "donnees",
+    points: [
+      "36 nouveaux scores de Ligue 1 : 4 journées, du 23 octobre au 22 novembre.",
+      "Le Paris SG a gagné ses 4 matchs, dont 5-1 au Havre et 3-2 à Nice.",
+      "Surprise : Le Mans a gagné 3-2 à Marseille.",
+      "5 nouveaux scores de Ligue 2, ceux du 6 novembre.",
+      "L'équipe de France a perdu 3-1 en Italie, puis a battu la Turquie 2-1 à Bordeaux. Elle va en quarts de finale de la Ligue des nations.",
+      "Les joueurs des grandes fiches n'ont pas changé de club.",
+    ],
+  },
+  {
     date: "2026-11-21",
     titre: "Version 66 : les paquets font du bruit !",
     type: "appli",

@@ -34,8 +34,8 @@ Dans `site/data/` :
 | `fc24-0.json` à `fc24-7.json` | Les 18 311 fiches EA Sports FC 24, toutes les colonnes, dont les 34 notes. |
 | `faces-0.json` à `faces-7.json` | Les 15 954 visuels du jeu, octet pour octet (en base64). |
 | `fc26-0.json` à `fc26-7.json` | Les 18 405 fiches du fichier du 19 septembre 2025. |
-| `ligues.json` | Les 22 842 scores de Ligue 1 (depuis 1993) et de Ligue 2 (depuis 1997), avec mi-temps, tirs, corners, cartons quand le fichier les donne. |
-| `pays-0.json` à `pays-3.json`, `pays-meta.json` | Les 49 945 matchs entre pays depuis 1872, avec buteurs et tirs au but. |
+| `ligues.json` | Les 22 883 scores de Ligue 1 (depuis 1993) et de Ligue 2 (depuis 1997), avec mi-temps, tirs, corners, cartons quand le fichier les donne. |
+| `pays-0.json` à `pays-3.json`, `pays-meta.json` | Les 49 947 matchs entre pays depuis 1872, avec buteurs et tirs au but. |
 | `wiki.json` | La base Wikipédia de septembre 2026 (988 joueurs, 36 clubs), les 1 038 clubs recollés, le fichier collé des dix stars. |
 | `card-doubts.json`, `reel-doubts.json` | Les liens mis de côté (voir plus bas). |
 
