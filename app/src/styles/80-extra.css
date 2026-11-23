@@ -91,57 +91,89 @@
 @keyframes ballpop { from { transform: scale(0); } to { transform: scale(1); } }
 @media (min-width: 640px) { .gamelist { grid-template-columns: repeat(3, 1fr); } }
 
-/* ---- the binder book */
-.livre { padding-bottom: 20px; }
-.livre__help { text-align: center; color: var(--fg-2); font-size: 0.86rem; margin: 8px 0; }
-.cover { position: relative; display: grid; justify-items: center; align-content: center; gap: 6px; width: min(78%, 300px); aspect-ratio: 3 / 4; margin: 14px auto; border-radius: 6px 18px 18px 6px; border: 0; cursor: pointer; color: #f6d77b;
-  background: radial-gradient(120% 90% at 30% 10%, #2a1c5e, #150d34 70%), #150d34; box-shadow: inset 0 0 0 4px #00000055, inset 0 0 0 7px #c9a24a66, 0 24px 40px -14px #000, 0 0 0 2px #0008; }
-.cover::before { content: ""; position: absolute; inset: 14px 14px 14px 26px; border: 2px solid #c9a24a99; border-radius: 4px 12px 12px 4px; pointer-events: none; }
-.cover__spine { position: absolute; left: 0; top: 0; bottom: 0; width: 16px; background: linear-gradient(90deg, #00000088, #ffffff18 60%, #00000040); border-radius: 6px 0 0 6px; }
-.cover__badge { font-size: 3.2rem; filter: drop-shadow(0 4px 6px #000a); }
-.cover__title { font: 900 2.6rem/1 var(--f-display); letter-spacing: 0.08em; text-shadow: 0 2px 0 #7a5410, 0 0 18px #f6c45377; }
-.cover__sub { font: 700 1.1rem var(--f-display); letter-spacing: 0.3em; text-transform: uppercase; color: #ffe9a8; }
-.cover__open { margin-top: 18px; display: inline-flex; gap: 8px; align-items: center; padding: 10px 16px; border-radius: 999px; background: #f6c453; color: #1d1405; font-weight: 800; }
-.cover__open svg { width: 18px; height: 18px; }
-.livre__bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+/* ---- le classeur : couverture, anneaux, pochettes en plastique, carte qu'on promène du doigt */
+.livre { padding-bottom: 20px; scroll-margin-top: 66px; }
+.livre__help { text-align: center; color: var(--fg-2); font-size: 0.88rem; margin: 10px 0; }
+.livre__bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
 .livre__nav { display: flex; align-items: center; gap: 10px; }
-.book { position: relative; padding: 12px 10px 14px; border-radius: 8px 18px 18px 8px; background: linear-gradient(90deg, #120a2e, #1d1247 6%, #1d1247); box-shadow: inset 6px 0 14px -6px #000, 0 20px 36px -16px #000; perspective: 1400px; }
-.book__page { position: relative; border-radius: 4px 12px 12px 4px; padding: 10px; background: linear-gradient(90deg, #d8cfb8, #f3ecd8 8%, #f7f1e0); box-shadow: inset 8px 0 14px -8px #0006; transform-origin: left center; }
-.book__page.turn-next { animation: pageNext 0.32s ease-in both; }
-.book__page.turn-prev { animation: pagePrev 0.32s ease-in both; }
-@keyframes pageNext { to { transform: rotateY(-70deg); opacity: 0.2; } }
-@keyframes pagePrev { to { transform: rotateY(70deg); opacity: 0.2; } }
-.pockets { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
-.pocket { position: relative; aspect-ratio: 5 / 7; border-radius: 6px; background: #00000012; border: 1.5px dashed #8a7f6055; box-shadow: inset 0 2px 5px #0003; }
-.pocket--hot { background: #34d39933; border-color: #0c5a41; }
-.pocket--ready { border-color: #c9a24a; background: #f6c45322; animation: pocketpulse 1s ease-in-out infinite alternate; }
-@keyframes pocketpulse { to { background: #f6c45355; } }
-.pocket__num { position: absolute; inset: 0; display: grid; place-items: center; font: 800 1.6rem var(--f-display); color: #8a7f6055; }
-.pocket__card, .tray__card { position: absolute; inset: 3px; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
-.pocket__card.is-lifted, .tray__card.is-lifted { opacity: 0.25; }
-.pocket__card.is-picked, .tray__card.is-picked { outline: 3px solid var(--gold); outline-offset: 2px; border-radius: 8px; }
-.pocket__card .carte, .tray__card .carte { pointer-events: none; }
-/* the transparent plastic sleeve: a glossy reflection and a rim over each pocket */
-.pocket__glass { position: absolute; inset: 0; border-radius: 6px; pointer-events: none; border: 1.5px solid #ffffffaa; box-shadow: inset 0 0 0 1px #0002, inset 0 -8px 12px -8px #ffffff55; background: linear-gradient(115deg, #ffffff50 0%, #ffffff10 28%, transparent 40%, transparent 68%, #ffffff22 80%, transparent 90%); }
-.pocket__glass::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 7px; background: linear-gradient(#ffffff88, transparent); border-radius: 6px 6px 0 0; }
-.book__edge { position: absolute; top: 20%; bottom: 20%; width: 44px; z-index: 6; display: grid; place-items: center; background: #f6c45366; color: #fff; border-radius: 12px; border: 2px dashed #f6c453; animation: edgepulse 0.8s ease-in-out infinite alternate; }
-.book__edge--l { left: -6px; }
-.book__edge--r { right: -6px; }
-.book__edge svg { width: 24px; height: 24px; }
-.book__edge.is-hot { background: #f6c453cc; }
+.livre__nav strong { font-variant-numeric: tabular-nums; }
+.livre__count { color: var(--gold-hi); font-weight: 800; font-size: 0.9rem; }
+.livre--closed { perspective: 1600px; }
+
+.cover { position: relative; display: grid; justify-items: center; align-content: center; gap: 8px; width: min(82%, 380px); aspect-ratio: 3 / 4; margin: 16px auto; padding: 0 0 0 26px;
+  border-radius: 8px 20px 20px 8px; border: 0; cursor: pointer; color: #f6d77b; transform-origin: left center; transition: transform 0.65s cubic-bezier(0.5, 0, 0.3, 1);
+  background: radial-gradient(120% 90% at 30% 10%, #2e1f66, #160e38 70%), #160e38;
+  box-shadow: inset 0 0 0 4px #00000055, inset 0 0 0 7px #c9a24a66, 6px 0 0 -1px #e9e0c8, 10px 2px 0 -2px #d6ccb0, 0 26px 44px -14px #000, 0 0 0 2px #0008; }
+.cover--opening { transform: rotateY(-75deg); }
+.cover__stitch { position: absolute; inset: 16px 16px 16px 40px; border: 2px dashed #c9a24a99; border-radius: 4px 12px 12px 4px; pointer-events: none; }
+.cover__spine { position: absolute; left: 0; top: 0; bottom: 0; width: 26px; display: grid; align-content: space-evenly; justify-items: center;
+  background: linear-gradient(90deg, #00000099, #ffffff1c 55%, #00000055); border-radius: 8px 0 0 8px; }
+.cover__spine i { width: 12px; height: 26px; border-radius: 6px; background: linear-gradient(90deg, #8d7a45, #f3dfa0 45%, #8d7a45); box-shadow: 0 2px 3px #0008; }
+.cover__badge { width: 64px; height: 64px; filter: drop-shadow(0 4px 6px #000a); }
+.cover__ball { width: 100%; height: 100%; }
+.cover__title { font: 900 2.8rem/1 var(--f-display); letter-spacing: 0.08em; text-shadow: 0 2px 0 #7a5410, 0 0 18px #f6c45377; }
+.cover__sub { font: 700 1.05rem var(--f-display); letter-spacing: 0.3em; text-transform: uppercase; color: #ffe9a8; }
+.cover__count { color: #ffe9a8cc; font-weight: 700; }
+.cover__open { margin-top: 14px; display: inline-flex; gap: 8px; align-items: center; padding: 12px 20px; border-radius: 999px; background: #f6c453; color: #1d1405; font-weight: 800; font-size: 1.05rem; }
+.cover__open svg { width: 20px; height: 20px; }
+
+/* l'intérieur : couverture sombre autour, feuilles crème, anneaux en métal */
+.classeur { position: relative; display: grid; gap: 0; margin-inline: auto; padding: 14px; border-radius: 14px;
+  background: radial-gradient(140% 100% at 50% 0%, #241760, #120a2e 75%); box-shadow: inset 0 0 0 3px #00000066, inset 0 0 0 6px #c9a24a44, 0 22px 40px -16px #000; }
+.classeur--one { grid-template-columns: 1fr; padding-left: 30px; width: min(100%, 620px, calc((100svh - 300px) * 0.714 + 100px)); min-width: min(100%, 300px); }
+.classeur--two { grid-template-columns: 1fr 1fr; width: min(100%, 1100px, calc((100svh - 300px) * 1.43 + 136px)); }
+.feuille { position: relative; padding: 12px 12px 22px; border-radius: 6px 12px 12px 6px; background: linear-gradient(90deg, #d9d0b9, #f3ecd8 7%, #f8f2e2); box-shadow: inset 8px 0 14px -8px #0006, 0 2px 0 #cfc5a8, 0 4px 0 #bdb293; }
+.feuille--left { border-radius: 12px 4px 4px 12px; background: linear-gradient(270deg, #d9d0b9, #f3ecd8 7%, #f8f2e2); box-shadow: inset -8px 0 14px -8px #0006, 0 2px 0 #cfc5a8, 0 4px 0 #bdb293; margin-right: 14px; }
+.feuille--right { margin-left: 14px; }
+.feuille__num { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font: 700 0.75rem var(--f-display); color: #8a7f60; }
+.classeur__rings { position: absolute; top: 14px; bottom: 14px; display: grid; align-content: space-evenly; justify-items: center; pointer-events: none; z-index: 3; }
+.classeur--two .classeur__rings { left: 50%; width: 40px; transform: translateX(-50%); }
+.classeur--one .classeur__rings { left: 4px; width: 34px; }
+.classeur__rings i { width: 34px; height: 16px; border-radius: 10px; border: 4px solid #cfd6e0; border-top-color: #ffffff; border-bottom-color: #7d8696; background: transparent; box-shadow: 0 3px 4px #0007; }
+.classeur.turn-next .feuille { animation: pageNext 0.3s ease-in both; transform-origin: left center; }
+.classeur.turn-prev .feuille { animation: pagePrev 0.3s ease-in both; transform-origin: right center; }
+@keyframes pageNext { to { transform: perspective(1400px) rotateY(-60deg); opacity: 0.25; } }
+@keyframes pagePrev { to { transform: perspective(1400px) rotateY(60deg); opacity: 0.25; } }
+
+.pockets { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pocket { position: relative; aspect-ratio: 5 / 7; border-radius: 6px; background: #00000012; border: 1.5px dashed #8a7f6055; box-shadow: inset 0 2px 5px #0003; transition: background 0.15s, transform 0.15s; }
+.pocket--hot { background: #34d39940; border: 2px solid #0c9a6a; transform: scale(1.04); }
+.pocket--empty { background: #00000022; }
+.pocket__num { position: absolute; inset: 0; display: grid; place-items: center; font: 800 1.4rem var(--f-display); color: #8a7f6055; }
+.pocket__card { position: absolute; inset: 3px; touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.pocket__card .carte { pointer-events: none; }
+/* la carte qui rentre dans le plastique : elle arrive d'un peu plus haut, glisse, puis le plastique brille */
+.pocket__card.is-in { animation: glisseIn 0.45s cubic-bezier(0.25, 0.9, 0.35, 1.15) both; }
+.pocket__card.is-back { animation: glisseBack 0.35s ease-out both; }
+@keyframes glisseIn { 0% { transform: translateY(-22%) scale(1.12) rotate(-3deg); } 70% { transform: translateY(2%) scale(0.98); } 100% { transform: none; } }
+@keyframes glisseBack { 0% { transform: scale(1.1); } 100% { transform: none; } }
+.pocket:has(.is-in) .pocket__glass::before { animation: reflet 0.55s ease-out 0.12s both; }
+@keyframes reflet { from { transform: translateX(-120%); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
+/* le plastique transparent par-dessus la carte */
+.pocket__glass { position: absolute; inset: 0; z-index: 2; overflow: hidden; border-radius: 6px; pointer-events: none; border: 1.5px solid #ffffffaa; box-shadow: inset 0 0 0 1px #0002, inset 0 -8px 12px -8px #ffffff55;
+  background: linear-gradient(115deg, #ffffff50 0%, #ffffff10 28%, transparent 40%, transparent 68%, #ffffff22 80%, transparent 90%); }
+.pocket__glass::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 9px; background: linear-gradient(#ffffff99, transparent); border-radius: 6px 6px 0 0; }
+.pocket__glass::before { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, #ffffffcc 50%, transparent 70%); transform: translateX(-120%); opacity: 0; }
+
+/* les bords qui tournent la page pendant qu'on promène une carte */
+.classeur__edge { position: absolute; top: 15%; bottom: 15%; width: 46px; z-index: 6; display: grid; place-items: center; background: #f6c45355; color: #fff; border-radius: 12px; border: 2px dashed #f6c453; animation: edgepulse 0.8s ease-in-out infinite alternate; }
+.classeur__edge--l { left: -10px; }
+.classeur__edge--r { right: -10px; }
+.classeur__edge svg { width: 26px; height: 26px; }
+.classeur__edge.is-hot { background: #f6c453dd; transform: scale(1.08); }
+.classeur__edge.is-off { opacity: 0.15; animation: none; }
 @keyframes edgepulse { to { opacity: 0.6; } }
-.tray { margin-top: 10px; padding: 8px; border-radius: 16px; background: var(--glass); border: 1px dashed var(--line-2); }
-.tray--hot { background: #34d39922; border-color: var(--pitch); }
-.tray__title { margin: 0 0 6px; font-weight: 800; color: var(--gold-hi); }
-.tray__empty { margin: 4px 0; color: var(--muted); font-size: 0.84rem; }
-.tray__row { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px; touch-action: pan-x; }
-.tray__card { position: relative; inset: auto; flex: 0 0 74px; width: 74px; touch-action: pan-x; }
-.ghost { position: fixed; z-index: 90; width: 84px; transform: translate(-50%, -62%) rotate(-5deg) scale(1.08); pointer-events: none; filter: drop-shadow(0 16px 14px #000a); }
-.book { max-width: 330px; margin-inline: auto; }
-.tray { position: sticky; bottom: 82px; z-index: 8; background: #0b1226f2; backdrop-filter: blur(6px); }
-.tray__card { flex-basis: 62px; width: 62px; }
-.tray__row { padding-bottom: 4px; }
-.tray__title { font-size: 0.85rem; }
+
+/* la carte accrochée au doigt */
+.ghost { position: fixed; z-index: 90; pointer-events: none; }
+.ghost__in { transform: scale(1.14) rotate(-4deg); transform-origin: center; animation: decolle 0.18s ease-out both; filter: drop-shadow(0 18px 16px #000b); }
+@keyframes decolle { from { transform: scale(1) rotate(0); } to { transform: scale(1.14) rotate(-4deg); } }
+.livre--drag { user-select: none; -webkit-user-select: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pocket__card.is-in, .pocket__card.is-back, .ghost__in, .classeur.turn-next .feuille, .classeur.turn-prev .feuille { animation: none; }
+  .cover { transition: none; }
+}
 
 /* ---- the voice menu */
 .voicepanel { display: grid; gap: 8px; }

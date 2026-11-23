@@ -4,6 +4,18 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-23",
+    titre: "Version 67 : un vrai classeur pour tes cartes",
+    type: "appli",
+    points: [
+      "Ton classeur ressemble à un vrai : une couverture, des anneaux en métal et des pochettes en plastique.",
+      "Quand tu l'ouvres, toutes tes cartes sont déjà rangées dedans. Les nouvelles cartes se rangent toutes seules à la suite.",
+      "Sur la tablette couchée, tu vois deux pages à la fois. Debout, une grande page.",
+      "Touche une carte pour la voir en grand.",
+      "Reste appuyé sur une carte : elle sort de sa pochette et suit ton doigt. Va au bord du classeur pour tourner les pages, puis lâche-la sur une pochette : elle se glisse dans le plastique. S'il y avait déjà une carte, elles échangent leur place.",
+    ],
+  },
+  {
+    date: "2026-11-23",
     titre: "Mise à jour du lundi : les nouvelles du foot",
     type: "donnees",
     points: [

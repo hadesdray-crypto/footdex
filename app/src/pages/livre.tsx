@@ -1,217 +1,413 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { LuArrowLeft, LuArrowRight, LuBookOpen, LuX } from "react-icons/lu";
 import { RARITY, type CardRef } from "../cards";
 import { setBook, useStore } from "../store";
 import { Carte } from "../ui/cards";
-import { click } from "../sound";
+import { click, crinkle, rustle, settle, slide } from "../sound";
+import { vibrate } from "../fx";
 import { cx } from "../util";
+import { Ball } from "../ui/pack";
 
 const POCKETS = 9;
+const HOLD_MS = 380; // rester appuyé ce temps-là : la carte sort de sa pochette
+const SLOP = 12; // le doigt bouge plus que ça avant : c'est un défilement, pas une prise
+const EDGE_WAIT = 520; // la carte reste au bord : la page tourne
+const EDGE_REPEAT = 950;
+const PAGE_KEY = "footdex.livrepage";
+
 type Book = Record<string, (string | null)[]>;
-type Drag = { id: string; from: { page: string; slot: number } | "tray"; x: number; y: number };
+type Spot = { page: number; slot: number };
+type Drag = { id: string; from: Spot; x: number; y: number; ox: number; oy: number; w: number };
+type Settling = { key: string; kind: "in" | "back" };
 
 const pageKey = (i: number) => `p${i + 1}`;
 const emptyPage = () => Array<string | null>(POCKETS).fill(null);
+const spotKey = (s: Spot) => `${s.page}:${s.slot}`;
 
-/** The binder as a real book: a cover, plastic pockets, pages you turn, cards you drag from one pocket to another. */
-export function Livre({ byId }: { byId: Map<string, CardRef> }) {
+function readPage(): number {
+  try {
+    return Math.max(0, Number(sessionStorage.getItem(PAGE_KEY)) || 0);
+  } catch {
+    return 0;
+  }
+}
+function writePage(n: number) {
+  try {
+    sessionStorage.setItem(PAGE_KEY, String(n));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Toutes les cartes possédées sont dans le classeur : celles qui n'ont pas encore de pochette
+ *  prennent les premières pochettes libres, dans l'ordre où elles ont été reçues. */
+function arrange(book: Book, owned: Record<string, unknown>, order: (id: string) => number, known: (id: string) => boolean): Book | null {
+  let changed = false;
+  const next: Book = {};
+  const placed = new Set<string>();
+  for (const k of Object.keys(book)) {
+    next[k] = (Array.isArray(book[k]) ? book[k] : emptyPage()).slice(0, POCKETS);
+    while (next[k].length < POCKETS) next[k].push(null);
+    next[k] = next[k].map((id) => {
+      if (!id || !(id in owned) || placed.has(id)) {
+        if (id) changed = true;
+        return null;
+      }
+      placed.add(id);
+      return id;
+    });
+  }
+  const waiting = Object.keys(owned).filter((id) => !placed.has(id) && known(id)).sort((a, b) => order(a) - order(b));
+  let p = 0;
+  let s = 0;
+  for (const id of waiting) {
+    for (;;) {
+      const k = pageKey(p);
+      const page = (next[k] ??= emptyPage());
+      if (s >= POCKETS) {
+        p += 1;
+        s = 0;
+        continue;
+      }
+      if (page[s] == null) {
+        page[s] = id;
+        changed = true;
+        s += 1;
+        break;
+      }
+      s += 1;
+    }
+  }
+  return changed ? next : null;
+}
+
+/** Le classeur comme un vrai : une couverture, des anneaux, des pochettes en plastique.
+ *  Rester appuyé sur une carte la sort de sa pochette ; on la promène du doigt, la page tourne
+ *  quand on arrive au bord, et en lâchant, elle se glisse dans la nouvelle pochette. */
+export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c: CardRef) => void }) {
   const s = useStore();
   const [open, setOpen] = useState(false);
-  const [page, setPage] = useState(0);
+  const [opening, setOpening] = useState(false);
+  const [page, setPageRaw] = useState(readPage);
   const [turn, setTurn] = useState<"" | "next" | "prev">("");
   const [drag, setDrag] = useState<Drag | null>(null);
-  const [picked, setPicked] = useState<string | null>(null);
-  const [hover, setHover] = useState<string>("");
+  const [hover, setHover] = useState("");
+  const [settling, setSettling] = useState<Settling[]>([]);
+  const [two, setTwo] = useState(false);
+  const wrap = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<Drag | null>(null);
   const edgeTimer = useRef(0);
+  const pageRef = useRef(page);
+  const hoverRef = useRef("");
   const book: Book = s.book;
-  const used = Object.keys(book).filter((k) => book[k].some(Boolean)).map((k) => Number(k.slice(1)) - 1);
-  const pages = Math.max(4, (used.length ? Math.max(...used) : 0) + 2);
 
-  const placed = new Set<string>();
-  for (const k of Object.keys(book)) for (const id of book[k]) if (id) placed.add(id);
-  // A card that left the collection can never stay in a pocket.
-  const tray = Object.keys(s.cards).filter((id) => !placed.has(id) && byId.has(id));
+  // Deux pages côte à côte quand il y a la place (tablette couchée), une grande page sinon.
+  useLayoutEffect(() => {
+    const el = wrap.current;
+    const measure = () => {
+      const w = el?.clientWidth ?? window.innerWidth;
+      setTwo(w >= 720 && window.innerWidth > window.innerHeight);
+    };
+    measure();
+    const ro = typeof ResizeObserver !== "undefined" && el ? new ResizeObserver(measure) : null;
+    if (ro && el) ro.observe(el);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [open]);
 
-  const slots = (key: string): (string | null)[] => book[key] ?? emptyPage();
+  // Ranger toute seule chaque carte qui n'a pas encore de pochette.
+  useEffect(() => {
+    const next = arrange(book, s.cards, (id) => s.cards[id]?.[2] ?? 0, (id) => byId.has(id));
+    if (next) setBook(next);
+  }, [book, s.cards, byId]);
 
-  function put(next: Book) {
-    setBook(next);
+  const used = Object.keys(book).filter((k) => book[k]?.some(Boolean)).map((k) => Number(k.slice(1)) - 1);
+  const step = two ? 2 : 1;
+  let pages = Math.max(2, (used.length ? Math.max(...used) : 0) + 2);
+  if (two && pages % 2) pages += 1;
+  const first = Math.min(two ? page - (page % 2) : page, pages - step);
+  const shown = two ? [first, first + 1] : [first];
+  const count = Object.keys(s.cards).filter((id) => byId.has(id)).length;
+
+  function setPage(n: number) {
+    const v = Math.max(0, Math.min(pages - 1, n));
+    pageRef.current = v;
+    setPageRaw(v);
+    writePage(v);
   }
 
-  function goPage(n: number, dir: "next" | "prev") {
+  function turnTo(n: number, dir: "next" | "prev") {
     if (n < 0 || n >= pages || turn) return;
-    click("soft");
+    rustle();
     setTurn(dir);
     window.setTimeout(() => {
       setPage(n);
       setTurn("");
-    }, 320);
+    }, 300);
   }
 
-  function drop(d: Drag, target: string) {
+  const slots = (p: number): (string | null)[] => book[pageKey(p)] ?? emptyPage();
+
+  function settle_(keys: Settling[]) {
+    setSettling(keys);
+    window.setTimeout(() => setSettling([]), 520);
+  }
+
+  function dropAt(d: Drag, target: string) {
+    const m = /^slot:(\d+):(\d+)$/.exec(target);
+    if (!m) {
+      settle();
+      settle_([{ key: spotKey(d.from), kind: "back" }]);
+      return;
+    }
+    const to: Spot = { page: Number(m[1]), slot: Number(m[2]) };
+    if (to.page === d.from.page && to.slot === d.from.slot) {
+      settle();
+      settle_([{ key: spotKey(to), kind: "back" }]);
+      return;
+    }
     const next: Book = JSON.parse(JSON.stringify(book));
-    const key = pageKey(page);
-    const get = (k: string) => (next[k] ??= emptyPage());
-    // take the card out of where it came from
-    let displaced: string | null = null;
-    if (target.startsWith("slot:")) {
-      const slot = Number(target.slice(5));
-      displaced = get(key)[slot];
-      if (d.from !== "tray") get(d.from.page)[d.from.slot] = displaced;
-      get(key)[slot] = d.id;
-      if (d.from !== "tray" && d.from.page === key && d.from.slot === slot) get(key)[slot] = d.id;
-    } else if (target === "tray" && d.from !== "tray") {
-      get(d.from.page)[d.from.slot] = null;
-    } else return;
-    click("soft");
-    put(next);
+    const get = (p: number) => (next[pageKey(p)] ??= emptyPage());
+    const displaced = get(to.page)[to.slot];
+    get(d.from.page)[d.from.slot] = displaced; // la carte qui était là prend la place libérée
+    get(to.page)[to.slot] = d.id;
+    setBook(next);
+    slide();
+    window.setTimeout(() => crinkle(0.35), 120);
+    vibrate(10);
+    const anim: Settling[] = [{ key: spotKey(to), kind: "in" }];
+    if (displaced) anim.push({ key: spotKey(d.from), kind: "in" });
+    settle_(anim);
   }
 
-  function startDrag(e: PointerEvent, id: string, from: Drag["from"]) {
+  function zoneAt(x: number, y: number): string {
+    const t = document.elementFromPoint(x, y) as HTMLElement | null;
+    const z = t?.closest<HTMLElement>("[data-drop]")?.dataset.drop;
+    if (z) return z;
+    // Au-delà du bord du classeur : la page tourne aussi.
+    const r = wrap.current?.querySelector(".classeur")?.getBoundingClientRect();
+    if (r && y > r.top && y < r.bottom) {
+      if (x < r.left + 30) return "edge:prev";
+      if (x > r.right - 30) return "edge:next";
+    }
+    return "";
+  }
+
+  function edgeTurn(zone: string) {
+    window.clearTimeout(edgeTimer.current);
+    if (zone !== "edge:next" && zone !== "edge:prev") return;
+    const go = (wait: number) => {
+      edgeTimer.current = window.setTimeout(() => {
+        const cur = pageRef.current;
+        const st = two ? 2 : 1;
+        const base = two ? cur - (cur % 2) : cur;
+        const n = zone === "edge:next" ? base + st : base - st;
+        if (n < 0 || n > pages - 1) return;
+        rustle();
+        setTurn(zone === "edge:next" ? "next" : "prev");
+        window.setTimeout(() => {
+          setPage(n);
+          setTurn("");
+        }, 260);
+        go(EDGE_REPEAT);
+      }, wait);
+    };
+    go(EDGE_WAIT);
+  }
+
+  function press(e: PointerEvent, card: CardRef, from: Spot) {
+    if (e.button !== undefined && e.button > 0) return;
     const el = e.currentTarget as HTMLElement;
+    const rect = el.getBoundingClientRect();
     const sx = e.clientX;
     const sy = e.clientY;
-    let active = false;
-    const t0 = performance.now();
-    const move = (ev: PointerEvent) => {
-      const dx = ev.clientX - sx;
-      const dy = ev.clientY - sy;
-      if (!active) {
-        const far = Math.hypot(dx, dy) > 9;
-        // From the tray, a mostly horizontal move scrolls the tray; a vertical move or a long press picks the card up.
-        if (!far) return;
-        if (from === "tray" && Math.abs(dx) > Math.abs(dy) * 1.4 && performance.now() - t0 < 300) return end(ev, false);
-        active = true;
-        try {
-          el.setPointerCapture(ev.pointerId);
-        } catch {
-          /* still works */
-        }
+    const pid = e.pointerId;
+    let lifted = false;
+    let gone = false;
+    let lx = sx;
+    let ly = sy;
+
+    const lift = () => {
+      if (gone) return;
+      lifted = true;
+      try {
+        el.setPointerCapture(pid);
+      } catch {
+        /* marche quand même */
       }
-      const d: Drag = { id, from, x: ev.clientX, y: ev.clientY };
+      vibrate(18);
+      crinkle(0.3);
+      const d: Drag = { id: card.id, from, x: lx, y: ly, ox: sx - rect.left, oy: sy - rect.top, w: rect.width };
       dragRef.current = d;
       setDrag(d);
-      const t = document.elementFromPoint(ev.clientX, ev.clientY) as HTMLElement | null;
-      const zone = t?.closest<HTMLElement>("[data-drop]")?.dataset.drop ?? "";
-      setHover(zone);
-      window.clearTimeout(edgeTimer.current);
-      if (zone === "edge:next" || zone === "edge:prev") {
-        edgeTimer.current = window.setTimeout(() => {
-          const delta = zone === "edge:next" ? 1 : -1;
-          setPage((p: number) => Math.max(0, Math.min(pages - 1, p + delta)));
-          click("soft");
-        }, 650);
+      hoverRef.current = `slot:${from.page}:${from.slot}`;
+      setHover(hoverRef.current);
+    };
+    const holdTimer = window.setTimeout(lift, HOLD_MS);
+
+    // Une fois la carte accrochée, le doigt ne fait plus défiler la page.
+    const block = (ev: TouchEvent) => {
+      if (lifted && ev.cancelable) ev.preventDefault();
+    };
+    const move = (ev: PointerEvent) => {
+      if (ev.pointerId !== pid) return;
+      lx = ev.clientX;
+      ly = ev.clientY;
+      if (!lifted) {
+        if (Math.hypot(lx - sx, ly - sy) > SLOP) cleanup(); // c'était un défilement
+        return;
+      }
+      const d = { ...(dragRef.current as Drag), x: lx, y: ly };
+      dragRef.current = d;
+      setDrag(d);
+      const zone = zoneAt(lx, ly);
+      if (zone !== hoverRef.current) {
+        hoverRef.current = zone;
+        edgeTurn(zone);
+        setHover(zone);
       }
     };
-    const end = (ev: PointerEvent, drop_: boolean) => {
+    const up = (ev: PointerEvent) => {
+      if (ev.pointerId !== pid) return;
+      const wasLifted = lifted;
+      const d = dragRef.current;
+      cleanup();
+      if (wasLifted && d) dropAt(d, zoneAt(ev.clientX, ev.clientY));
+      else if (!wasLifted) {
+        click("soft");
+        onView(card); // un simple toucher : la carte en grand
+      }
+    };
+    const cancel = (ev: PointerEvent) => {
+      if (ev.pointerId !== pid) return;
+      const d = dragRef.current;
+      const wasLifted = lifted;
+      cleanup();
+      if (wasLifted && d) dropAt(d, "");
+    };
+    function cleanup() {
+      gone = true;
+      window.clearTimeout(holdTimer);
+      window.clearTimeout(edgeTimer.current);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", cancel);
-      window.clearTimeout(edgeTimer.current);
-      if (active && drop_) {
-        const t = document.elementFromPoint(ev.clientX, ev.clientY) as HTMLElement | null;
-        const zone = t?.closest<HTMLElement>("[data-drop]")?.dataset.drop ?? "";
-        const d = dragRef.current;
-        if (d && zone) drop(d, zone);
-      } else if (!active && drop_) {
-        setPicked((p: string | null) => (p === id ? null : id));
-        pickedFrom.current = from;
-      }
+      window.removeEventListener("touchmove", block);
       dragRef.current = null;
+      hoverRef.current = "";
       setDrag(null);
       setHover("");
-    };
-    const up = (ev: PointerEvent) => end(ev, true);
-    const cancel = (ev: PointerEvent) => end(ev, false);
+    }
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", cancel);
-  }
-  const pickedFrom = useRef<Drag["from"]>("tray");
-
-  // Tap method: pick a card, then tap a pocket (for little fingers that do not like dragging).
-  function tapSlot(slot: number) {
-    if (picked) {
-      drop({ id: picked, from: pickedFrom.current, x: 0, y: 0 }, `slot:${slot}`);
-      setPicked(null);
-    }
+    window.addEventListener("touchmove", block, { passive: false });
   }
 
   useEffect(() => () => window.clearTimeout(edgeTimer.current), []);
 
+  function openBook() {
+    click("button");
+    setOpening(true);
+    window.setTimeout(() => {
+      rustle();
+      setOpen(true);
+      setOpening(false);
+      // le classeur ouvert remplit l'écran : on descend jusqu'à lui
+      window.setTimeout(() => wrap.current?.scrollIntoView({ block: "start", behavior: "smooth" }), 60);
+    }, 650);
+  }
+
   if (!open) {
     return (
-      <div className="livre livre--closed">
-        <button type="button" className="cover" onClick={() => { click("button"); setOpen(true); }} aria-label="Ouvrir le livre">
-          <span className="cover__spine" aria-hidden="true" />
-          <span className="cover__badge" aria-hidden="true">⚽</span>
+      <div className="livre livre--closed" ref={wrap}>
+        <button type="button" className={cx("cover", opening && "cover--opening")} onClick={openBook} aria-label="Ouvrir le classeur">
+          <span className="cover__spine" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+          <span className="cover__stitch" aria-hidden="true" />
+          <span className="cover__badge" aria-hidden="true"><Ball className="cover__ball" /></span>
           <span className="cover__title">FOOTDEX</span>
-          <span className="cover__sub">pour Raphaël</span>
+          <span className="cover__sub">mon classeur</span>
+          <span className="cover__count">{count} carte{count > 1 ? "s" : ""}</span>
           <span className="cover__open"><LuBookOpen aria-hidden="true" /> Ouvrir</span>
         </button>
-        <p className="livre__help">Range tes cartes comme dans un vrai classeur : une page, neuf pochettes, et tu glisses les cartes où tu veux.</p>
+        <p className="livre__help">Touche le classeur pour l'ouvrir : toutes tes cartes sont rangées dedans.</p>
       </div>
     );
   }
 
-  const cur = slots(pageKey(page));
+  const settlingOf = (k: string) => settling.find((x) => x.key === k)?.kind;
+  const dragCard = drag ? byId.get(drag.id) : undefined;
+  const label = two ? `Pages ${first + 1} et ${first + 2} sur ${pages}` : `Page ${first + 1} sur ${pages}`;
+
   return (
-    <div className="livre">
+    <div className={cx("livre", drag && "livre--drag")} ref={wrap}>
       <div className="livre__bar">
-        <button type="button" className="btn btn--soft" onClick={() => setOpen(false)}><LuX aria-hidden="true" /> Fermer</button>
+        <button type="button" className="btn btn--soft" onClick={() => { click("back"); setOpen(false); }}><LuX aria-hidden="true" /> Fermer</button>
         <div className="livre__nav">
-          <button type="button" className="btn btn--soft" onClick={() => goPage(page - 1, "prev")} disabled={page === 0} aria-label="Page précédente"><LuArrowLeft aria-hidden="true" /></button>
-          <strong>Page {page + 1} / {pages}</strong>
-          <button type="button" className="btn btn--soft" onClick={() => goPage(page + 1, "next")} disabled={page >= pages - 1} aria-label="Page suivante"><LuArrowRight aria-hidden="true" /></button>
+          <button type="button" className="btn btn--soft" onClick={() => turnTo(first - step, "prev")} disabled={first === 0} aria-label="Page précédente"><LuArrowLeft aria-hidden="true" /></button>
+          <strong>{label}</strong>
+          <button type="button" className="btn btn--soft" onClick={() => turnTo(first + step, "next")} disabled={first + step > pages - 1} aria-label="Page suivante"><LuArrowRight aria-hidden="true" /></button>
         </div>
+        <span className="livre__count">{count} carte{count > 1 ? "s" : ""} rangée{count > 1 ? "s" : ""}</span>
       </div>
 
-      <div className={cx("book", drag && "book--drag")}>
-        {drag ? <span className={cx("book__edge book__edge--l", hover === "edge:prev" && "is-hot")} data-drop="edge:prev"><LuArrowLeft aria-hidden="true" /></span> : null}
-        {drag ? <span className={cx("book__edge book__edge--r", hover === "edge:next" && "is-hot")} data-drop="edge:next"><LuArrowRight aria-hidden="true" /></span> : null}
-        <div className={cx("book__page", turn && `turn-${turn}`)}>
-          <ul className="pockets">
-            {cur.map((id, i) => {
-              const card = id ? byId.get(id) : undefined;
-              const own = id ? s.cards[id] : undefined;
-              return (
-                <li key={i} className={cx("pocket", hover === `slot:${i}` && "pocket--hot", picked && !id && "pocket--ready")} data-drop={`slot:${i}`} onClick={() => !card && tapSlot(i)}>
-                  <span className="pocket__num">{i + 1}</span>
-                  {card ? (
-                    <div className={cx("pocket__card", drag?.id === id && "is-lifted", picked === id && "is-picked")} onPointerDown={(e: PointerEvent) => startDrag(e, card.id, { page: pageKey(page), slot: i })}>
-                      <Carte card={card} shiny={(own?.[3] ?? 0) > 0} size="sm" tilt={false} label={`${card.name}, carte ${RARITY[card.rarity].label}`} />
-                    </div>
-                  ) : null}
-                  <span className="pocket__glass" aria-hidden="true" />
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </div>
-      <p className="livre__help">{picked ? "Touche maintenant une pochette vide." : "Glisse une carte dans une pochette. Pour changer de page, amène-la sur la flèche au bord. Tu peux aussi toucher une carte, puis une pochette."}</p>
-
-      <div className={cx("tray", hover === "tray" && "tray--hot")} data-drop="tray">
-        <p className="tray__title">Mes cartes à ranger ({tray.length})</p>
-        {tray.length === 0 ? <p className="tray__empty">Toutes tes cartes sont rangées dans le livre. Glisse-en une ici pour la sortir.</p> : null}
-        <div className="tray__row">
-          {tray.map((id) => {
-            const card = byId.get(id);
-            if (!card) return null;
-            const own = s.cards[id];
-            return (
-              <div key={id} className={cx("tray__card", drag?.id === id && "is-lifted", picked === id && "is-picked")} onPointerDown={(e: PointerEvent) => startDrag(e, id, "tray")}>
-                <Carte card={card} shiny={(own?.[3] ?? 0) > 0} size="sm" tilt={false} label={card.name} />
-              </div>
-            );
-          })}
-        </div>
+      <div className={cx("classeur", two ? "classeur--two" : "classeur--one", turn && `turn-${turn}`)}>
+        {drag ? <span className={cx("classeur__edge classeur__edge--l", hover === "edge:prev" && "is-hot", first === 0 && "is-off")} data-drop="edge:prev"><LuArrowLeft aria-hidden="true" /></span> : null}
+        {drag ? <span className={cx("classeur__edge classeur__edge--r", hover === "edge:next" && "is-hot", first + step > pages - 1 && "is-off")} data-drop="edge:next"><LuArrowRight aria-hidden="true" /></span> : null}
+        {shown.map((p, i) => (
+          <div key={p} className={cx("feuille", two && (i === 0 ? "feuille--left" : "feuille--right"))}>
+            <ul className="pockets">
+              {slots(p).map((id, slot) => {
+                const card = id ? byId.get(id) : undefined;
+                const own = id ? s.cards[id] : undefined;
+                const k = `${p}:${slot}`;
+                const lifted = drag && drag.from.page === p && drag.from.slot === slot;
+                const st = settlingOf(k);
+                return (
+                  <li key={slot} className={cx("pocket", hover === `slot:${k}` && "pocket--hot", lifted && "pocket--empty")} data-drop={`slot:${k}`}>
+                    <span className="pocket__num">{p * POCKETS + slot + 1}</span>
+                    {card && !lifted ? (
+                      <div
+                        className={cx("pocket__card", st === "in" && "is-in", st === "back" && "is-back")}
+                        onPointerDown={(e: PointerEvent) => press(e, card, { page: p, slot })}
+                        onContextMenu={(e: Event) => e.preventDefault()}
+                      >
+                        <Carte card={card} shiny={(own?.[3] ?? 0) > 0} size="sm" tilt={false} label={`${card.name}, carte ${RARITY[card.rarity].label}`} />
+                      </div>
+                    ) : null}
+                    <span className="pocket__glass" aria-hidden="true" />
+                  </li>
+                );
+              })}
+            </ul>
+            <span className="feuille__num" aria-hidden="true">{p + 1}</span>
+          </div>
+        ))}
+        <span className="classeur__rings" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </span>
       </div>
 
-      {drag && byId.get(drag.id) ? (
-        <div className="ghost" style={{ left: `${drag.x}px`, top: `${drag.y}px` }}>
-          <Carte card={byId.get(drag.id) as CardRef} size="sm" tilt={false} label="Carte en train d'être déplacée" />
+      <p className="livre__help">
+        {drag
+          ? "Amène la carte sur une pochette et lâche-la. Au bord du classeur, la page tourne."
+          : "Touche une carte pour la voir en grand. Reste appuyé dessus pour la sortir et la ranger ailleurs."}
+      </p>
+
+      {drag && dragCard ? (
+        <div className="ghost" style={{ left: `${drag.x - drag.ox}px`, top: `${drag.y - drag.oy}px`, width: `${drag.w}px` }}>
+          <div className="ghost__in">
+            <Carte card={dragCard} shiny={(s.cards[drag.id]?.[3] ?? 0) > 0} size="sm" tilt={false} label="Carte en train d'être déplacée" />
+          </div>
         </div>
       ) : null}
     </div>

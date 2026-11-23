@@ -13,7 +13,7 @@ html.fluide-leger .pathbar__fill, html.fluide-leger .ztrunk__slot { animation: n
 /* les flous derrière les barres et les fenêtres : un fond plus opaque à la place */
 html.fluide-leger .topbar, html.fluide-leger .tabbar { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background: rgba(7, 11, 22, 0.95); }
 html.fluide-leger .mm__backdrop, html.fluide-leger .signal__backdrop, html.fluide-leger .btn--glass,
-html.fluide-leger .tray, html.fluide-leger .carte__zoom button { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html.fluide-leger .carte__zoom button { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 html.fluide-leger .mm__backdrop, html.fluide-leger .signal__backdrop { background: rgba(3, 5, 10, 0.86); }
 /* les ombres floues des personnages qui bougent (recalculées à chaque image) */
 html.fluide-leger :is(.buddy, .act svg, .fbp svg, .vis svg, .mascot__fab, .mascot__ball, .mascot__kick, .rball, .fball__spin svg, .thief__prop, .zpiece, .ztrunk) { filter: none !important; }

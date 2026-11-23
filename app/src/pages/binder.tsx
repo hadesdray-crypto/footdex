@@ -46,7 +46,7 @@ let seq = 1000;
 
 export function Binder({ album }: { album: Album }) {
   const state = useStore();
-  const [tab, setTab] = useState<Tab>(() => readSession(TAB_KEY, "cartes") as Tab);
+  const [tab, setTab] = useState<Tab>(() => readSession(TAB_KEY, "livre") as Tab);
   const ch = cheminOf(state.opened);
   const hasGame = Object.keys(state.cards).some((id) => id.startsWith("g:"));
   const { pools, ready, people } = usePools(album, ch.index, hasGame);
@@ -96,8 +96,8 @@ export function Binder({ album }: { album: Album }) {
       <div className="segmented" role="tablist" aria-label="Classeur">
         {(
           [
+            ["livre", "Le classeur", LuBookOpen],
             ["cartes", "Mes cartes", LuLayers],
-            ["livre", "Le livre", LuBookOpen],
             ["album", "L'album", LuBookOpen],
             ["boutique", "Boutique", LuStore],
           ] as const
@@ -109,7 +109,7 @@ export function Binder({ album }: { album: Album }) {
       </div>
 
       {tab === "cartes" ? <MyCards byId={byId} waiting={hasGame && !people} onView={setViewing} pools={pools} chemin={ch.index} /> : null}
-      {tab === "livre" ? <Livre byId={byId} /> : null}
+      {tab === "livre" ? <Livre byId={byId} onView={setViewing} /> : null}
       {tab === "album" ? <AlbumTab album={album} pools={pools} onView={setViewing} /> : null}
       {tab === "boutique" ? <Shop pools={pools} chemin={ch.index} ready={ready} onBuy={buy} /> : null}
 
