@@ -4,6 +4,19 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-23",
+    titre: "Version 68 : tes classeurs et la machine du casino",
+    type: "appli",
+    points: [
+      "Le classeur s'ouvre toujours sur le vrai classeur, d'où que tu viennes, avec toutes les cartes que tu as déjà gagnées.",
+      "Pour l'ouvrir, glisse la couverture sur le côté : elle tourne sur ses anneaux. Le bouton « Ouvrir » marche aussi.",
+      "Dans « Ma collection », tes classeurs sont rangés sur une étagère : celui des joueurs et celui des Footballinis. Touche-en un pour le voir en grand, puis glisse la couverture pour l'ouvrir.",
+      "Nouvelle machine à secrets, comme au casino : reste appuyé sur ta carte et glisse-la dans la fente. Elle est avalée avec un « clac ».",
+      "Tire le levier vers le bas : les rouleaux tournent, les lumières clignotent, puis BOUM, une enveloppe tombe dans le bac.",
+      "Touche l'enveloppe : le cachet se casse et l'histoire se déroule. Le bouton « Écouter » la fait lire à voix haute.",
+    ],
+  },
+  {
+    date: "2026-11-23",
     titre: "Version 67 : un vrai classeur pour tes cartes",
     type: "appli",
     points: [

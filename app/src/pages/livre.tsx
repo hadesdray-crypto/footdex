@@ -1,12 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { LuArrowLeft, LuArrowRight, LuBookOpen, LuX } from "react-icons/lu";
+import { LuArrowLeft, LuArrowRight, LuX } from "react-icons/lu";
 import { RARITY, type CardRef } from "../cards";
 import { setBook, useStore } from "../store";
 import { Carte } from "../ui/cards";
 import { click, crinkle, rustle, settle, slide } from "../sound";
 import { vibrate } from "../fx";
 import { cx } from "../util";
-import { Ball } from "../ui/pack";
+import { Couverture, livreDejaOuvert } from "./classeurs";
 
 const POCKETS = 9;
 const HOLD_MS = 380; // rester appuyé ce temps-là : la carte sort de sa pochette
@@ -86,8 +86,7 @@ function arrange(book: Book, owned: Record<string, unknown>, order: (id: string)
  *  quand on arrive au bord, et en lâchant, elle se glisse dans la nouvelle pochette. */
 export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c: CardRef) => void }) {
   const s = useStore();
-  const [open, setOpen] = useState(false);
-  const [opening, setOpening] = useState(false);
+  const [open, setOpen] = useState(livreDejaOuvert);
   const [page, setPageRaw] = useState(readPage);
   const [turn, setTurn] = useState<"" | "next" | "prev">("");
   const [drag, setDrag] = useState<Drag | null>(null);
@@ -309,35 +308,24 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
 
   useEffect(() => () => window.clearTimeout(edgeTimer.current), []);
 
+  // arrivé déjà ouvert (depuis l'étagère) : on descend jusqu'au classeur
+  useEffect(() => {
+    if (open) window.setTimeout(() => wrap.current?.scrollIntoView({ block: "start", behavior: "smooth" }), 120);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function openBook() {
-    click("button");
-    setOpening(true);
-    window.setTimeout(() => {
-      rustle();
-      setOpen(true);
-      setOpening(false);
-      // le classeur ouvert remplit l'écran : on descend jusqu'à lui
-      window.setTimeout(() => wrap.current?.scrollIntoView({ block: "start", behavior: "smooth" }), 60);
-    }, 650);
+    setOpen(true);
+    // le classeur ouvert remplit l'écran : on descend jusqu'à lui
+    window.setTimeout(() => wrap.current?.scrollIntoView({ block: "start", behavior: "smooth" }), 60);
   }
+
 
   if (!open) {
     return (
       <div className="livre livre--closed" ref={wrap}>
-        <button type="button" className={cx("cover", opening && "cover--opening")} onClick={openBook} aria-label="Ouvrir le classeur">
-          <span className="cover__spine" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span>
-          <span className="cover__stitch" aria-hidden="true" />
-          <span className="cover__badge" aria-hidden="true"><Ball className="cover__ball" /></span>
-          <span className="cover__title">FOOTDEX</span>
-          <span className="cover__sub">mon classeur</span>
-          <span className="cover__count">{count} carte{count > 1 ? "s" : ""}</span>
-          <span className="cover__open"><LuBookOpen aria-hidden="true" /> Ouvrir</span>
-        </button>
-        <p className="livre__help">Touche le classeur pour l'ouvrir : toutes tes cartes sont rangées dedans.</p>
+        <Couverture theme="joueurs" count={count} onOpen={openBook} />
+        <p className="livre__help">Glisse la couverture sur le côté pour ouvrir ton classeur : toutes tes cartes sont rangées dedans.</p>
       </div>
     );
   }

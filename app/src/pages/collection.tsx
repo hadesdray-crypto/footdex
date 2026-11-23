@@ -2,15 +2,15 @@
 // the Footballinis cards, the figurines, the styled characters, and soon music, clips and match moments.
 import { useState } from "react";
 import { Piece } from "../ui/Piece";
-import { LuClapperboard, LuLibrary, LuLock, LuMusic, LuTrophy } from "react-icons/lu";
+import { LuClapperboard, LuLock, LuMusic, LuTrophy } from "react-icons/lu";
 import { FBX, RARITY } from "../fbx/art";
 import { ChestModal, FbxCard, FigZoom, Figurine } from "../fbx/ui";
 import type { Edition } from "../fbx/Standee";
 import { Chest } from "./coffre";
+import { Etagere } from "./classeurs";
 import { dupValue, tradeDuplicates, tradeFigDuplicates, useCollec } from "../fbx/store";
 import { Fig } from "../mascot/Fig";
 import { say, update } from "../mascot/state";
-import { go } from "../router";
 import { useStore } from "../store";
 import { PageTitle } from "../ui/bits";
 import { cx } from "../util";
@@ -56,13 +56,7 @@ export function Collection() {
         </span>
       </button>
 
-      <button type="button" className="colx__binder" onClick={() => go({ page: "classeur" })}>
-        <LuLibrary aria-hidden="true" />
-        <span>
-          <strong>Mon classeur de cartes</strong>
-          <em>Les cartes des joueurs, page par page</em>
-        </span>
-      </button>
+      <Etagere />
 
       <div className="segmented" role="tablist" aria-label="Ma collection">
         {([

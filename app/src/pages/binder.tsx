@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Piece } from "../ui/Piece";
 import { LuBookOpen, LuCheck, LuLayers, LuLock, LuPackageOpen, LuStore } from "react-icons/lu";
 import { BACKS, CHEMINS, GROUPS, RARITIES, RARITY, cardById, cheminOf, drawRarity, openGroups, shopRarities, type CardRef, type GroupId, type Rarity } from "../cards";
@@ -46,14 +46,19 @@ let seq = 1000;
 
 export function Binder({ album }: { album: Album }) {
   const state = useStore();
-  const [tab, setTab] = useState<Tab>(() => readSession(TAB_KEY, "livre") as Tab);
+  // On arrive toujours sur le classeur, quel que soit le chemin pris. Seul le compteur de pièces
+  // demande la boutique, une seule fois.
+  const [tab, setTab] = useState<Tab>(() => {
+    const asked = readSession(TAB_KEY, "");
+    writeSession(TAB_KEY, "");
+    return asked === "boutique" ? "boutique" : "livre";
+  });
   const ch = cheminOf(state.opened);
   const hasGame = Object.keys(state.cards).some((id) => id.startsWith("g:"));
   const { pools, ready, people } = usePools(album, ch.index, hasGame);
   const byId = useMemo(() => cardById(pools), [pools]);
   const [viewing, setViewing] = useState<CardRef | null>(null);
   const [opening, setOpening] = useState<Opening | null>(null);
-  useEffect(() => writeSession(TAB_KEY, tab), [tab]);
 
   const unique = Object.keys(state.cards).length;
   const copies = Object.values(state.cards).reduce((n, o) => n + o[0], 0);

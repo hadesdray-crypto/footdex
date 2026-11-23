@@ -1,7 +1,8 @@
 // La garde du démarrage passe AVANT tout le reste : elle vérifie les sauvegardes avant qu'on les lise.
 import "./maj/secours";
 import { useEffect } from "react";
-import { Machine, Mission } from "./pages/mission";
+import { Mission } from "./pages/mission";
+import { Machine } from "./pages/machine";
 import { createRoot } from "react-dom/client";
 import { type Album, loadAlbum } from "./data";
 import { Binder } from "./pages/binder";
