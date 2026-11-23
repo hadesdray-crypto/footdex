@@ -1,13 +1,14 @@
+import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { LuArrowLeft, LuArrowRight, LuPalette, LuX } from "react-icons/lu";
+import { LuArrowLeft, LuArrowRight, LuMaximize2, LuMinimize2, LuSettings2, LuX } from "react-icons/lu";
 import { RARITY, type CardRef } from "../cards";
 import { setBook, useStore } from "../store";
 import { Carte } from "../ui/cards";
 import { click, crinkle, rustle, settle, slide } from "../sound";
 import { vibrate } from "../fx";
 import { cx } from "../util";
-import { ChoixCouleurs, Couverture, livreDejaOuvert } from "./classeurs";
-import { useCouleursClasseur } from "../vue-classeur";
+import { Couverture, ReglagesClasseur, livreDejaOuvert } from "./classeurs";
+import { changerClasseur, useClasseur } from "../vue-classeur";
 
 const POCKETS = 9;
 const HOLD_MS = 380; // rester appuyé ce temps-là : la carte sort de sa pochette
@@ -21,7 +22,6 @@ type Spot = { page: number; slot: number };
 type Drag = { id: string; from: Spot; x: number; y: number; ox: number; oy: number; w: number };
 type Settling = { key: string; kind: "in" | "back" };
 type Flip = { dir: "next" | "prev"; from: number; to: number };
-const FLIP_MS = 640;
 
 const pageKey = (i: number) => `p${i + 1}`;
 const emptyPage = () => Array<string | null>(POCKETS).fill(null);
@@ -95,7 +95,8 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
   const flipRef = useRef<Flip | null>(null);
   const [palette, setPalette] = useState(false);
   const [arrive, setArrive] = useState(false);
-  const couleurs = useCouleursClasseur();
+  const couleurs = useClasseur("joueurs");
+  const grand = couleurs.vue === "grand";
   const [drag, setDrag] = useState<Drag | null>(null);
   const [hover, setHover] = useState("");
   const [settling, setSettling] = useState<Settling[]>([]);
@@ -123,7 +124,7 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
       ro?.disconnect();
       window.removeEventListener("resize", measure);
     };
-  }, [open]);
+  }, [open, grand]);
 
   // Ranger toute seule chaque carte qui n'a pas encore de pochette.
   useEffect(() => {
@@ -179,12 +180,12 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
     const f: Flip = { dir, from, to: n };
     flipRef.current = f;
     setFlip(f);
-    rustle();
+    if (couleurs.son) rustle();
     window.setTimeout(() => {
       setPage(n);
       flipRef.current = null;
       setFlip(null);
-    }, FLIP_MS);
+    }, couleurs.flipMs);
   }
 
   const slots = (p: number): (string | null)[] => book[pageKey(p)] ?? emptyPage();
@@ -412,8 +413,8 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
   const dragCard = drag ? byId.get(drag.id) : undefined;
   const label = two ? `Pages ${first + 1} et ${first + 2} sur ${pages}` : `Page ${first + 1} sur ${pages}`;
 
-  return (
-    <div className={cx("livre", drag && "livre--drag")} ref={wrap}>
+  const vueOuverte = (
+    <div className={cx("livre", drag && "livre--drag", grand && "livre--grand")} ref={wrap} style={couleurs.style}>
       <div className="livre__bar">
         <button type="button" className="btn btn--soft" onClick={() => { click("back"); setOpen(false); }}><LuX aria-hidden="true" /> Fermer</button>
         <div className="livre__nav">
@@ -421,14 +422,18 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
           <strong>{label}</strong>
           <button type="button" className="btn btn--soft" onClick={() => turnTo(first + step, "next")} disabled={first + step > pages - 1} aria-label="Page suivante"><LuArrowRight aria-hidden="true" /></button>
         </div>
-        <button type="button" className={cx("btn btn--soft", palette && "btn--on")} onClick={() => { click("soft"); setPalette((v: boolean) => !v); }}><LuPalette aria-hidden="true" /> Couleurs</button>
+        <button type="button" className={cx("btn btn--soft", palette && "btn--on")} onClick={() => { click("soft"); setPalette((v: boolean) => !v); }}><LuSettings2 aria-hidden="true" /> Réglages</button>
+        <button type="button" className="btn btn--soft" onClick={() => { click("soft"); changerClasseur("joueurs", { vue: grand ? "page" : "grand" }); }}>
+          {grand ? <LuMinimize2 aria-hidden="true" /> : <LuMaximize2 aria-hidden="true" />} {grand ? "Plus petit" : "En grand"}
+        </button>
         <span className="livre__count">
           {count} carte{count > 1 ? "s" : ""} différente{count > 1 ? "s" : ""}
           {copies > count ? <small> · {copies} avec les doublons</small> : null}
         </span>
       </div>
 
-      <div className={cx("classeur", two ? "classeur--two" : "classeur--one", flip && "is-flipping", arrive && "classeur--arrive")} style={couleurs.style} onPointerDown={swipeStart}>
+      <div className="table" style={couleurs.style}>
+      <div className={cx("classeur", two ? "classeur--two" : "classeur--one", flip && "is-flipping", arrive && "classeur--arrive", couleurs.classes)} onPointerDown={swipeStart}>
         {drag ? <span className={cx("classeur__edge classeur__edge--l", hover === "edge:prev" && "is-hot", first === 0 && "is-off")} data-drop="edge:prev"><LuArrowLeft aria-hidden="true" /></span> : null}
         {drag ? <span className={cx("classeur__edge classeur__edge--r", hover === "edge:next" && "is-hot", first + step > pages - 1 && "is-off")} data-drop="edge:next"><LuArrowRight aria-hidden="true" /></span> : null}
         {two ? (
@@ -469,21 +474,25 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
           <i />
         </span>
       </div>
+      </div>
 
-      {palette ? <ChoixCouleurs /> : null}
+      {palette ? <ReglagesClasseur quel="joueurs" /> : null}
       <p className="livre__help">
         {drag
           ? "Amène la carte sur une pochette et lâche-la. Au bord du classeur, la page tourne."
           : "Touche une carte pour la voir en grand. Reste appuyé dessus pour la sortir et la ranger ailleurs."}
       </p>
 
-      {drag && dragCard ? (
+      {drag && dragCard ? createPortal(
         <div className="ghost" style={{ left: `${drag.x - drag.ox}px`, top: `${drag.y - drag.oy}px`, width: `${drag.w}px` }}>
           <div className="ghost__in">
             <Carte card={dragCard} shiny={(s.cards[drag.id]?.[3] ?? 0) > 0} size="sm" tilt={false} label="Carte en train d'être déplacée" />
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </div>
   );
+  // En grand, le classeur passe au-dessus de tout (même de la barre du haut).
+  return grand ? createPortal(vueOuverte, document.body) : vueOuverte;
 }

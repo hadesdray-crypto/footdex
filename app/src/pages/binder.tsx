@@ -10,7 +10,7 @@ import { CardViewer, Carte } from "../ui/cards";
 import { Reveal, type Opening } from "../ui/reveal";
 import { cx, fmt } from "../util";
 import { Livre } from "./livre";
-import { vueClasseur } from "../vue-classeur";
+import { reglagesClasseur, useClasseur } from "../vue-classeur";
 import { usePools } from "./packs";
 
 type Tab = "cartes" | "livre" | "album" | "boutique";
@@ -53,8 +53,13 @@ export function Binder({ album }: { album: Album }) {
     const asked = readSession(TAB_KEY, "");
     writeSession(TAB_KEY, "");
     if (asked === "boutique") return "boutique";
-    return vueClasseur() === "liste" ? "cartes" : "livre";
+    return reglagesClasseur("joueurs").vue === "liste" ? "cartes" : "livre";
   });
+  // l'affichage choisi dans les réglages du classeur s'applique tout de suite
+  const vue = useClasseur("joueurs").vue;
+  useEffect(() => {
+    setTab((t: Tab) => (vue === "liste" ? (t === "livre" ? "cartes" : t) : t === "cartes" ? "livre" : t));
+  }, [vue]);
   const ch = cheminOf(state.opened);
   const hasGame = Object.keys(state.cards).some((id) => id.startsWith("g:"));
   const { pools, ready, people } = usePools(album, ch.index, hasGame);

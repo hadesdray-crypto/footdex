@@ -4,6 +4,18 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-23",
+    titre: "Version 71 : tes classeurs à ta façon, et la boîte à objets",
+    type: "appli",
+    points: [
+      "Bouton « En grand » : le classeur prend tout l'écran. « Plus petit » le remet dans la page.",
+      "Bouton « Réglages » dans chaque classeur : l'affichage (dans la page, en grand ou la liste), la couverture, les pages, le fond derrière le classeur, les anneaux, les pochettes brillantes ou mates, les numéros, la vitesse et le bruit des pages.",
+      "Le classeur des Footballinis a les mêmes réglages, et ses pages se tournent aussi avec le doigt.",
+      "Nouvelle boîte à objets sur l'étagère, à côté des classeurs : tes figurines, tes personnages, tes histoires et tes objets du coffre, tout ce qui n'est pas une carte.",
+      "Touche la boîte une fois, elle sort de l'étagère ; une deuxième fois, elle vient devant. Pousse le couvercle vers le haut pour l'ouvrir.",
+    ],
+  },
+  {
+    date: "2026-11-23",
     titre: "Version 70 : tes anciennes cartes reviennent",
     type: "appli",
     points: [

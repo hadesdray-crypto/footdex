@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 // La machine à secrets, façon machine du casino : on glisse sa carte dans la fente, on tire le levier,
 // les rouleaux tournent, BOUM, une enveloppe tombe dans le bac ; on casse le cachet et on lit l'histoire.
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -562,18 +563,20 @@ export function Machine({ album }: { album: Album }) {
         </div>
       </div>
 
-      {drag && cur ? (
+      {drag && cur ? createPortal(
         <div className="mx-ghost" style={{ left: `${drag.x - drag.ox}px`, top: `${drag.y - drag.oy}px`, width: `${drag.w}px` }}>
           <div className="mx-ghost__in">{cardEl(cur)}</div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
-      {swallow && inside ? (
+      {swallow && inside ? createPortal(
         <div className="mx-swallow" style={{ left: `${swallow.x}px`, top: `${swallow.y}px` }}>
           <div className="mx-swallow__in">{cardEl(inside)}</div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
 
-      {phase === "lu" && inside ? (
+      {phase === "lu" && inside ? createPortal(
         <div className="mx-secret" role="dialog" aria-label={`Le secret de ${inside.nom}`}>
           <div className="mx-secret__env" aria-hidden="true">
             <span className="mx-secret__flap" />
@@ -597,7 +600,8 @@ export function Machine({ album }: { album: Album }) {
             {joueur ? <a className="btn btn--pitch" href={youtubeSearch(joueur.videoQuery)} target="_blank" rel="noreferrer">Voir des vidéos (il faut Internet)</a> : null}
             <button type="button" className="btn btn--gold btn--big mx-secret__again" onClick={again}>Mettre une autre carte</button>
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </div>
   );
