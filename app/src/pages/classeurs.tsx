@@ -11,6 +11,7 @@ import { click, rustle } from "../sound";
 import { useStore } from "../store";
 import { Ball } from "../ui/pack";
 import { cx } from "../util";
+import { COUVS, PAPIERS, choisirCouv, choisirPapier, useCouleursClasseur } from "../vue-classeur";
 
 export type Theme = "joueurs" | "fbx";
 
@@ -38,6 +39,7 @@ export function Couverture({ theme, count, onOpen, onTap, small = false }: { the
   const [anim, setAnim] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   const t = TITRES[theme];
+  const couleurs = useCouleursClasseur();
 
   function finish() {
     setAnim(true);
@@ -109,7 +111,7 @@ export function Couverture({ theme, count, onOpen, onTap, small = false }: { the
   }
 
   return (
-    <div className={cx("couv", `couv--${theme}`, small && "couv--small")} ref={ref}>
+    <div className={cx("couv", `couv--${theme}`, small && "couv--small")} ref={ref} style={theme === "joueurs" ? couleurs.style : undefined}>
       <div className="couv__inside" aria-hidden="true">
         {Array.from({ length: 9 }, (_, k) => (
           <span key={k} />
@@ -150,6 +152,7 @@ export function Etagere() {
   const s = useStore();
   const c = useCollec();
   const [zoom, setZoom] = useState<Theme | null>(null);
+  const [sorti, setSorti] = useState<Theme | null>(null);
   const [fbxOpen, setFbxOpen] = useState(false);
   const joueurs = Object.keys(s.cards).length;
   const fbx = FBX.filter((f) => c.cards[f.id]).length;
@@ -157,6 +160,7 @@ export function Etagere() {
 
   function open(t: Theme) {
     setZoom(null);
+    setSorti(null);
     if (t === "joueurs") {
       try {
         sessionStorage.setItem(OUVRIR_LIVRE, "1");
@@ -173,8 +177,24 @@ export function Etagere() {
         <p className="etagere__title">Mes classeurs</p>
         <div className="etagere__row">
           {(["joueurs", "fbx"] as Theme[]).map((t) => (
-            <div key={t} className="etagere__item">
-              <Couverture theme={t} count={count(t)} small onTap={() => setZoom(t)} onOpen={() => open(t)} />
+            <div key={t} className={cx("etagere__item", sorti === t && "is-out")}>
+              <Couverture
+                theme={t}
+                count={count(t)}
+                small
+                onTap={() => {
+                  // une fois : il sort un peu de l'étagère ; une deuxième fois : il vient devant, en grand
+                  if (sorti === t) {
+                    setSorti(null);
+                    setZoom(t);
+                  } else {
+                    setSorti(t);
+                    vibrate(8);
+                  }
+                }}
+                onOpen={() => open(t)}
+              />
+              {sorti === t ? <span className="etagere__tip">Touche encore</span> : null}
             </div>
           ))}
         </div>
@@ -271,6 +291,33 @@ function ClasseurFbx({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+/** Les couleurs du classeur des joueurs : l'enfant choisit sa couverture et ses pages. */
+export function ChoixCouleurs() {
+  const { couv, papier } = useCouleursClasseur();
+  return (
+    <div className="couleurs">
+      <p className="couleurs__titre">La couverture</p>
+      <div className="couleurs__row">
+        {COUVS.map((c) => (
+          <button key={c.id} type="button" className={cx("couleurs__sw", couv.id === c.id && "is-on")} aria-pressed={couv.id === c.id} onClick={() => { click("soft"); choisirCouv(c.id); }}>
+            <span style={{ background: `radial-gradient(120% 90% at 30% 10%, ${c.a}, ${c.b} 75%)`, borderColor: c.ligne }} />
+            <small>{c.nom}</small>
+          </button>
+        ))}
+      </div>
+      <p className="couleurs__titre">Les pages</p>
+      <div className="couleurs__row">
+        {PAPIERS.map((c) => (
+          <button key={c.id} type="button" className={cx("couleurs__sw", papier.id === c.id && "is-on")} aria-pressed={papier.id === c.id} onClick={() => { click("soft"); choisirPapier(c.id); }}>
+            <span style={{ background: `linear-gradient(90deg, ${c.a}, ${c.b} 30%)` }} />
+            <small>{c.nom}</small>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

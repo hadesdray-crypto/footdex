@@ -1,12 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { LuArrowLeft, LuArrowRight, LuX } from "react-icons/lu";
+import { LuArrowLeft, LuArrowRight, LuPalette, LuX } from "react-icons/lu";
 import { RARITY, type CardRef } from "../cards";
 import { setBook, useStore } from "../store";
 import { Carte } from "../ui/cards";
 import { click, crinkle, rustle, settle, slide } from "../sound";
 import { vibrate } from "../fx";
 import { cx } from "../util";
-import { Couverture, livreDejaOuvert } from "./classeurs";
+import { ChoixCouleurs, Couverture, livreDejaOuvert } from "./classeurs";
+import { useCouleursClasseur } from "../vue-classeur";
 
 const POCKETS = 9;
 const HOLD_MS = 380; // rester appuyé ce temps-là : la carte sort de sa pochette
@@ -19,6 +20,8 @@ type Book = Record<string, (string | null)[]>;
 type Spot = { page: number; slot: number };
 type Drag = { id: string; from: Spot; x: number; y: number; ox: number; oy: number; w: number };
 type Settling = { key: string; kind: "in" | "back" };
+type Flip = { dir: "next" | "prev"; from: number; to: number };
+const FLIP_MS = 640;
 
 const pageKey = (i: number) => `p${i + 1}`;
 const emptyPage = () => Array<string | null>(POCKETS).fill(null);
@@ -88,7 +91,10 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
   const s = useStore();
   const [open, setOpen] = useState(livreDejaOuvert);
   const [page, setPageRaw] = useState(readPage);
-  const [turn, setTurn] = useState<"" | "next" | "prev">("");
+  const [flip, setFlip] = useState<Flip | null>(null);
+  const flipRef = useRef<Flip | null>(null);
+  const [palette, setPalette] = useState(false);
+  const couleurs = useCouleursClasseur();
   const [drag, setDrag] = useState<Drag | null>(null);
   const [hover, setHover] = useState("");
   const [settling, setSettling] = useState<Settling[]>([]);
@@ -98,6 +104,7 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
   const edgeTimer = useRef(0);
   const pageRef = useRef(page);
   const hoverRef = useRef("");
+  const liftedRef = useRef(false);
   const book: Book = s.book;
 
   // Deux pages côte à côte quand il y a la place (tablette couchée), une grande page sinon.
@@ -128,8 +135,8 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
   let pages = Math.max(2, (used.length ? Math.max(...used) : 0) + 2);
   if (two && pages % 2) pages += 1;
   const first = Math.min(two ? page - (page % 2) : page, pages - step);
-  const shown = two ? [first, first + 1] : [first];
   const count = Object.keys(s.cards).filter((id) => byId.has(id)).length;
+  const copies = Object.entries(s.cards).reduce((n, [id, o]) => n + (byId.has(id) ? o[0] : 0), 0);
 
   function setPage(n: number) {
     const v = Math.max(0, Math.min(pages - 1, n));
@@ -138,14 +145,44 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
     writePage(v);
   }
 
+  // Glisser le doigt sur la page (sans rester appuyé sur une carte) : la page tourne, comme un vrai classeur.
+  function swipeStart(e: PointerEvent) {
+    if (e.button !== undefined && e.button > 0) return;
+    const sx = e.clientX;
+    const sy = e.clientY;
+    const t0 = performance.now();
+    const pid = e.pointerId;
+    liftedRef.current = false;
+    const up = (ev: PointerEvent) => {
+      if (ev.pointerId !== pid) return;
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+      if (liftedRef.current || dragRef.current || ev.type === "pointercancel") return;
+      const dx = ev.clientX - sx;
+      const dy = ev.clientY - sy;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4 && performance.now() - t0 < 900) {
+        if (dx < 0) turnTo(first + step, "next");
+        else turnTo(first - step, "prev");
+      }
+    };
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+  }
+
+  /** Tourner la page pour de vrai : la feuille se soulève, passe au-dessus des anneaux et retombe de l'autre côté. */
   function turnTo(n: number, dir: "next" | "prev") {
-    if (n < 0 || n >= pages || turn) return;
+    if (n < 0 || n >= pages || flipRef.current) return;
+    const cur = pageRef.current;
+    const from = two ? cur - (cur % 2) : cur;
+    const f: Flip = { dir, from, to: n };
+    flipRef.current = f;
+    setFlip(f);
     rustle();
-    setTurn(dir);
     window.setTimeout(() => {
       setPage(n);
-      setTurn("");
-    }, 300);
+      flipRef.current = null;
+      setFlip(null);
+    }, FLIP_MS);
   }
 
   const slots = (p: number): (string | null)[] => book[pageKey(p)] ?? emptyPage();
@@ -205,12 +242,7 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
         const base = two ? cur - (cur % 2) : cur;
         const n = zone === "edge:next" ? base + st : base - st;
         if (n < 0 || n > pages - 1) return;
-        rustle();
-        setTurn(zone === "edge:next" ? "next" : "prev");
-        window.setTimeout(() => {
-          setPage(n);
-          setTurn("");
-        }, 260);
+        turnTo(n, zone === "edge:next" ? "next" : "prev");
         go(EDGE_REPEAT);
       }, wait);
     };
@@ -232,6 +264,7 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
     const lift = () => {
       if (gone) return;
       lifted = true;
+      liftedRef.current = true;
       try {
         el.setPointerCapture(pid);
       } catch {
@@ -331,6 +364,40 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
   }
 
   const settlingOf = (k: string) => settling.find((x) => x.key === k)?.kind;
+
+  /** Une feuille du classeur. `live` : on peut toucher et déplacer ses cartes (pas pendant qu'elle tourne). */
+  function feuille(p: number, side: "left" | "right" | "one", live: boolean) {
+    if (p < 0 || p >= pages) return <div className={cx("feuille", side !== "one" && `feuille--${side}`, "feuille--vide")} />;
+    return (
+      <div className={cx("feuille", side !== "one" && `feuille--${side}`)}>
+        <ul className="pockets">
+          {slots(p).map((id, slot) => {
+            const card = id ? byId.get(id) : undefined;
+            const own = id ? s.cards[id] : undefined;
+            const k = `${p}:${slot}`;
+            const lifted = live && drag && drag.from.page === p && drag.from.slot === slot;
+            const st = live ? settlingOf(k) : undefined;
+            return (
+              <li key={slot} className={cx("pocket", live && hover === `slot:${k}` && "pocket--hot", lifted && "pocket--empty")} data-drop={live ? `slot:${k}` : undefined}>
+                <span className="pocket__num">{p * POCKETS + slot + 1}</span>
+                {card && !lifted ? (
+                  <div
+                    className={cx("pocket__card", st === "in" && "is-in", st === "back" && "is-back")}
+                    onPointerDown={live ? (e: PointerEvent) => press(e, card, { page: p, slot }) : undefined}
+                    onContextMenu={(e: Event) => e.preventDefault()}
+                  >
+                    <Carte card={card} count={own?.[0]} shiny={(own?.[3] ?? 0) > 0} size="sm" tilt={false} label={`${card.name}, carte ${RARITY[card.rarity].label}`} />
+                  </div>
+                ) : null}
+                <span className="pocket__glass" aria-hidden="true" />
+              </li>
+            );
+          })}
+        </ul>
+        <span className="feuille__num" aria-hidden="true">{p + 1}</span>
+      </div>
+    );
+  }
   const dragCard = drag ? byId.get(drag.id) : undefined;
   const label = two ? `Pages ${first + 1} et ${first + 2} sur ${pages}` : `Page ${first + 1} sur ${pages}`;
 
@@ -343,41 +410,48 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
           <strong>{label}</strong>
           <button type="button" className="btn btn--soft" onClick={() => turnTo(first + step, "next")} disabled={first + step > pages - 1} aria-label="Page suivante"><LuArrowRight aria-hidden="true" /></button>
         </div>
-        <span className="livre__count">{count} carte{count > 1 ? "s" : ""} rangée{count > 1 ? "s" : ""}</span>
+        <button type="button" className={cx("btn btn--soft", palette && "btn--on")} onClick={() => { click("soft"); setPalette((v: boolean) => !v); }}><LuPalette aria-hidden="true" /> Couleurs</button>
+        <span className="livre__count">
+          {count} carte{count > 1 ? "s" : ""} différente{count > 1 ? "s" : ""}
+          {copies > count ? <small> · {copies} avec les doublons</small> : null}
+        </span>
       </div>
 
-      <div className={cx("classeur", two ? "classeur--two" : "classeur--one", turn && `turn-${turn}`)}>
+      <div className={cx("classeur", two ? "classeur--two" : "classeur--one", flip && "is-flipping")} style={couleurs.style} onPointerDown={swipeStart}>
         {drag ? <span className={cx("classeur__edge classeur__edge--l", hover === "edge:prev" && "is-hot", first === 0 && "is-off")} data-drop="edge:prev"><LuArrowLeft aria-hidden="true" /></span> : null}
         {drag ? <span className={cx("classeur__edge classeur__edge--r", hover === "edge:next" && "is-hot", first + step > pages - 1 && "is-off")} data-drop="edge:next"><LuArrowRight aria-hidden="true" /></span> : null}
-        {shown.map((p, i) => (
-          <div key={p} className={cx("feuille", two && (i === 0 ? "feuille--left" : "feuille--right"))}>
-            <ul className="pockets">
-              {slots(p).map((id, slot) => {
-                const card = id ? byId.get(id) : undefined;
-                const own = id ? s.cards[id] : undefined;
-                const k = `${p}:${slot}`;
-                const lifted = drag && drag.from.page === p && drag.from.slot === slot;
-                const st = settlingOf(k);
-                return (
-                  <li key={slot} className={cx("pocket", hover === `slot:${k}` && "pocket--hot", lifted && "pocket--empty")} data-drop={`slot:${k}`}>
-                    <span className="pocket__num">{p * POCKETS + slot + 1}</span>
-                    {card && !lifted ? (
-                      <div
-                        className={cx("pocket__card", st === "in" && "is-in", st === "back" && "is-back")}
-                        onPointerDown={(e: PointerEvent) => press(e, card, { page: p, slot })}
-                        onContextMenu={(e: Event) => e.preventDefault()}
-                      >
-                        <Carte card={card} shiny={(own?.[3] ?? 0) > 0} size="sm" tilt={false} label={`${card.name}, carte ${RARITY[card.rarity].label}`} />
-                      </div>
-                    ) : null}
-                    <span className="pocket__glass" aria-hidden="true" />
-                  </li>
-                );
-              })}
-            </ul>
-            <span className="feuille__num" aria-hidden="true">{p + 1}</span>
+        {two ? (
+          <>
+            <div className="cellule">
+              {feuille(flip ? (flip.dir === "next" ? flip.from : flip.to) : first, "left", !flip)}
+              {flip && flip.dir === "prev" ? (
+                <div className="leaf leaf--prev" aria-hidden="true">
+                  <div className="leaf__face">{feuille(flip.from, "left", false)}</div>
+                  <div className="leaf__face leaf__face--back">{feuille(flip.to + 1, "right", false)}</div>
+                </div>
+              ) : null}
+            </div>
+            <div className="cellule">
+              {feuille(flip ? (flip.dir === "next" ? flip.to + 1 : flip.from + 1) : first + 1, "right", !flip)}
+              {flip && flip.dir === "next" ? (
+                <div className="leaf leaf--next" aria-hidden="true">
+                  <div className="leaf__face">{feuille(flip.from + 1, "right", false)}</div>
+                  <div className="leaf__face leaf__face--back">{feuille(flip.to, "left", false)}</div>
+                </div>
+              ) : null}
+            </div>
+          </>
+        ) : (
+          <div className="cellule">
+            {feuille(flip ? (flip.dir === "next" ? flip.to : flip.from) : first, "one", !flip)}
+            {flip ? (
+              <div className={cx("leaf", flip.dir === "next" ? "leaf--next" : "leaf--back-in")} aria-hidden="true">
+                <div className="leaf__face">{feuille(flip.dir === "next" ? flip.from : flip.to, "one", false)}</div>
+                <div className="leaf__face leaf__face--back"><div className="feuille feuille--dos" /></div>
+              </div>
+            ) : null}
           </div>
-        ))}
+        )}
         <span className="classeur__rings" aria-hidden="true">
           <i />
           <i />
@@ -385,6 +459,7 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
         </span>
       </div>
 
+      {palette ? <ChoixCouleurs /> : null}
       <p className="livre__help">
         {drag
           ? "Amène la carte sur une pochette et lâche-la. Au bord du classeur, la page tourne."

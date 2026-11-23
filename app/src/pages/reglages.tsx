@@ -4,6 +4,7 @@
 //   ├─ L'appli : les sons · les mises à jour · la sauvegarde · réparer l'appli (sans code)
 //   └─ Pour les grands (code) : temps d'écran et Internet · réglages du jeu · atelier · essais (développeur)
 // Chaque écran a une flèche de retour (celle d'Android aussi) et ne montre que ce dont il parle.
+import { choisirVueClasseur, useVueClasseur } from "../vue-classeur";
 import { setBallonEcran, useBallonEcran } from "../orientation";
 import { type ReactNode, useState, useSyncExternalStore } from "react";
 import { LuSwatchBook, LuLock, LuCopy, LuMic, LuRefreshCw, LuSettings, LuShieldCheck, LuShirt, LuUserRound, LuUsers, LuVolume2, LuZap } from "react-icons/lu";
@@ -185,6 +186,7 @@ export function RegApparence() {
       </div>
     </div>
   );
+  const vue = useVueClasseur();
   return (
     <Ecran titre="Apparence" kicker="Tu choisis, l'appli change tout de suite">
       <Section title="Couleur du fond" kicker="Touche pour choisir">
@@ -196,6 +198,15 @@ export function RegApparence() {
               <small>{s.note}</small>
             </button>
           ))}
+        </div>
+      </Section>
+      <Section title="Mon classeur" kicker="Ce que tu vois quand tu l'ouvres">
+        <div className="approw">
+          <span>Quand j'ouvre mon classeur<small>Toutes tes cartes sont toujours dedans, dans les deux cas</small></span>
+          <div className="chips">
+            <button type="button" className={cx("chip", vue === "livre" && "chip--on")} aria-pressed={vue === "livre"} onClick={() => choisirVueClasseur("livre")}>Le classeur</button>
+            <button type="button" className={cx("chip", vue === "liste" && "chip--on")} aria-pressed={vue === "liste"} onClick={() => choisirVueClasseur("liste")}>La liste</button>
+          </div>
         </div>
       </Section>
       <Section title="Pour lire plus facilement">

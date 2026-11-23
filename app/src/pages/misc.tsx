@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { LuGem, LuGlobe, LuBookMarked, LuCalendarDays, LuExternalLink, LuFilm, LuGraduationCap, LuMessageSquareQuote, LuPlay, LuShieldCheck, LuShirt, LuTrophy, LuZap } from "react-icons/lu";
-import { albumCard, matchPoster, matchVideo } from "../cards";
+import { albumCard } from "../cards";
 import { type Album, loadPeople, loadWiki } from "../data";
 import { BackLink, Chips, Door, Facts, Link, Loading, PageTitle, Section, useLoad } from "../ui/bits";
 import { Tile } from "../ui/cards";
@@ -333,28 +333,15 @@ export function Histoires({ album }: { album: Album }) {
 }
 
 export function Videos({ album }: { album: Album }) {
-  const clips = album.matches.filter((m) => matchVideo(m.id));
+  // Les illustrations animées faites par une IA ne sont plus dans ce rayon (demande du 23 novembre 2026) :
+  // seules les recherches de vraies images restent.
   return (
     <div>
-      <PageTitle kicker="Rayon vidéos" title="Les images, sans faux lien.">
+      <PageTitle kicker="Rayon vidéos" title="Les vraies images, sans faux lien.">
         <p>
-          Quatre grands matchs ont leur illustration animée, faite pour l'album. Pour les vraies images, chaque bouton ouvre une recherche YouTube : aucune adresse n'est
-          inventée, une vidéo peut disparaître, le texte de l'almanach reste.
+          Chaque bouton ouvre une recherche YouTube des vraies images : aucune adresse n'est inventée, une vidéo peut disparaître, le texte de l'almanach reste.
         </p>
       </PageTitle>
-      <div className="clips">
-        {clips.map((m) => (
-          <figure key={m.id} className="clip">
-            <video src={matchVideo(m.id) ?? undefined} poster={matchPoster(m.id) ?? undefined} controls playsInline preload="none" />
-            <figcaption>
-              <Link to={{ page: "match", id: m.id }}>{m.title}</Link>
-              <span className="muted">
-                {m.competition} · {m.date}
-              </span>
-            </figcaption>
-          </figure>
-        ))}
-      </div>
       <Section title="Chercher les vrais matchs">
         <ul className="links">
           {album.matches.map((m) => (

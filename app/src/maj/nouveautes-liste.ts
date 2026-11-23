@@ -4,6 +4,20 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-23",
+    titre: "Version 69 : les pages tournent pour de vrai",
+    type: "appli",
+    points: [
+      "Dans le classeur, la page se soulève, passe au-dessus des anneaux et retombe de l'autre côté, comme un vrai classeur.",
+      "Glisse ton doigt sur la page vers la gauche ou vers la droite pour la tourner. Les flèches marchent aussi.",
+      "Bouton « Couleurs » : choisis la couverture de ton classeur (8 couleurs) et la couleur des pages (crème, blanc ou nuit).",
+      "En haut du classeur, tu vois combien tu as de cartes différentes, et combien en tout avec les doublons. Les doublons ont leur petit nombre sur la carte.",
+      "Dans Paramètres, Apparence : choisis ce qui s'ouvre quand tu vas dans ton classeur, le classeur ou la liste. La liste montre maintenant toutes tes cartes quand tu descends.",
+      "Sur l'étagère de « Ma collection » : touche un classeur une fois, il sort un peu ; touche-le encore, il vient devant, en grand.",
+      "Le rayon vidéos ne montre plus les petites animations faites par une IA : il reste seulement les recherches des vraies images.",
+    ],
+  },
+  {
+    date: "2026-11-23",
     titre: "Version 68 : tes classeurs et la machine du casino",
     type: "appli",
     points: [

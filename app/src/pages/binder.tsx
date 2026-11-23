@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Piece } from "../ui/Piece";
 import { LuBookOpen, LuCheck, LuLayers, LuLock, LuPackageOpen, LuStore } from "react-icons/lu";
 import { BACKS, CHEMINS, GROUPS, RARITIES, RARITY, cardById, cheminOf, drawRarity, openGroups, shopRarities, type CardRef, type GroupId, type Rarity } from "../cards";
@@ -10,6 +10,7 @@ import { CardViewer, Carte } from "../ui/cards";
 import { Reveal, type Opening } from "../ui/reveal";
 import { cx, fmt } from "../util";
 import { Livre } from "./livre";
+import { vueClasseur } from "../vue-classeur";
 import { usePools } from "./packs";
 
 type Tab = "cartes" | "livre" | "album" | "boutique";
@@ -51,7 +52,8 @@ export function Binder({ album }: { album: Album }) {
   const [tab, setTab] = useState<Tab>(() => {
     const asked = readSession(TAB_KEY, "");
     writeSession(TAB_KEY, "");
-    return asked === "boutique" ? "boutique" : "livre";
+    if (asked === "boutique") return "boutique";
+    return vueClasseur() === "liste" ? "cartes" : "livre";
   });
   const ch = cheminOf(state.opened);
   const hasGame = Object.keys(state.cards).some((id) => id.startsWith("g:"));
@@ -129,7 +131,7 @@ function MyCards({ byId, waiting, onView, pools, chemin }: { byId: Map<string, C
   const [sort, setSort] = useState<Sort>("recentes");
   const [filter, setFilter] = useState<Filter>("toutes");
   const [doubles, setDoubles] = useState(false);
-  const [shown, setShown] = useState(40);
+  const [shown, setShown] = useState(60);
   const ownedIds = Object.keys(state.cards);
 
   const mine = useMemo(() => {
@@ -192,7 +194,7 @@ function MyCards({ byId, waiting, onView, pools, chemin }: { byId: Map<string, C
           options={[["toutes", "Toutes"], ...RARITIES.map((r) => [r, RARITY[r].label] as [Filter, string]), ["brillantes", "Brillantes"]]}
           onChange={(v) => {
             setFilter(v);
-            setShown(40);
+            setShown(60);
           }}
         />
         <div className="finder__row">
@@ -227,7 +229,8 @@ function MyCards({ byId, waiting, onView, pools, chemin }: { byId: Map<string, C
           );
         })}
       </div>
-      <More shown={shown} total={mine.length} step={40} onMore={() => setShown((n) => n + 40)} />
+      <More shown={shown} total={mine.length} step={60} onMore={() => setShown((n) => n + 60)} />
+      {shown < mine.length ? <AutoMore onMore={() => setShown((n) => n + 60)} /> : null}
     </>
   );
 }
@@ -387,4 +390,17 @@ function Shop({ pools, chemin, ready, onBuy }: { pools: ReturnType<typeof usePoo
       </section>
     </>
   );
+}
+
+/** Quand on arrive en bas de la liste, les cartes suivantes s'affichent toutes seules : on voit toutes ses cartes. */
+function AutoMore({ onMore }: { onMore: () => void }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver((es) => es.some((e) => e.isIntersecting) && onMore(), { rootMargin: "600px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [onMore]);
+  return <div ref={ref} aria-hidden="true" style={{ height: 1 }} />;
 }
