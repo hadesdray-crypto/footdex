@@ -691,3 +691,42 @@ body:has(.viewer, .reveal, .majfull) .page .back::after { animation-play-state: 
 .fbxbook__extra { display: grid; gap: 6px; margin: 8px 0; }
 .fbxbook__liste { padding: 10px; border-radius: 16px; background: var(--fond, transparent); }
 .boitec__bientot { margin: 16px 0 4px; font-weight: 800; color: #ffe9a8; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.85rem; }
+
+/* le lecteur vidéo dans l'appli */
+.lecteur { position: fixed; inset: 0; z-index: 95; display: grid; grid-template-rows: auto 1fr auto; gap: 8px; padding: 10px 10px 14px; background: #000; animation: fadeIn 0.2s ease-out both; }
+.lecteur__bar { display: flex; align-items: center; gap: 10px; }
+.lecteur__titre { display: grid; min-width: 0; }
+.lecteur__titre strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lecteur__titre small { color: #9aa6c4; }
+.lecteur__ecran { display: grid; place-items: center; min-height: 0; }
+.lecteur__ecran iframe { width: min(100%, calc((100svh - 130px) * 16 / 9)); aspect-ratio: 16 / 9; border: 0; border-radius: 10px; background: #111; }
+.lecteur__secours { justify-self: center; font-size: 0.85rem; }
+.vignettes { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 12px 0; }
+.vignette { display: grid; gap: 4px; padding: 0 0 8px; border-radius: 14px; border: 1px solid var(--line-2); background: var(--glass); color: var(--fg); font: inherit; text-align: left; cursor: pointer; overflow: hidden; }
+.vignette strong, .vignette small { padding: 0 10px; }
+.vignette small { color: var(--fg-2); }
+.vignette__img { position: relative; display: block; aspect-ratio: 16 / 9; background: #0b1226; }
+.vignette__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vignette__genre { position: absolute; left: 8px; top: 8px; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; background: #000a; color: #fff; }
+.vignette__genre--complet { background: var(--gold); color: #1d1405; }
+.vignette__play { position: absolute; inset: 0; display: grid; place-items: center; }
+.vignette__play svg { width: 46px; height: 46px; padding: 10px; border-radius: 50%; background: #000a; color: #fff; }
+.vignette--absente { padding: 12px; cursor: default; opacity: 0.75; }
+
+/* la photo du match et les grands moments */
+.matchhero__photo { margin: 0; position: relative; }
+.matchhero__photo img { width: 100%; max-height: 420px; object-fit: cover; display: block; }
+.matchhero__photo figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 4px 10px; font-size: 0.72rem; color: #e9edf7; background: linear-gradient(transparent, #000c); }
+.moments { margin: 18px 0; padding: 14px; border-radius: 18px; background: var(--glass); border: 1px solid var(--line-2); }
+.moments__head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.moments__head h2 { margin: 0; font: 900 1.4rem var(--f-display); }
+.moments__liste { list-style: none; margin: 12px 0 0; padding: 0 0 0 14px; border-left: 3px solid var(--line-2); display: grid; gap: 10px; }
+.moment { position: relative; display: grid; grid-template-columns: 64px 1fr; gap: 8px; align-items: start; padding: 8px 10px; border-radius: 12px; transition: background 0.3s, transform 0.3s; }
+.moment::before { content: ""; position: absolute; left: -22px; top: 14px; width: 12px; height: 12px; border-radius: 50%; background: var(--line-2); }
+.moment p { margin: 0; line-height: 1.4; }
+.moment__min { font: 800 0.95rem var(--f-display); color: var(--gold-hi); }
+.moment--fort::before { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+.moment--fort p { font-weight: 700; }
+.moment.is-on { background: #f6c45326; transform: scale(1.02); }
+.moment.is-on::before { background: #fff; }
+.moment.is-vu { opacity: 0.7; }

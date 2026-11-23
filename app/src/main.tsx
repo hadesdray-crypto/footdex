@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Mission } from "./pages/mission";
 import { Machine } from "./pages/machine";
 import { rendreAnciennesCartes } from "./rendu";
+import { Lecteur } from "./ui/lecteur";
 import { createRoot } from "react-dom/client";
 import { type Album, loadAlbum } from "./data";
 import { Binder } from "./pages/binder";
@@ -139,6 +140,7 @@ function App() {
   return (
     <Shell page={route.page} pageKey={token(route)} album={album}>
       <Page route={route} album={album} />
+      <Lecteur />
     </Shell>
   );
 }

@@ -4,6 +4,18 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-23",
+    titre: "Version 73 : les grands moments des matchs et les vraies vidéos",
+    type: "appli",
+    points: [
+      "Chaque match raconté a sa vraie photo, prise pendant le match quand elle existe, avec le nom du photographe.",
+      "Nouveau : « Les grands moments ». Touche « Écouter le récit » : Philippe raconte le match moment par moment, avec le suspense, et le moment raconté s'allume.",
+      "Le bouton « Regarder le match complet » ouvre le vrai match en grand dans l'appli, quand la FIFA ou le club l'a publié. Sinon, le meilleur résumé officiel.",
+      "Le rayon vidéos a trois parties : les grands matchs, les plus beaux buts, et « Apprendre les gestes » (roulette, passement de jambes, crochet, frappes…), en français.",
+      "Les vidéos ont besoin d'Internet : un adulte l'allume dans Réglages, « Pour les grands ».",
+    ],
+  },
+  {
+    date: "2026-11-23",
     titre: "Version 72 : « Ma collection », c'est ton étagère",
     type: "appli",
     points: [

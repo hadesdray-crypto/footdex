@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import { LuGem, LuGlobe, LuBookMarked, LuCalendarDays, LuExternalLink, LuFilm, LuGraduationCap, LuMessageSquareQuote, LuPlay, LuShieldCheck, LuShirt, LuTrophy, LuZap } from "react-icons/lu";
 import { albumCard } from "../cards";
+import { AILLEURS, BUTS, GESTES, VIDEO_MATCH } from "../videos";
+import { Vignette } from "../ui/lecteur";
 import { type Album, loadPeople, loadWiki } from "../data";
 import { BackLink, Chips, Door, Facts, Link, Loading, PageTitle, Section, useLoad } from "../ui/bits";
 import { Tile } from "../ui/cards";
-import { fmt, fold, longDate, shortDate, youtubeSearch } from "../util";
+import { cx, fmt, fold, longDate, shortDate, youtubeSearch } from "../util";
 
 // ------------------------------------------------------------------ coupes
 
@@ -333,39 +335,48 @@ export function Histoires({ album }: { album: Album }) {
 }
 
 export function Videos({ album }: { album: Album }) {
-  // Les illustrations animées faites par une IA ne sont plus dans ce rayon (demande du 23 novembre 2026) :
-  // seules les recherches de vraies images restent.
+  // Seulement des vidéos officielles vérifiées, lues dans l'appli (videos.ts). Les animations faites par une IA
+  // ne sont plus dans ce rayon (demande du 23 novembre 2026).
+  const [rayon, setRayon] = useState<"matchs" | "buts" | "gestes">("matchs");
   return (
     <div>
-      <PageTitle kicker="Rayon vidéos" title="Les vraies images, sans faux lien.">
-        <p>
-          Chaque bouton ouvre une recherche YouTube des vraies images : aucune adresse n'est inventée, une vidéo peut disparaître, le texte de l'almanach reste.
-        </p>
+      <PageTitle kicker="Rayon vidéos" title="Les vraies images">
+        <p>Des vidéos officielles (FIFA, clubs, Ligue 1, UEFA…), vérifiées une par une, qui s'ouvrent en grand dans l'appli. Il faut Internet.</p>
       </PageTitle>
-      <Section title="Chercher les vrais matchs">
-        <ul className="links">
-          {album.matches.map((m) => (
-            <li key={m.id}>
-              <a href={youtubeSearch(`${m.videoQuery} match complet`)} target="_blank" rel="noreferrer">
-                <LuPlay aria-hidden="true" /> {m.title} <span className="muted">· {m.competition}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </Section>
-      <Section title="Chercher les joueurs">
-        <ul className="links">
-          {album.album
-            .filter((p) => p._src === "curated")
-            .map((p) => (
-              <li key={p.id}>
-                <a href={youtubeSearch(p.videoQuery)} target="_blank" rel="noreferrer">
-                  <LuPlay aria-hidden="true" /> {p.display} <span className="muted">· {p.anecdotes[0]?.title ?? p.club}</span>
-                </a>
-              </li>
-            ))}
-        </ul>
-      </Section>
+      <div className="segmented" role="tablist" aria-label="Rayon vidéos">
+        {([
+          ["matchs", "Les grands matchs"],
+          ["buts", "Les plus beaux buts"],
+          ["gestes", "Apprendre les gestes"],
+        ] as const).map(([id, label]) => (
+          <button key={id} type="button" role="tab" aria-selected={rayon === id} className={cx("segmented__tab", rayon === id && "segmented__tab--on")} onClick={() => setRayon(id)}>{label}</button>
+        ))}
+      </div>
+      {rayon === "matchs" ? (
+        <>
+          <p className="note">« Match complet » : le match en entier, posté par la FIFA ou le club. « Résumé » : quand le match entier n'existe pas en version officielle.</p>
+          <div className="vignettes">
+            {album.matches.map((m) => {
+              const v = VIDEO_MATCH[m.id];
+              return v ? (
+                <Vignette key={m.id} v={v} />
+              ) : (
+                <div key={m.id} className="vignette vignette--absente">
+                  <strong>{m.title}</strong>
+                  <small>{AILLEURS[m.id] ?? "Pas encore de vidéo officielle."}</small>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      ) : rayon === "buts" ? (
+        <div className="vignettes">{BUTS.map((v) => <Vignette key={v.yt} v={v} />)}</div>
+      ) : (
+        <>
+          <p className="note">Des petites leçons en français pour apprendre les dribbles et les frappes. Ensuite, essaie dehors avec un ballon !</p>
+          <div className="vignettes">{GESTES.map((v) => <Vignette key={v.yt} v={v} />)}</div>
+        </>
+      )}
     </div>
   );
 }

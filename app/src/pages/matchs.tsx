@@ -1,10 +1,14 @@
-import { useEffect } from "react";
-import { LuExternalLink } from "react-icons/lu";
-import { matchPoster, matchVideo, momentCard } from "../cards";
+import { useEffect, useRef, useState } from "react";
+import { LuPlay, LuSquare, LuVolume2 } from "react-icons/lu";
+import { momentCard } from "../cards";
+import { AILLEURS, PHOTOS, VIDEO_MATCH } from "../videos";
+import { regarder } from "../ui/lecteur";
+import { MOMENTS } from "../moments";
+import { say } from "../mascot/state";
+import { cx } from "../util";
 import type { Album } from "../data";
 import { useStore } from "../store";
 import { BackLink, Link, PageTitle, Section } from "../ui/bits";
-import { youtubeSearch } from "../util";
 
 export function Matchs({ album }: { album: Album }) {
   const state = useStore();
@@ -17,7 +21,7 @@ export function Matchs({ album }: { album: Album }) {
       </PageTitle>
       <ul className="matchgrid">
         {album.matches.map((m, i) => {
-          const poster = matchPoster(m.id);
+          const poster = PHOTOS[m.id]?.src ?? null;
           const owned = state.cards[momentCard(m, i, album.matches.length).id];
           return (
             <li key={m.id}>
@@ -64,8 +68,8 @@ export function MatchPage({ album, id }: { album: Album; id: string }) {
       </div>
     );
   }
-  const video = matchVideo(m.id);
-  const poster = matchPoster(m.id);
+  const photo = PHOTOS[m.id];
+  const film = VIDEO_MATCH[m.id];
   useEffect(() => {
     // the friends on the screen are fans: they celebrate this match
     const t = window.setTimeout(() => window.dispatchEvent(new CustomEvent("footdex:party", { detail: { title: m.title, year: m.date.slice(0, 4) } })), 1800);
@@ -75,8 +79,11 @@ export function MatchPage({ album, id }: { album: Album; id: string }) {
     <div className="matchpage">
       <BackLink to={{ page: "matchs" }} label="Les matchs" />
       <header className="matchhero">
-        {video ? (
-          <video className="matchhero__video" src={video} poster={poster ?? undefined} controls playsInline preload="none" aria-label={`Illustration animée : ${m.title}`} />
+        {photo ? (
+          <figure className="matchhero__photo">
+            <img src={photo.src} alt={photo.quoi} />
+            <figcaption>{photo.quoi}{photo.duMatch ? "" : " (pas une photo du match)"} · {photo.auteur}, {photo.licence}</figcaption>
+          </figure>
         ) : null}
         <div className="matchhero__board">
           <p className="eyebrow">
@@ -93,6 +100,7 @@ export function MatchPage({ album, id }: { album: Album; id: string }) {
       </header>
       <h1 className="matchpage__title">{m.title}</h1>
       <p className="lede">{m.summary}</p>
+      <GrandsMoments id={m.id} titre={m.title} />
       <Section title="Le récit">
         <p className="prose">{m.story}</p>
       </Section>
@@ -111,14 +119,68 @@ export function MatchPage({ album, id }: { album: Album; id: string }) {
         <p>{m.nugget.text}</p>
       </section>
       <div className="fiche__actions">
-        <a className="btn btn--pitch" href={youtubeSearch(`${m.videoQuery} match complet`)} target="_blank" rel="noreferrer">
-          Chercher le match sur YouTube <LuExternalLink aria-hidden="true" />
-        </a>
+        {film ? (
+          <button type="button" className="btn btn--gold btn--big" onClick={() => regarder(film)}>
+            <LuPlay aria-hidden="true" /> {film.genre === "complet" ? "Regarder le match complet" : film.genre === "resume" ? "Regarder le résumé" : "Regarder la vidéo"}
+          </button>
+        ) : AILLEURS[m.id] ? (
+          <p className="note">{AILLEURS[m.id]}</p>
+        ) : null}
       </div>
       <footer className="credits">
-        {video ? <p>Illustration animée créée pour l'album (pas une image du vrai match).</p> : null}
+        {photo ? <p>Photo : « {photo.fichier} », {photo.auteur}, {photo.licence}, Wikimedia Commons.</p> : null}
+        {film ? <p>Vidéo officielle : {film.chaine}.</p> : null}
         <p>Sources : {m.sources.join(" · ")}.</p>
       </footer>
     </div>
+  );
+}
+
+/** Les grands moments du match, dans l'ordre. « Écouter » : Philippe les raconte un par un, et le moment raconté s'allume. */
+function GrandsMoments({ id, titre }: { id: string; titre: string }) {
+  const liste = MOMENTS[id] ?? [];
+  const [en, setEn] = useState(-1);
+  const timers = useRef<number[]>([]);
+  const stop = () => {
+    timers.current.forEach((t) => window.clearTimeout(t));
+    timers.current = [];
+    setEn(-1);
+  };
+  useEffect(() => stop, [id]);
+  // le moment raconté reste à l'écran
+  useEffect(() => {
+    if (en >= 0) document.querySelector(".moment.is-on")?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [en]);
+  if (!liste.length) return null;
+
+  function ecouter() {
+    if (en >= 0) return stop();
+    let t = 0;
+    const lignes = [{ texte: `Les grands moments de ${titre}.` }, ...liste];
+    lignes.forEach((m, i) => {
+      const phrase = "min" in m && m.min ? `${m.min.replace(/e$/, "e minute")} : ${m.texte}` : m.texte;
+      timers.current.push(window.setTimeout(() => { setEn(i - 1); say(phrase); }, t));
+      t += Math.max(2600, phrase.length * 70) + 500;
+    });
+    timers.current.push(window.setTimeout(() => setEn(-1), t));
+  }
+
+  return (
+    <section className="moments">
+      <div className="moments__head">
+        <h2>Les grands moments</h2>
+        <button type="button" className={cx("btn", en >= 0 ? "btn--soft" : "btn--gold")} onClick={ecouter}>
+          {en >= 0 ? <><LuSquare aria-hidden="true" /> Arrêter</> : <><LuVolume2 aria-hidden="true" /> Écouter le récit</>}
+        </button>
+      </div>
+      <ol className="moments__liste">
+        {liste.map((m, i) => (
+          <li key={i} className={cx("moment", m.fort && "moment--fort", en === i && "is-on", en > i && "is-vu")}>
+            <span className="moment__min">{m.min ?? "•"}</span>
+            <p>{m.texte}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
