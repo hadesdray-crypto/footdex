@@ -607,12 +607,6 @@ body:has(.viewer, .reveal, .majfull) .page .back::after { animation-play-state: 
 .etagere__tip { position: absolute; left: 50%; bottom: -26px; transform: translateX(-50%); white-space: nowrap; font-weight: 800; font-size: 0.8rem; color: var(--gold-hi); animation: mxHint 0.8s ease-in-out infinite alternate; }
 @media (prefers-reduced-motion: reduce) { .leaf { animation-duration: 0.01s !important; } }
 
-/* les pochettes vides ne se voient pas : la page reste propre ; elles apparaissent seulement quand on déplace une carte */
-.pocket--libre { background: transparent; border-color: transparent; box-shadow: none; }
-.pocket--libre .pocket__num, .pocket--libre .pocket__glass { display: none; }
-.livre--drag .pocket--libre { border: 1.5px dashed #8a7f6077; background: #00000010; }
-.livre--drag .pocket--libre .pocket__num { display: grid; }
-.livre--drag .pocket--libre.pocket--hot { background: #34d39940; border: 2px solid #0c9a6a; }
 /* le classeur qui arrive quand la couverture s'est ouverte */
 .classeur--arrive { animation: classeurArrive 0.5s cubic-bezier(0.25, 0.9, 0.35, 1.05) both; }
 @keyframes classeurArrive { from { transform: scale(0.92) translateY(14px); opacity: 0.2; } to { transform: none; opacity: 1; } }

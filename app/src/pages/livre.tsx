@@ -133,8 +133,8 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
 
   const used = Object.keys(book).filter((k) => book[k]?.some(Boolean)).map((k) => Number(k.slice(1)) - 1);
   const step = two ? 2 : 1;
-  // Pas de page vide au bout : seulement une de plus pendant qu'on déplace une carte (pour la poser plus loin).
-  let pages = Math.max(1, (used.length ? Math.max(...used) : 0) + 1) + (drag ? 1 : 0);
+  // Comme un vrai classeur : une page libre au bout, avec ses pochettes vides.
+  let pages = Math.max(2, (used.length ? Math.max(...used) : 0) + 2);
   if (two && pages % 2) pages += 1;
   const first = Math.min(two ? page - (page % 2) : page, pages - step);
   const count = Object.keys(s.cards).filter((id) => byId.has(id)).length;
@@ -389,7 +389,7 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
             const lifted = live && drag && drag.from.page === p && drag.from.slot === slot;
             const st = live ? settlingOf(k) : undefined;
             return (
-              <li key={slot} className={cx("pocket", !card && "pocket--libre", live && hover === `slot:${k}` && "pocket--hot", lifted && "pocket--empty")} data-drop={live ? `slot:${k}` : undefined}>
+              <li key={slot} className={cx("pocket", live && hover === `slot:${k}` && "pocket--hot", lifted && "pocket--empty")} data-drop={live ? `slot:${k}` : undefined}>
                 <span className="pocket__num">{p * POCKETS + slot + 1}</span>
                 {card && !lifted ? (
                   <div
