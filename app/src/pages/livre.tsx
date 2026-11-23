@@ -94,6 +94,7 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
   const [flip, setFlip] = useState<Flip | null>(null);
   const flipRef = useRef<Flip | null>(null);
   const [palette, setPalette] = useState(false);
+  const [arrive, setArrive] = useState(false);
   const couleurs = useCouleursClasseur();
   const [drag, setDrag] = useState<Drag | null>(null);
   const [hover, setHover] = useState("");
@@ -132,7 +133,8 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
 
   const used = Object.keys(book).filter((k) => book[k]?.some(Boolean)).map((k) => Number(k.slice(1)) - 1);
   const step = two ? 2 : 1;
-  let pages = Math.max(2, (used.length ? Math.max(...used) : 0) + 2);
+  // Pas de page vide au bout : seulement une de plus pendant qu'on déplace une carte (pour la poser plus loin).
+  let pages = Math.max(1, (used.length ? Math.max(...used) : 0) + 1) + (drag ? 1 : 0);
   if (two && pages % 2) pages += 1;
   const first = Math.min(two ? page - (page % 2) : page, pages - step);
   const count = Object.keys(s.cards).filter((id) => byId.has(id)).length;
@@ -349,6 +351,8 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
 
   function openBook() {
     setOpen(true);
+    setArrive(true);
+    window.setTimeout(() => setArrive(false), 520);
     // le classeur ouvert remplit l'écran : on descend jusqu'à lui
     window.setTimeout(() => wrap.current?.scrollIntoView({ block: "start", behavior: "smooth" }), 60);
   }
@@ -357,7 +361,14 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
   if (!open) {
     return (
       <div className="livre livre--closed" ref={wrap}>
-        <Couverture theme="joueurs" count={count} onOpen={openBook} />
+        <Couverture
+          theme="joueurs"
+          count={count}
+          onOpen={openBook}
+          apercu={slots(0)
+            .map((id) => (id ? byId.get(id) : undefined))
+            .map((card, k) => (card ? <span key={k} className="couv__mini"><Carte card={card} size="sm" tilt={false} label={card.name} /></span> : <span key={k} />))}
+        />
         <p className="livre__help">Glisse la couverture sur le côté pour ouvrir ton classeur : toutes tes cartes sont rangées dedans.</p>
       </div>
     );
@@ -378,7 +389,7 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
             const lifted = live && drag && drag.from.page === p && drag.from.slot === slot;
             const st = live ? settlingOf(k) : undefined;
             return (
-              <li key={slot} className={cx("pocket", live && hover === `slot:${k}` && "pocket--hot", lifted && "pocket--empty")} data-drop={live ? `slot:${k}` : undefined}>
+              <li key={slot} className={cx("pocket", !card && "pocket--libre", live && hover === `slot:${k}` && "pocket--hot", lifted && "pocket--empty")} data-drop={live ? `slot:${k}` : undefined}>
                 <span className="pocket__num">{p * POCKETS + slot + 1}</span>
                 {card && !lifted ? (
                   <div
@@ -417,7 +428,7 @@ export function Livre({ byId, onView }: { byId: Map<string, CardRef>; onView: (c
         </span>
       </div>
 
-      <div className={cx("classeur", two ? "classeur--two" : "classeur--one", flip && "is-flipping")} style={couleurs.style} onPointerDown={swipeStart}>
+      <div className={cx("classeur", two ? "classeur--two" : "classeur--one", flip && "is-flipping", arrive && "classeur--arrive")} style={couleurs.style} onPointerDown={swipeStart}>
         {drag ? <span className={cx("classeur__edge classeur__edge--l", hover === "edge:prev" && "is-hot", first === 0 && "is-off")} data-drop="edge:prev"><LuArrowLeft aria-hidden="true" /></span> : null}
         {drag ? <span className={cx("classeur__edge classeur__edge--r", hover === "edge:next" && "is-hot", first + step > pages - 1 && "is-off")} data-drop="edge:next"><LuArrowRight aria-hidden="true" /></span> : null}
         {two ? (

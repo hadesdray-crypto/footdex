@@ -1,6 +1,6 @@
 // Les classeurs : la couverture qu'on ouvre en la glissant sur le côté, l'étagère de « Ma collection »
 // (le classeur des joueurs et celui des Footballinis), et le classeur des Footballinis.
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { LuArrowLeft, LuArrowRight, LuChevronsLeft, LuX } from "react-icons/lu";
 import { FBX } from "../fbx/art";
 import { FbxCard } from "../fbx/ui";
@@ -34,7 +34,7 @@ const TITRES: Record<Theme, { titre: string; sous: string }> = {
 
 /** Une couverture de classeur. On l'ouvre en la glissant vers le côté (elle tourne sur ses anneaux),
  *  ou avec le bouton « Ouvrir ». Un simple toucher appelle onTap (sur l'étagère : la voir en grand). */
-export function Couverture({ theme, count, onOpen, onTap, small = false }: { theme: Theme; count: number; onOpen: () => void; onTap?: () => void; small?: boolean }) {
+export function Couverture({ theme, count, onOpen, onTap, small = false, apercu }: { theme: Theme; count: number; onOpen: () => void; onTap?: () => void; small?: boolean; apercu?: ReactNode }) {
   const [angle, setAngle] = useState(0);
   const [anim, setAnim] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
@@ -112,10 +112,9 @@ export function Couverture({ theme, count, onOpen, onTap, small = false }: { the
 
   return (
     <div className={cx("couv", `couv--${theme}`, small && "couv--small")} ref={ref} style={theme === "joueurs" ? couleurs.style : undefined}>
+      {/* sous la couverture : la première page, avec les vraies cartes (aucune pochette vide) */}
       <div className="couv__inside" aria-hidden="true">
-        {Array.from({ length: 9 }, (_, k) => (
-          <span key={k} />
-        ))}
+        {apercu}
       </div>
       <div
         className={cx("cover", `cover--${theme}`, anim && "cover--anim")}

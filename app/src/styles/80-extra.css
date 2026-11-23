@@ -101,8 +101,10 @@
 
 .couv { position: relative; width: min(82%, 380px); aspect-ratio: 3 / 4; margin: 16px auto; perspective: 1600px; }
 .couv--small { width: 100%; margin: 0; }
-.couv__inside { position: absolute; inset: 2% 1% 2% 4%; border-radius: 4px 14px 14px 4px; background: linear-gradient(90deg, #d9d0b9, #f3ecd8 8%, #f8f2e2); box-shadow: 0 20px 36px -14px #000; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 6%; padding: 8%; }
-.couv__inside span { border-radius: 5px; border: 1.5px dashed #8a7f6066; background: #0000000d; }
+.couv__inside { position: absolute; inset: 2% 1% 2% 4%; border-radius: 4px 14px 14px 4px; background: linear-gradient(90deg, var(--pg-a, #d9d0b9), var(--pg-b, #f8f2e2) 8%); box-shadow: 0 20px 36px -14px #000; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, auto); align-content: start; gap: 4%; padding: 7%; }
+.couv__inside > span { display: block; min-width: 0; }
+.couv__mini { pointer-events: none; }
+.couv__mini .carte { pointer-events: none; }
 .cover > * { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 .cover { position: absolute; inset: 0; display: grid; justify-items: center; align-content: center; gap: 8px; padding: 0 0 0 26px; border-radius: 8px 20px 20px 8px; border: 0; cursor: grab; color: #f6d77b; transform-origin: left center; transform-style: preserve-3d; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; backface-visibility: hidden;
   background: radial-gradient(120% 90% at 30% 10%, var(--cv-a, #2e1f66), var(--cv-b, #160e38) 70%), var(--cv-b, #160e38);
@@ -604,3 +606,13 @@ body:has(.viewer, .reveal, .majfull) .page .back::after { animation-play-state: 
 .etagere__item.is-out { transform: translateY(-16px) scale(1.07) rotate(-2deg); filter: drop-shadow(0 18px 14px #000a); z-index: 2; }
 .etagere__tip { position: absolute; left: 50%; bottom: -26px; transform: translateX(-50%); white-space: nowrap; font-weight: 800; font-size: 0.8rem; color: var(--gold-hi); animation: mxHint 0.8s ease-in-out infinite alternate; }
 @media (prefers-reduced-motion: reduce) { .leaf { animation-duration: 0.01s !important; } }
+
+/* les pochettes vides ne se voient pas : la page reste propre ; elles apparaissent seulement quand on déplace une carte */
+.pocket--libre { background: transparent; border-color: transparent; box-shadow: none; }
+.pocket--libre .pocket__num, .pocket--libre .pocket__glass { display: none; }
+.livre--drag .pocket--libre { border: 1.5px dashed #8a7f6077; background: #00000010; }
+.livre--drag .pocket--libre .pocket__num { display: grid; }
+.livre--drag .pocket--libre.pocket--hot { background: #34d39940; border: 2px solid #0c9a6a; }
+/* le classeur qui arrive quand la couverture s'est ouverte */
+.classeur--arrive { animation: classeurArrive 0.5s cubic-bezier(0.25, 0.9, 0.35, 1.05) both; }
+@keyframes classeurArrive { from { transform: scale(0.92) translateY(14px); opacity: 0.2; } to { transform: none; opacity: 1; } }

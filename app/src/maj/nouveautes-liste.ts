@@ -4,6 +4,16 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-23",
+    titre: "Version 70 : tes anciennes cartes reviennent",
+    type: "appli",
+    points: [
+      "Les cartes effacées le 21 novembre reviennent dans ton classeur : autant de cartes que tu en avais ouvert avant, tirées comme dans les vrais paquets.",
+      "Plus de pochettes vides dans le classeur : les pages restent propres. Les places libres apparaissent seulement quand tu déplaces une carte.",
+      "Quand tu ouvres le classeur, tu vois déjà tes cartes sous la couverture, puis les pages arrivent en douceur.",
+    ],
+  },
+  {
+    date: "2026-11-23",
     titre: "Version 69 : les pages tournent pour de vrai",
     type: "appli",
     points: [

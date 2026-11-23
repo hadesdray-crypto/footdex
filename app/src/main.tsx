@@ -3,6 +3,7 @@ import "./maj/secours";
 import { useEffect } from "react";
 import { Mission } from "./pages/mission";
 import { Machine } from "./pages/machine";
+import { rendreAnciennesCartes } from "./rendu";
 import { createRoot } from "react-dom/client";
 import { type Album, loadAlbum } from "./data";
 import { Binder } from "./pages/binder";
@@ -103,7 +104,10 @@ function App() {
 
   // L'album est ouvert : l'appli a bien démarré (sinon, la prochaine fois, on proposera de la réparer).
   useEffect(() => {
-    if (album) quandAlbumOuvert();
+    if (album) {
+      quandAlbumOuvert();
+      void rendreAnciennesCartes(album);
+    }
   }, [album]);
 
   // Le code des grands se referme dès qu'on quitte leurs écrans (le bouton retour ne les rouvre pas sans code).

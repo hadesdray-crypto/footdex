@@ -382,3 +382,19 @@ export function addGift(kind: GiftKind, from: string) {
 export function setBook(book: Record<string, (string | null)[]>) {
   commit({ ...state, book });
 }
+
+/** Rend des cartes sans toucher au reste : ni paquets ouverts, ni pièces (retour des cartes effacées le 21 novembre). */
+export function rendreCartes(pulled: Pulled[]): number {
+  const owned = { ...state.cards };
+  let order = state.order;
+  for (const { card, shiny } of pulled) {
+    const had = owned[card.id];
+    if (had) owned[card.id] = [had[0] + 1, had[1], had[2], had[3] + (shiny ? 1 : 0)];
+    else {
+      order += 1;
+      owned[card.id] = [1, daysSinceEpoch(), order, shiny ? 1 : 0];
+    }
+  }
+  commit({ ...state, cards: owned, order });
+  return pulled.length;
+}
