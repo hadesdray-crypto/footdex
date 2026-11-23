@@ -5,6 +5,7 @@
 //   └─ Pour les grands (code) : temps d'écran et Internet · réglages du jeu · atelier · essais (développeur)
 // Chaque écran a une flèche de retour (celle d'Android aussi) et ne montre que ce dont il parle.
 import { choisirVueClasseur, useVueClasseur } from "../vue-classeur";
+import { ChoixCouleurs } from "./classeurs";
 import { setBallonEcran, useBallonEcran } from "../orientation";
 import { type ReactNode, useState, useSyncExternalStore } from "react";
 import { LuSwatchBook, LuLock, LuCopy, LuMic, LuRefreshCw, LuSettings, LuShieldCheck, LuShirt, LuUserRound, LuUsers, LuVolume2, LuZap } from "react-icons/lu";
@@ -208,6 +209,7 @@ export function RegApparence() {
             <button type="button" className={cx("chip", vue === "liste" && "chip--on")} aria-pressed={vue === "liste"} onClick={() => choisirVueClasseur("liste")}>La liste</button>
           </div>
         </div>
+        <ChoixCouleurs />
       </Section>
       <Section title="Pour lire plus facilement">
         {ligne("Police lisible", "Des lettres plus simples et plus larges", a.lisible, "lisible")}
