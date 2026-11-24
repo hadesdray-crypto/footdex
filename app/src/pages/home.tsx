@@ -243,7 +243,7 @@ export function Home({ album }: { album: Album }) {
             <span>matchs entre pays, depuis 1872</span>
           </div>
           <div>
-            <strong>22 883</strong>
+            <strong>22 915</strong>
             <span>matchs de Ligue 1 et de Ligue 2</span>
           </div>
           <div>

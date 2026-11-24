@@ -4,6 +4,16 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-24",
+    titre: "Mise à jour : 32 scores de Ligue 2 et 126 nouveaux secrets",
+    type: "donnees",
+    points: [
+      "32 nouveaux scores de Ligue 2, du 19 octobre au 23 novembre. Chacun a été vérifié sur deux sites.",
+      "La machine à secrets connaît 42 joueurs de plus : Haaland, Vinícius, Marquinhos, Kvaratskhelia, Zaïre-Emery, Ethan Mbappé, Thauvin et plein d'autres. 3 secrets chacun, vérifiés sur au moins deux sites.",
+      "Dans la machine, les cartes qui ont des secrets passent en premier, avec « a des secrets ! ».",
+    ],
+  },
+  {
+    date: "2026-11-24",
     titre: "Version 74 : la saison à jour, et des icônes partout",
     type: "appli",
     points: [

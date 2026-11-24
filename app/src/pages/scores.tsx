@@ -27,7 +27,7 @@ export function Scores({ album }: { album: Album }) {
     <div>
       <PageTitle kicker="Les archives" title="Les scores">
         <p>
-          {fmt(22883)} matchs de Ligue 1 (depuis 1993) et de Ligue 2 (depuis 1997), {fmt(49947)} matchs entre pays depuis le 30 novembre 1872, dont {fmt(1068)} de Coupe
+          {fmt(22915)} matchs de Ligue 1 (depuis 1993) et de Ligue 2 (depuis 1997), {fmt(49947)} matchs entre pays depuis le 30 novembre 1872, dont {fmt(1068)} de Coupe
           du monde. Rien n'a été retiré.
         </p>
       </PageTitle>
@@ -97,7 +97,7 @@ function Ligues({ album }: { album: Album }) {
   const extra = new Set([...album.extraScores, ...(infos?.scores ?? [])].map((e) => `${e.date}|${e.home}|${e.away}`));
 
   if (error) return <Failure text="Les scores n'ont pas pu être chargés." retry={retry} />;
-  if (!data) return <Loading text="Chargement des 22 883 scores…" />;
+  if (!data) return <Loading text="Chargement des 22 915 scores…" />;
 
   return (
     <div className="archive">

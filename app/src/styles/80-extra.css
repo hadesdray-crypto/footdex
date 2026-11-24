@@ -736,3 +736,4 @@ body:has(.viewer, .reveal, .majfull) .page .back::after { animation-play-state: 
 .goal__keeper svg { width: 34px; height: 34px; color: #ffd76a; filter: drop-shadow(0 2px 3px #000a); }
 .mascot__zzz { font: 900 1.1rem var(--f-display); color: #9fd8ff; letter-spacing: 0.05em; }
 .fbc__stat i svg { width: 1em; height: 1em; vertical-align: -0.12em; }
+.mx-secret__src { margin: 0 0 8px; font-size: 0.75rem; color: #8a7a52; }

@@ -424,7 +424,7 @@ export function Sources({ album }: { album: Album }) {
             ["Fiches de l'album", fmt(album.album.length)],
             ["Joueurs des fichiers du jeu", fmt(25229)],
             ["Visuels du jeu", fmt(15954)],
-            ["Matchs de Ligue 1 et de Ligue 2", fmt(22883)],
+            ["Matchs de Ligue 1 et de Ligue 2", fmt(22915)],
             ["Matchs entre pays", fmt(49947)],
             ["Dont Coupe du monde", fmt(1068)],
             ["Matchs racontés", String(album.matches.length)],

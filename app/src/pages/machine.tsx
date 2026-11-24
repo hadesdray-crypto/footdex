@@ -15,6 +15,7 @@ import { PageTitle } from "../ui/bits";
 import { Carte } from "../ui/cards";
 import { cx, youtubeSearch } from "../util";
 import { usePools } from "./packs";
+import SECRETS_JOUEURS from "../secrets-joueurs.json";
 
 const HOLD_MS = 380;
 const SLOP = 12;
@@ -27,7 +28,7 @@ const KNOB_DOWN = 352;
 type Phase = "choix" | "dedans" | "tourne" | "sortie" | "lu";
 type Item = { id: string; nom: string; card?: CardRef; special?: { nom: string; sous: string } };
 type Drag = { x: number; y: number; ox: number; oy: number; w: number };
-type Story = { titre: string; texte: string };
+type Story = { titre: string; texte: string; sources?: string[] };
 
 // ------------------------------------------------------------------ les dessins
 
@@ -182,7 +183,9 @@ export function Machine({ album }: { album: Album }) {
       .filter((p) => st.cards[`a:${p.id}`])
       .sort((a, b) => (st.cards[`a:${b.id}`]?.[2] ?? 0) - (st.cards[`a:${a.id}`]?.[2] ?? 0))
       .map((p) => ({ id: `a:${p.id}`, nom: p.display, card: byId.get(`a:${p.id}`) }));
-    return [...specials, ...players];
+    const avec = players.filter((x) => !!(SECRETS_JOUEURS as Record<string, unknown[]>)[x.id.slice(2)] || (album.byId.get(x.id.slice(2))?.anecdotes.length ?? 0) > 0);
+    const sans = players.filter((x) => !avec.includes(x));
+    return [...specials, ...avec, ...sans];
   }, [m.gagnees, album, st.cards, byId]);
 
   const [idx, setIdx] = useState(0);
@@ -201,6 +204,8 @@ export function Machine({ album }: { album: Album }) {
   const slotRef = useRef<SVGRectElement | null>(null);
   const timers = useRef<number[]>([]);
   const cur = items.length ? items[Math.min(idx, items.length - 1)] : null;
+  const aDesSecrets = (id: string) =>
+    id.startsWith("s:") ? (SECRETS[id.slice(2)] ?? []).length > 0 : !!(SECRETS_JOUEURS as Record<string, unknown[]>)[id.slice(2)] || (album.byId.get(id.slice(2))?.anecdotes.length ?? 0) > 0;
 
   useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
   // on arrive directement devant la machine
@@ -424,7 +429,8 @@ export function Machine({ album }: { album: Album }) {
     if (!inside) return [];
     if (inside.id.startsWith("s:")) return SECRETS[inside.id.slice(2)] ?? [];
     const p = album.byId.get(inside.id.slice(2));
-    return (p?.anecdotes ?? []).map((a) => ({ titre: a.title, texte: a.text }));
+    const secrets = (SECRETS_JOUEURS as Record<string, Story[]>)[inside.id.slice(2)] ?? [];
+    return [...secrets, ...(p?.anecdotes ?? []).map((a) => ({ titre: a.title, texte: a.text }))];
   }, [inside, album]);
   const joueur = inside?.id.startsWith("a:") ? album.byId.get(inside.id.slice(2)) : undefined;
 
@@ -557,7 +563,7 @@ export function Machine({ album }: { album: Album }) {
           ) : (
             <p className="note">Tu n'as pas encore de carte. Ouvre un paquet pour en gagner !</p>
           )}
-          {cur ? <p className="mx__count">{Math.min(idx, items.length - 1) + 1} / {items.length} · {cur.nom}</p> : null}
+          {cur ? <p className="mx__count">{Math.min(idx, items.length - 1) + 1} / {items.length} · {cur.nom}{aDesSecrets(cur.id) ? " · a des secrets !" : ""}</p> : null}
           <p className={cx("mx__hint", hint && "is-on")} role="status">{hint || (phase === "choix" && cur ? "Reste appuyé sur ta carte et glisse-la dans la fente." : phase === "tourne" ? "Ça tourne…" : "")}</p>
           <p className="note">{m.machine.length} carte{m.machine.length > 1 ? "s" : ""} déjà passée{m.machine.length > 1 ? "s" : ""} dans la machine.</p>
         </div>
@@ -591,6 +597,7 @@ export function Machine({ album }: { album: Album }) {
                 <article key={x.titre} className="mx-secret__story">
                   <h3>{x.titre}</h3>
                   <p>{x.texte}</p>
+                  {x.sources?.length ? <p className="mx-secret__src">Vérifié dans : {[...new Set(x.sources.map((u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return u; } }))].join(", ")}</p> : null}
                   <button type="button" className="btn btn--soft mx-secret__listen" onClick={() => say(`${x.titre}. ${x.texte}`)}><LuVolume2 aria-hidden="true" /> Écouter</button>
                 </article>
               ))
