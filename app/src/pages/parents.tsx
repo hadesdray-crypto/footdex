@@ -1,6 +1,6 @@
 // The parents' corner (from the Encyclopédie de la vie) and the one journal of what's new.
 import { useState } from "react";
-import { LuCopy, LuDownload, LuRefreshCw, LuUpload } from "react-icons/lu";
+import { LuChartColumn, LuCopy, LuDownload, LuRefreshCw, LuUpload, LuWrench } from "react-icons/lu";
 import { Section } from "../ui/bits";
 import { cx } from "../util";
 import { EST_APK, HORS_LIGNE, LIEN_APK, VERSION_APK, VERSION_APP } from "../maj/env";
@@ -19,7 +19,7 @@ export function Journal() {
       <div className="journal">
         {liste.map((n) => (
           <article key={n.date + n.titre} className="journal__item">
-            <p className="journal__tag">{n.type === "appli" ? "🛠️ Appli" : "📊 Données"} · {n.date.split("-").reverse().join("/")}</p>
+            <p className="journal__tag">{n.type === "appli" ? <><LuWrench aria-hidden="true" className="ico-inline" /> Appli</> : <><LuChartColumn aria-hidden="true" className="ico-inline" /> Données</>} · {n.date.split("-").reverse().join("/")}</p>
             <h3>{n.titre}</h3>
             <ul className="list list--compact">{n.points.map((p) => <li key={p}>{p}</li>)}</ul>
           </article>

@@ -1,6 +1,7 @@
 // « Papa te propose une mission » (3 questions → a special card). The card machine is in machine.tsx.
 import { useState } from "react";
-import { type Album } from "../data";
+import { LuCalculator, LuFlaskConical, LuKeyRound, LuMail, LuPartyPopper } from "react-icons/lu";
+import { Ball } from "../ui/pack";
 import { fanfare, click } from "../sound";
 import { say } from "../mascot/state";
 import { PageTitle, Section } from "../ui/bits";
@@ -43,7 +44,7 @@ export function Mission() {
       {etape === "intro" ? (
         <Section>
           <div className="mission__box">
-            <p className="mission__big">📩 Ton père te propose une mission.</p>
+            <p className="mission__big"><LuMail aria-hidden="true" className="ico-inline" /> Ton père te propose une mission.</p>
             <p>Réponds juste à 3 questions : une sur le foot, une de science et une de maths. Si tu réussis, tu gagnes la carte <b>Mbappé</b> spéciale !</p>
             <div className="chips">
               <button type="button" className="btn btn--gold btn--big btn--glow" onClick={() => { click("button"); setEtape("code"); }}>J'accepte la mission</button>
@@ -55,7 +56,7 @@ export function Mission() {
       {etape === "code" ? (
         <Section>
           <div className="mission__box">
-            <p className="mission__big">🔑 Demande le code de la mission à ton père.</p>
+            <p className="mission__big"><LuKeyRound aria-hidden="true" className="ico-inline" /> Demande le code de la mission à ton père.</p>
             {!r.codeMission.trim() ? <p className="note">Papa n'a pas encore choisi de code : il doit le faire dans Réglages, « Pour les grands », « Réglages du jeu ».</p> : null}
             <input className="mission__code" value={saisi} aria-label="Code de la mission" inputMode="text" autoComplete="off" maxLength={12} onChange={(e: { target: { value: string } }) => { setSaisi(e.target.value); setErreur(""); }} />
             {erreur ? <p className="rg__total rg__total--bad">{erreur}</p> : null}
@@ -71,7 +72,7 @@ export function Mission() {
       {etape === "quiz" && q ? (
         <Section title={`Question ${i + 1} sur 3`} kicker={q.type === "foot" ? "Football" : q.type === "science" ? "Science du ballon" : "Maths"}>
           <div className="mission__box">
-            <div className="mission__visuel" aria-hidden="true">{q.visuel}</div>
+            <div className="mission__visuel" aria-hidden="true">{q.type === "maths" ? <LuCalculator /> : q.type === "science" ? <LuFlaskConical /> : <Ball className="mission__ball" />}</div>
             <p className="mission__big">{q.q}</p>
             <div className="mission__choix">
               {q.choix.map((c, k) => (
@@ -107,7 +108,7 @@ export function Mission() {
       {etape === "gagne" ? (
         <Section>
           <div className="mission__box mission__win">
-            <p className="mission__big">🎉 Mission réussie !</p>
+            <p className="mission__big"><LuPartyPopper aria-hidden="true" className="ico-inline" /> Mission réussie !</p>
             <div className="speccard"><b>{CARTES_SPECIALES.mbappe.nom}</b><span>{CARTES_SPECIALES.mbappe.sous}</span></div>
             <p>Mets-la dans la machine à secrets pour découvrir plein d'anecdotes sur Mbappé.</p>
             <button type="button" className="btn btn--gold btn--big btn--glow" onClick={() => go({ page: "machine" })}>Aller à la machine</button>

@@ -3,10 +3,10 @@ import { LuGem, LuGlobe, LuBookMarked, LuCalendarDays, LuExternalLink, LuFilm, L
 import { albumCard } from "../cards";
 import { AILLEURS, BUTS, GESTES, VIDEO_MATCH } from "../videos";
 import { Vignette } from "../ui/lecteur";
-import { type Album, loadPeople, loadWiki } from "../data";
+import { type Album, loadInfosMaj, loadPeople, loadWiki } from "../data";
 import { BackLink, Chips, Door, Facts, Link, Loading, PageTitle, Section, useLoad } from "../ui/bits";
 import { Tile } from "../ui/cards";
-import { cx, fmt, fold, longDate, shortDate, youtubeSearch } from "../util";
+import { cx, fmt, fold, longDate, shortDate } from "../util";
 
 // ------------------------------------------------------------------ coupes
 
@@ -240,34 +240,7 @@ export function Saison({ album }: { album: Album }) {
         )}
       </Section>
 
-      <Section title="Les prochains matchs de Ligue 1">
-        <ul className="fixtures">
-          {album.saison.nextFixtures.map((f) => (
-            <li key={`${f.date}-${f.home}`}>
-              <span className="fixtures__date">{shortDate(f.date)}</span>
-              <span>
-                {f.home} – {f.away}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </Section>
-
-      <Section title="Les derniers scores ajoutés" kicker="Du 16 au 18 octobre 2026">
-        <ul className="fixtures">
-          {album.extraScores.map((s) => (
-            <li key={`${s.date}-${s.home}`}>
-              <span className="fixtures__date">
-                {shortDate(s.date)} · {s.league}
-              </span>
-              <span>
-                {s.home} {s.hg}–{s.ag} {s.away}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="muted">Même score sur trois sites : football.fr, footballdatabase et mon-match.</p>
-      </Section>
+      <ProchainsEtDerniers album={album} />
 
       <Section title="Ce qui a changé depuis septembre">
         <ul className="list">
@@ -514,5 +487,69 @@ export function Plus({ album }: { album: Album }) {
         <Door to={{ page: "sources" }} kicker="Contrôle" title="Sources et certitude" icon={LuShieldCheck} />
       </div>
     </div>
+  );
+}
+
+/** Les prochains matchs (seulement ceux qui ne sont pas encore joués) et les derniers scores ajoutés par la mise à jour du lundi. */
+function ProchainsEtDerniers({ album }: { album: Album }) {
+  const { data: infos } = useLoad(() => loadInfosMaj(), []);
+  const today = new Date().toISOString().slice(0, 10);
+  const prochains = (infos?.prochains.length ? infos.prochains : album.saison.nextFixtures).filter((f) => f.date >= today);
+  return (
+    <>
+      <Section title="Les prochains matchs de Ligue 1">
+        {prochains.length ? (
+          <ul className="fixtures">
+            {prochains.map((f) => (
+              <li key={`${f.date}-${f.home}`}>
+                <span className="fixtures__date">{shortDate(f.date)}</span>
+                <span>
+                  {f.home} – {f.away}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="note">Les prochains matchs arrivent avec la mise à jour du lundi.</p>
+        )}
+        {prochains.length && infos?.prochainsSource ? <p className="muted">Calendrier : {infos.prochainsSource}. Les dates peuvent encore bouger.</p> : null}
+      </Section>
+
+      {infos ? (
+        <Section title="Les derniers scores ajoutés" kicker={`Mise à jour du ${infos.libelle}`}>
+          <p className="note">Matchs joués {infos.periode}.</p>
+          <ul className="fixtures">
+            {[...infos.scores].sort((x, y) => y.date.localeCompare(x.date)).map((s) => (
+              <li key={`${s.date}-${s.home}-${s.away}`}>
+                <span className="fixtures__date">
+                  {shortDate(s.date)} · {s.league}
+                </span>
+                <span>
+                  {s.home} {s.hg}–{s.ag} {s.away}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="muted">Chaque score est confirmé par au moins deux sources : {infos.sources.join(" ; ")}.</p>
+          {infos.attente ? <p className="muted">{infos.attente}</p> : null}
+        </Section>
+      ) : null}
+
+      <Section title="Les scores ajoutés avant" kicker="Du 16 au 18 octobre 2026">
+        <ul className="fixtures">
+          {album.extraScores.map((s) => (
+            <li key={`${s.date}-${s.home}`}>
+              <span className="fixtures__date">
+                {shortDate(s.date)} · {s.league}
+              </span>
+              <span>
+                {s.home} {s.hg}–{s.ag} {s.away}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="muted">Même score sur trois sites : football.fr, footballdatabase et mon-match.</p>
+      </Section>
+    </>
   );
 }

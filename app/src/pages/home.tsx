@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Piece } from "../ui/Piece";
-import { LuArrowRight, LuBookOpen, LuCalendarDays, LuFilm, LuGift, LuGraduationCap, LuLibrary, LuMessageSquareQuote, LuPackageOpen, LuQuote, LuSearch, LuTrophy, LuUsers, LuGlobe, LuGem, LuPlay } from "react-icons/lu";
+import { LuMail, LuArrowRight, LuBookOpen, LuCalendarDays, LuFilm, LuGift, LuGraduationCap, LuLibrary, LuMessageSquareQuote, LuPackageOpen, LuQuote, LuSearch, LuTrophy, LuUsers, LuGlobe, LuGem, LuPlay } from "react-icons/lu";
 import { CARDS_PER_CHEMIN, CHEMINS, RARITY, albumCard, cheminOf, milestoneRewards, momentCard, type CardRef } from "../cards";
 import type { Album } from "../data";
 import { go } from "../router";
@@ -72,7 +72,7 @@ export function Home({ album }: { album: Album }) {
       <Installer />
       {mission.en ? (
         <section className="missionbanner" aria-label="Mission de Papa">
-          <p><b>📩 Ton père te propose une mission !</b> Réponds à 3 questions pour gagner la carte Mbappé.</p>
+          <p><b><LuMail aria-hidden="true" className="ico-inline" /> Ton père te propose une mission !</b> Réponds à 3 questions pour gagner la carte Mbappé.</p>
           <button type="button" className="btn btn--gold btn--glow" onClick={() => go({ page: "mission" })}>Voir la mission</button>
         </section>
       ) : null}

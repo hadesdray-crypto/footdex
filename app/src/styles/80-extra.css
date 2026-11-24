@@ -730,3 +730,9 @@ body:has(.viewer, .reveal, .majfull) .page .back::after { animation-play-state: 
 .moment.is-on { background: #f6c45326; transform: scale(1.02); }
 .moment.is-on::before { background: #fff; }
 .moment.is-vu { opacity: 0.7; }
+.ico-inline { width: 1.1em; height: 1.1em; vertical-align: -0.18em; margin-right: 0.25em; }
+.mission__visuel svg, .mission__ball { width: 64px; height: 64px; }
+.mission__visuel svg { color: var(--gold-hi); }
+.goal__keeper svg { width: 34px; height: 34px; color: #ffd76a; filter: drop-shadow(0 2px 3px #000a); }
+.mascot__zzz { font: 900 1.1rem var(--f-display); color: #9fd8ff; letter-spacing: 0.05em; }
+.fbc__stat i svg { width: 1em; height: 1em; vertical-align: -0.12em; }

@@ -1,6 +1,6 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { LuSearch } from "react-icons/lu";
-import { type Album, type LigueMatch, type PaysMatch, loadLigues, loadPays, loadPaysMeta, loadWiki } from "../data";
+import { loadInfosMaj, type Album, type LigueMatch, type PaysMatch, loadLigues, loadPays, loadPaysMeta, loadWiki } from "../data";
 import { Chips, Failure, Link, Loading, More, PageTitle, useLoad } from "../ui/bits";
 import { cx, fmt, fold, shortDate } from "../util";
 
@@ -76,6 +76,7 @@ function Ligues({ album }: { album: Album }) {
   const [season, setSeason] = useState<string>("2026-2027");
   const [team, setTeam] = useState("");
   const [view, setView] = useState<"resultats" | "classement">("resultats");
+  const { data: infos } = useLoad(() => loadInfosMaj(), []);
   const [shown, setShown] = useState(60);
   const deferred = useDeferredValue(team);
 
@@ -93,7 +94,7 @@ function Ligues({ album }: { album: Album }) {
       .sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
   }, [data, league, season, deferred]);
   const standings = useMemo(() => (data && season !== "toutes" ? table(data.rows.filter((r) => r.league === league && r.season === season)) : []), [data, league, season]);
-  const extra = new Set(album.extraScores.map((e) => `${e.date}|${e.home}|${e.away}`));
+  const extra = new Set([...album.extraScores, ...(infos?.scores ?? [])].map((e) => `${e.date}|${e.home}|${e.away}`));
 
   if (error) return <Failure text="Les scores n'ont pas pu être chargés." retry={retry} />;
   if (!data) return <Loading text="Chargement des 22 883 scores…" />;
@@ -183,7 +184,7 @@ function Ligues({ album }: { album: Album }) {
           <More shown={shown} total={rows.length} step={60} onMore={() => setShown((n) => n + 60)} />
         </>
       )}
-      <p className="note">Sources : football-data.co.uk jusqu'au 12 octobre 2026 ; football.fr, footballdatabase et mon-match pour les scores du 16 au 18 octobre 2026.</p>
+      <p className="note">Sources : football-data.co.uk jusqu'au 12 octobre 2026 ; football.fr, footballdatabase et mon-match pour les scores du 16 au 18 octobre 2026{infos ? ` ; puis, mise à jour du ${infos.libelle} (matchs joués ${infos.periode}) : ${infos.sources.join(" ; ")}` : ""}.</p>
     </div>
   );
 }

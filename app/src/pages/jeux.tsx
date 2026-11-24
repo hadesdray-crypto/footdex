@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Piece } from "../ui/Piece";
 import { faute } from "../mascot/terrain";
-import { LuArrowLeft, LuCircleCheck, LuGem, LuLayers, LuPlay, LuRotateCcw, LuStar, LuTrophy, LuVolume2, LuX } from "react-icons/lu";
+import { LuHand, LuArrowLeft, LuCircleCheck, LuGem, LuLayers, LuPlay, LuRotateCcw, LuStar, LuTrophy, LuVolume2, LuX } from "react-icons/lu";
 import { Fig } from "../mascot/Fig";
 import { PERSOS } from "../mascot/lines";
 import { emit, sayLabel, stopTalking, useMascot } from "../mascot/state";
@@ -270,7 +270,7 @@ function Penalty({ speak, end, alive, sleep, lv }: P) {
           {[0, 1, 2].map((i) => <rect key={i} x={10 + i * 93.3} y="10" width="93.3" height="110" fill={shot && shot.keeper === i ? "#34d39955" : "none"} stroke="#ffffff30" />)}
         </svg>
         {shot ? <span className="goal__ball" style={{ left: `${16 + shot.ball * 33.3}%` }}><Ball size={30} /></span> : null}
-        {shot ? <span className="goal__keeper" style={{ left: `${16 + shot.keeper * 33.3}%` }}>🧤</span> : null}
+        {shot ? <span className="goal__keeper" style={{ left: `${16 + shot.keeper * 33.3}%` }}><LuHand aria-hidden="true" /></span> : null}
       </div>
       <div className="gm__btns">
         {["Gauche", "Milieu", "Droite"].map((t, i) => (

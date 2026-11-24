@@ -717,7 +717,7 @@ export function Mascot({ album, page }: { album: Album; page: string }) {
   if (m.s.rest) {
     return (
       <button type="button" className="mascot__sleep" aria-label={`${perso.name} se repose : touche pour le réveiller`} onClick={() => { update({ rest: false }); window.setTimeout(greet, 400); }}>
-        <span aria-hidden="true">💤</span>
+        <span aria-hidden="true" className="mascot__zzz">Zzz</span>
       </button>
     );
   }

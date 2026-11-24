@@ -688,3 +688,19 @@ export function loadPays(file: string): Promise<PaysMatch[]> {
 export function bornIsoOf(p: Player): string {
   return frenchDateToIso(p.born);
 }
+
+/** Ce que la mise à jour du lundi a ajouté : les derniers scores, leurs sources, les prochains matchs. */
+export type InfosMaj = {
+  jour: string;
+  libelle: string;
+  periode: string;
+  scores: { league: string; date: string; home: string; away: string; hg: number; ag: number }[];
+  sources: string[];
+  prochains: { league: string; date: string; home: string; away: string }[];
+  prochainsSource?: string;
+  attente?: string;
+};
+let infosPromise: Promise<InfosMaj | null> | null = null;
+export function loadInfosMaj(): Promise<InfosMaj | null> {
+  return (infosPromise ??= fetchJson<InfosMaj>("data/infos-maj.json").catch(() => null));
+}

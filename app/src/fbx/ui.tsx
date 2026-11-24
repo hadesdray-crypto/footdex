@@ -2,7 +2,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Piece } from "../ui/Piece";
-import { LuGift } from "react-icons/lu";
+import { LuGift, LuLaugh, LuTarget, LuZap } from "react-icons/lu";
+import type { ReactNode } from "react";
 import { cx } from "../util";
 import { FBX, RARITY, fbx, fbxSvg } from "./art";
 import { chestStars, openChest, useCollec, type Loot } from "./store";
@@ -73,7 +74,7 @@ function Turntable({ id, size, onMissing }: { id: string; size: number; onMissin
   );
 }
 
-const Bar = ({ label, icon, v, hide }: { label: string; icon: string; v: number; hide: boolean }) => (
+const Bar = ({ label, icon, v, hide }: { label: string; icon: ReactNode; v: number; hide: boolean }) => (
   <span className="fbc__stat" aria-label={`${label} : ${hide ? "inconnu" : `${v} sur 10`}`}>
     <i aria-hidden="true">{icon}</i>
     <b>{hide ? "???" : <span className="fbc__bar"><span style={{ width: `${v * 10}%` }} /></span>}</b>
@@ -98,9 +99,9 @@ export function FbxCard({ id, count = 1, owned = true, big = false, onClick }: {
       {big ? (
         <>
           <span className="fbc__stats">
-            <Bar label="Vitesse" icon="⚡" v={f.vit} hide={hide} />
-            <Bar label="Tir" icon="🎯" v={f.tir} hide={hide} />
-            <Bar label="Rigolade" icon="😂" v={f.rig} hide={hide} />
+            <Bar label="Vitesse" icon={<LuZap />} v={f.vit} hide={hide} />
+            <Bar label="Tir" icon={<LuTarget />} v={f.tir} hide={hide} />
+            <Bar label="Rigolade" icon={<LuLaugh />} v={f.rig} hide={hide} />
           </span>
           <span className="fbc__power">{hide ? "???" : f.power}</span>
           <span className="fbc__cry">{hide ? "« … »" : `« ${f.cry} »`}</span>

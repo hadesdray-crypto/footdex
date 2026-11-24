@@ -3,6 +3,16 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    date: "2026-11-24",
+    titre: "Version 74 : la saison à jour, et des icônes partout",
+    type: "appli",
+    points: [
+      "Page Saison : « Les prochains matchs » ne montre plus que les matchs pas encore joués, et la mise à jour du lundi les renouvelle.",
+      "« Les derniers scores ajoutés » montre les scores de la dernière mise à jour du lundi, avec leurs sources. Les anciens sont gardés juste en dessous.",
+      "Les petits dessins (émojis) sont remplacés par les icônes de l'appli : cartes Footballinis, mission de Papa, jeu du gardien, journal des nouveautés.",
+    ],
+  },
+  {
     date: "2026-11-23",
     titre: "Version 73 : les grands moments des matchs et les vraies vidéos",
     type: "appli",
@@ -476,7 +486,7 @@ export const NOUVEAUTES: Nouveaute[] = [
     titre: "Version 31 : 26 bruitages et les options du Zombie",
     type: "appli",
     points: [
-      "Mes bruitages : 26 moments par personnage (lancé, atterrissage, ballon dans la figure, victoire, carte rare, coffre, ola, carton, check-up, chat…). Touche 🎙️ pour enregistrer, ⏹️ pour arrêter.",
+      "Mes bruitages : 26 moments par personnage (lancé, atterrissage, ballon dans la figure, victoire, carte rare, coffre, ola, carton, check-up, chat…). Touche le micro pour enregistrer, ⏹️ pour arrêter.",
       "Chaque bruit est joué exactement au moment de l'action.",
       "Le Zombie perd toujours sa tête et ses bras quand on le lance fort, même quand il est un copain.",
       "Nouveau réglage « Le Zombie » : membres, peur des autres, poursuite, tête et ballon, éternuement, chat du stade.",
@@ -556,8 +566,8 @@ export const NOUVEAUTES: Nouveaute[] = [
     type: "appli",
     points: [
       "« Change ma voix ! » dans le menu du personnage : touche une voix pour l'écouter, puis « C'est elle ! ».",
-      "Chaque personnage a sa propre voix. Les ⭐⭐⭐ sont les plus fluides.",
-      "Un curseur 🐭 / 🐻 pour une voix plus aiguë ou plus grave.",
+      "Chaque personnage a sa propre voix. Celles à trois étoiles sont les plus fluides.",
+      "Un curseur pour une voix plus aiguë ou plus grave.",
       "Pendant les jongles, le ballon touche la pointe de la chaussure, comme un vrai jongleur.",
       "Code parent (4 chiffres) pour les réglages avancés, le temps d'écran et Internet.",
       "45 minutes de jeu par jour, puis il faut le code parent pour continuer.",
@@ -582,7 +592,7 @@ export const NOUVEAUTES: Nouveaute[] = [
       "Bouton « Installer de plus belles voix » (voix Google haute qualité).",
       "Lance le jongleur d'un coup de doigt : il vole, tombe, se relève et retourne à son ballon.",
       "Déplace-le : il va chercher son ballon et le ramène à sa nouvelle place.",
-      "Nouvelle page Paramètres (bouton ⚙️ en haut) : personnage, voix, sons, mises à jour.",
+      "Nouvelle page Paramètres (bouton engrenage en haut) : personnage, voix, sons, mises à jour.",
       "Deux touchers sur le personnage : son menu s'ouvre.",
       "Tous les personnages se lancent : appui long puis lancer, ou coup de doigt. Ils volent, tombent, ont un bobo et râlent !",
       "Type de voix au choix : Garçon (par défaut), Homme, Grave, ou celle du personnage.",
