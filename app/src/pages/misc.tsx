@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { LuGem, LuGlobe, LuBookMarked, LuCalendarDays, LuExternalLink, LuFilm, LuGraduationCap, LuMessageSquareQuote, LuPlay, LuShieldCheck, LuShirt, LuTrophy, LuZap } from "react-icons/lu";
 import { albumCard } from "../cards";
 import { AILLEURS, BUTS, GESTES, VIDEO_MATCH } from "../videos";
+import { GestesPhilippe } from "../ui/gestes";
 import { Vignette } from "../ui/lecteur";
 import { type Album, loadInfosMaj, loadPeople, loadWiki } from "../data";
 import { BackLink, Chips, Door, Facts, Link, Loading, PageTitle, Section, useLoad } from "../ui/bits";
@@ -346,7 +347,9 @@ export function Videos({ album }: { album: Album }) {
         <div className="vignettes">{BUTS.map((v) => <Vignette key={v.yt} v={v} />)}</div>
       ) : (
         <>
-          <p className="note">Des petites leçons en français pour apprendre les dribbles et les frappes. Ensuite, essaie dehors avec un ballon !</p>
+          <GestesPhilippe />
+          <h2>Les leçons en vidéo</h2>
+          <p className="note">Des petites leçons en français pour apprendre les dribbles et les frappes (il faut Internet).</p>
           <div className="vignettes">{GESTES.map((v) => <Vignette key={v.yt} v={v} />)}</div>
         </>
       )}

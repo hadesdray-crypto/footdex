@@ -53,17 +53,51 @@ export function Soins({ onClose }: { onClose: () => void }) {
   const [fini, setFini] = useState(false);
   const zone = useRef<HTMLDivElement | null>(null);
   const humeurTimer = useRef(0);
-  const total = useRef(list.length);
+  const finTimer = useRef(0);
+  const finDrag = useRef<(() => void) | null>(null);
   const goneRef = useRef<Record<string, "arrache" | "casse">>({});
   const coupsRef = useRef<Record<string, number>>({});
   const listRef = useRef(list);
   listRef.current = list;
 
-  // si une blessure arrive pendant le jeu, elle rejoint la liste
-  useEffect(() => onWounds(() => !fini && setList((l: Piece[]) => (l.length ? l : pieces(wounds())))), [fini]);
-  useEffect(() => () => window.clearTimeout(humeurTimer.current), []);
+  // si une blessure arrive pendant le jeu, elle rejoint la liste (les morceaux déjà retirés restent retirés)
+  useEffect(
+    () =>
+      onWounds(() => {
+        if (fini) return;
+        setList((l: Piece[]) => {
+          const ids = new Set(l.map((p) => p.id));
+          const neufs = pieces(wounds()).filter((p) => !ids.has(p.id) && !goneRef.current[p.id]);
+          return neufs.length ? [...l, ...neufs] : l;
+        });
+      }),
+    [fini],
+  );
+  useEffect(() => {
+    const echap = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", echap);
+    (document.querySelector(".soins__bar .btn") as HTMLElement | null)?.focus();
+    return () => {
+      window.removeEventListener("keydown", echap);
+      window.clearTimeout(humeurTimer.current);
+      window.clearTimeout(finTimer.current);
+      finDrag.current?.();
+    };
+  }, []);
 
   const restants = list.filter((p) => !gone[p.id]).length;
+  const total = list.length;
+
+  // au clavier : Entrée ou Espace arrache le pansement d'un coup
+  function arracherClavier(e: KeyboardEvent, p: Piece) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    if (goneRef.current[p.id]) return;
+    ripFinish();
+    mood("aie", 1100);
+    say(pick(AIE));
+    retire(p.id, "arrache");
+  }
 
   function mood(h: "aie" | "peur", ms = 900) {
     setHumeur(h);
@@ -77,7 +111,8 @@ export function Soins({ onClose }: { onClose: () => void }) {
     goneRef.current = next;
     setGone(next);
     if (listRef.current.every((p) => next[p.id])) {
-      window.setTimeout(() => {
+      finTimer.current = window.setTimeout(() => {
+        window.clearTimeout(humeurTimer.current);
         heal();
         setFini(true);
         setHumeur("content");
@@ -125,10 +160,12 @@ export function Soins({ onClose }: { onClose: () => void }) {
       end();
     };
     function end() {
+      finDrag.current = null;
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
     }
+    finDrag.current = end;
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", up);
@@ -162,7 +199,7 @@ export function Soins({ onClose }: { onClose: () => void }) {
       <div className="soins__bar">
         <button type="button" className="btn btn--soft" onClick={onClose}><LuX aria-hidden="true" /> Fermer</button>
         <strong>{fini ? `${perso.name} est tout neuf !` : `Soigne ${perso.name}`}</strong>
-        <span className="soins__compte">{fini ? "" : `${total.current - restants} / ${total.current}`}</span>
+        <span className="soins__compte">{fini ? "" : `${total - restants} / ${total}`}</span>
       </div>
       <p className="soins__aide">
         {fini
@@ -182,6 +219,8 @@ export function Soins({ onClose }: { onClose: () => void }) {
                 transform: `translate(-50%, -50%) rotate(${p.rot}deg) ${peel?.id === p.id ? `translate(${peel.dx * 0.35}px, ${peel.dy * 0.35}px) rotateX(${Math.min(60, Math.hypot(peel.dx, peel.dy))}deg)` : ""}`,
               }}
               onPointerDown={(e: PointerEvent) => tirer(e, p)}
+              onKeyDown={(e: KeyboardEvent) => arracherClavier(e, p)}
+              tabIndex={gone[p.id] ? -1 : 0}
               role="button"
               aria-label="Pansement : tire dessus pour l'arracher"
             >

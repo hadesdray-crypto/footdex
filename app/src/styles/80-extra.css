@@ -773,3 +773,44 @@ body:has(.viewer, .reveal, .majfull) .page .back::after { animation-play-state: 
 @keyframes morceauTombe { to { transform: translate(var(--dx), 220px) rotate(var(--r)); opacity: 0; } }
 .soins__ok { justify-self: center; }
 .platre.is-casse .platre__fente { display: none; }
+
+/* Les gestes de Philippe : le personnage montre les gestes, pose par pose */
+.gestes { margin: 18px 0 8px; }
+.gestes h2 { margin: 0 0 4px; }
+.gestes__liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; margin-top: 12px; }
+.geste { display: grid; gap: 10px; padding: 12px; border-radius: 18px; background: var(--night-2); border: 1px solid var(--line-2); min-width: 0; }
+.geste.is-joue { border-color: var(--gold); box-shadow: 0 0 22px -10px var(--gold); }
+.geste h3 { margin: 0; font-size: 17px; }
+.geste__etapes { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; color: var(--muted); }
+.geste__etapes li { transition: color .3s; }
+.geste__etapes li.is-vu { color: var(--fg-2); }
+.geste__etapes li.is-on { color: var(--fg); font-weight: 700; }
+.geste__boutons { display: flex; flex-wrap: wrap; gap: 8px; }
+.ges { position: relative; height: 210px; border-radius: 14px; overflow: hidden; background: linear-gradient(#7cc4f2, #bfe5ff 62%, #3f9b4f 62%, #2f8a40); }
+.ges__sol { position: absolute; left: 0; right: 0; bottom: 0; height: 38%; background: repeating-linear-gradient(90deg, #ffffff10 0 30px, #0000 30px 60px); }
+.ges__sol::after { content: ""; position: absolute; left: 0; right: 0; top: 22%; height: 2px; background: #ffffff55; }
+.ges__joueur { position: absolute; left: 50%; bottom: 22px; width: 92px; height: 122px; transform: translateX(calc(-50% + var(--jx))); transition: transform var(--tr) ease-in-out; }
+.ges__v { position: absolute; inset: 0; opacity: 0; transition: opacity calc(var(--tr) * .4); }
+.ges__v.is-on { opacity: 1; }
+.ges--gauche .ges__v { transform: scaleX(-1); }
+.ges__v svg { width: 100%; height: 100%; overflow: visible; display: block; filter: drop-shadow(0 4px 3px #0005); }
+.ges__v .far { filter: brightness(.78); }
+.ges .lg, .ges .ar, .ges .up { transition: transform var(--tr) ease-in-out; }
+.ges .lgA { transform: var(--lgA); }
+.ges .lgB { transform: var(--lgB); }
+.ges .up { transform: var(--up); }
+.ges .arA { transform: var(--arA); }
+.ges .arB { transform: var(--arB); }
+.ges .sw, .ges .mt { opacity: 0; }
+.ges__balle { position: absolute; left: 50%; bottom: 18px; width: 22px; height: 22px; z-index: 2; transform: translate(calc(-50% + var(--bx)), var(--by)); transition: transform var(--tr) ease-in-out; filter: drop-shadow(0 3px 2px #0006); }
+.ges__balle > * { width: 100%; height: 100%; display: block; }
+.ges--tourne .ges__balle > * { animation: gesTourne .35s linear infinite; }
+@keyframes gesTourne { to { transform: rotate(360deg); } }
+.ges__but { position: absolute; right: 6px; bottom: 26px; width: 30px; height: 74px; border: 4px solid #fff; border-left: 0; border-radius: 0 3px 0 0; background: repeating-linear-gradient(45deg, #ffffff40 0 2px, #0000 2px 8px); }
+.ges__trace { position: absolute; left: 32%; right: 12%; bottom: 30px; height: 100px; width: 56%; opacity: 0; transition: opacity .3s; }
+.ges--enroulee.ges--courbe .ges__trace { opacity: .8; }
+.ges__def { position: absolute; left: 50%; bottom: 22px; width: 30px; height: 46px; transform: translateX(calc(-50% + var(--dx))); transition: transform var(--tr) ease-in-out; background: linear-gradient(#ff8a3d, #e5611a); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.ges__def::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 7px; background: #fff; }
+@media (prefers-reduced-motion: reduce) { .ges--tourne .ges__balle > * { animation: none; } }
+.geste__etape { all: unset; cursor: pointer; display: block; border-radius: 6px; }
+.geste__etape:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }

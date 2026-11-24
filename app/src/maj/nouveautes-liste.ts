@@ -4,6 +4,17 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-24",
+    titre: "Version 77 : les gestes de Philippe",
+    type: "appli",
+    points: [
+      "Vidéos, onglet « Apprendre les gestes » : ton personnage montre lui-même 6 gestes, sans Internet.",
+      "Le passement de jambes, le crochet, la feinte de corps, la roulette, la frappe du cou-de-pied et la frappe enroulée.",
+      "« Regarder avec Philippe » : il fait le geste lentement et explique chaque étape. « En vraie vitesse » : le geste en entier, trois fois de suite.",
+      "Touche une étape pour revoir juste ce moment-là.",
+    ],
+  },
+  {
+    date: "2026-11-24",
     titre: "Version 76 : soigner complètement son personnage",
     type: "appli",
     points: [
