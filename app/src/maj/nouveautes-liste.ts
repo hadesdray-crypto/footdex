@@ -4,6 +4,16 @@ export type Nouveaute = { date: string; titre: string; type: "appli" | "donnees"
 export const NOUVEAUTES: Nouveaute[] = [
   {
     date: "2026-11-24",
+    titre: "Version 76 : soigner complètement son personnage",
+    type: "appli",
+    points: [
+      "Dans le menu du personnage, nouvelle case « Le soigner complètement ».",
+      "Un petit jeu s'ouvre : attrape chaque pansement et tire d'un coup pour l'arracher. Il n'aime pas ça du tout !",
+      "Tape 3 fois sur un plâtre pour le casser. Il a un peu peur… mais après, il est tout content, comme neuf.",
+    ],
+  },
+  {
+    date: "2026-11-24",
     titre: "Mise à jour : 32 scores de Ligue 2 et 126 nouveaux secrets",
     type: "donnees",
     points: [

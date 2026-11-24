@@ -5,6 +5,7 @@ import { Mission } from "./pages/mission";
 import { Machine } from "./pages/machine";
 import { rendreAnciennesCartes } from "./rendu";
 import { Lecteur } from "./ui/lecteur";
+import { SoinsHote } from "./mascot/Soins";
 import { createRoot } from "react-dom/client";
 import { type Album, loadAlbum } from "./data";
 import { Binder } from "./pages/binder";
@@ -141,6 +142,7 @@ function App() {
     <Shell page={route.page} pageKey={token(route)} album={album}>
       <Page route={route} album={album} />
       <Lecteur />
+      <SoinsHote />
     </Shell>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { LuSwatchBook, LuRefreshCw, LuMic, LuArrowLeft, LuBookMarked, LuBookOpen, LuCalendarDays, LuFilm, LuGlobe, LuGraduationCap, LuHouse, LuLibrary, LuMessageSquareQuote, LuPackageOpen, LuShieldCheck, LuTrophy, LuUserRound, LuUsers, LuZap, LuMessageCircle, LuSettings, LuShirt, LuVolume2, LuX } from "react-icons/lu";
+import { LuBandage, LuSwatchBook, LuRefreshCw, LuMic, LuArrowLeft, LuBookMarked, LuBookOpen, LuCalendarDays, LuFilm, LuGlobe, LuGraduationCap, LuHouse, LuLibrary, LuMessageSquareQuote, LuPackageOpen, LuShieldCheck, LuTrophy, LuUserRound, LuUsers, LuZap, LuMessageCircle, LuSettings, LuShirt, LuVolume2, LuX } from "react-icons/lu";
 import type { Album } from "../data";
 import { useOverlay } from "../ui/cards";
 import { cx, dayKey } from "../util";
@@ -22,6 +22,7 @@ import { Buddies, BuddyPicker } from "./Buddies";
 import { depthZ } from "./depth";
 import { playFx } from "./bruits";
 import { addBandage, addCast, addNose, heal, isOut, onWounds, wounds } from "./wounds";
+import { aSoigner, ouvrirSoins } from "./Soins";
 import { fallApart } from "./zombie";
 import { runScript } from "./scripts";
 
@@ -874,6 +875,9 @@ function Menu({ view, setView, album, page, openWardrobe }: { view: "main" | "go
                 ) : null}
                 <button type="button" className="mm__tile" onClick={() => setView("go")}>
                   <LuGlobe aria-hidden="true" /> <span>Aller quelque part</span>
+                </button>
+                <button type="button" className="mm__tile" onClick={() => { if (aSoigner()) { close(); ouvrirSoins(); } else say("Je n'ai aucun bobo, je suis en pleine forme !"); }}>
+                  <LuBandage aria-hidden="true" /> <span>Le soigner complètement</span>
                 </button>
               </div>
             </section>
